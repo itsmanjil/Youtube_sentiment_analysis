@@ -1,0 +1,26 @@
+data:
+  max_len: 200
+  vocab_max_size: 20000
+  vocab_min_freq: 2
+device: auto
+early_stopping_monitor: val_f1_macro
+early_stopping_patience: 7
+experiment_name: thesis_full_gpu_optimized
+label_column: label
+model:
+  embedding_dim: 300
+num_classes: 3
+num_workers: 2
+output_dir: ./output
+seed: 42
+tensorboard_dir: ./runs
+test_csv: data/test_full_filtered.csv
+text_column: text
+train_csv: data/train_full_filtered.csv
+training:
+  batch_size: 192
+  gradient_clip: 5.0
+  learning_rate: 0.002
+  max_epochs: 7
+  weight_decay: 0.0001
+val_csv: data/val_full_filtered.csv

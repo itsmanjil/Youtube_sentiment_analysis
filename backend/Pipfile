@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+djangorestframework = "*"
+django-cors-headers = "*"
+djangorestframework-simplejwt = "*"
+psycopg2 = "*"
+nltk = "*"
+pandas = "*"
+python-dotenv = "*"
+scikit-learn = "==0.24.2"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
+youtube-comment-downloader = "*"
+yt-dlp = "*"
+emoji = "*"
+langdetect = "*"
+torch = "*"
+wordcloud = "*"
+matplotlib = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"

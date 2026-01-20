@@ -1,0 +1,17 @@
+1. pip install pipenv
+
+2. pipenv shell
+   pipenv install
+
+3. cd backend
+
+4.python manage.py makemigrations
+    python manage.py migrate
+
+5. python manage.py runserver
+
+6. python manage.py createsuperuser
+
+ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+
+ .venv\Scripts\activate     

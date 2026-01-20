@@ -1,0 +1,62 @@
+{
+  "dataset": "data\\raw\\youtube_comments_cleaned.csv",
+  "total_samples": 1032064,
+  "label_distribution": {
+    "Negative": 346075,
+    "Positive": 343317,
+    "Neutral": 342672
+  },
+  "max_per_class": null,
+  "text_column": "CommentText",
+  "label_column": "Sentiment",
+  "vectorizer": {
+    "max_features": 75000,
+    "min_df": 2,
+    "max_df": 0.95,
+    "ngram_range": "1,2",
+    "lowercase": true,
+    "strip_accents": false
+  },
+  "model": {
+    "type": "MultinomialNB",
+    "alpha": 0.5
+  },
+  "random_seed": 42,
+  "sklearn_version": "1.7.2",
+  "pandas_version": "2.3.3",
+  "accuracy": 0.6632964009049818,
+  "f1_macro": 0.6629992434838555,
+  "report": {
+    "Negative": {
+      "precision": 0.6044757062933817,
+      "recall": 0.7524091598641913,
+      "f1-score": 0.6703782607856136,
+      "support": 69215.0
+    },
+    "Neutral": {
+      "precision": 0.638766954377312,
+      "recall": 0.5669156914816004,
+      "f1-score": 0.6007003764716796,
+      "support": 68534.0
+    },
+    "Positive": {
+      "precision": 0.7736649056095838,
+      "recall": 0.6696667831760457,
+      "f1-score": 0.7179190931942732,
+      "support": 68664.0
+    },
+    "accuracy": 0.6632964009049818,
+    "macro avg": {
+      "precision": 0.6723025220934259,
+      "recall": 0.6629972115072791,
+      "f1-score": 0.6629992434838555,
+      "support": 206413.0
+    },
+    "weighted avg": {
+      "precision": 0.6721425856955113,
+      "recall": 0.6632964009049818,
+      "f1-score": 0.6630581772295249,
+      "support": 206413.0
+    }
+  }
+}
