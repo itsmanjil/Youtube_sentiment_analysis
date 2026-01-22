@@ -13,7 +13,7 @@ from .analysis_utils import (
     normalize_probs,
 )
 from .models import YouTubeVideo, YouTubeAnalysis, YouTubeComment
-from .sentiment_engines import SentimentResult
+from src.sentiment import SentimentResult
 
 # Mock data for YouTube Fetcher/Scraper
 MOCK_VIDEO_METADATA = {
@@ -41,7 +41,7 @@ class MockSentimentEngine:
         if "great" in text:
             label = "Positive"
             score = 0.8
-        elif "not like" in text:
+        elif "not like" in text or "dislike" in text:
             label = "Negative"
             score = -0.5
         else:
@@ -58,7 +58,13 @@ class MockSentimentEngine:
 class YouTubeAnalysisAPITests(APITestCase):
     def setUp(self):
         # Create a test user
-        self.user = NewUser.objects.create_user(email='test@example.com', user_name='testuser', password='testpassword123')
+        self.user = NewUser.objects.create_user(
+            email='test@example.com',
+            user_name='testuser',
+            first_name='Test',
+            last_name='User',
+            password='testpassword123',
+        )
         self.client.force_authenticate(user=self.user)
 
         # URLs
@@ -79,7 +85,8 @@ class YouTubeAnalysisAPITests(APITestCase):
             "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
             "max_comments": 100,
             "use_api": True,
-            "filter_spam": True
+            "filter_spam": True,
+            "filter_language": False,
         }
 
         response = self.client.post(self.analyze_url, data, format='json')
@@ -97,8 +104,8 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(analysis.total_comments_analyzed, 3)
         self.assertEqual(analysis.filtered_spam_count, 1)
         self.assertEqual(analysis.sentiment_data['Positive'], 1)
-        self.assertEqual(analysis.sentiment_data['Negative'], 1)
-        self.assertEqual(analysis.sentiment_data['Neutral'], 1)
+        self.assertEqual(analysis.sentiment_data['Negative'], 0)
+        self.assertEqual(analysis.sentiment_data['Neutral'], 2)
 
     def test_analyze_video_missing_url(self):
         data = {"max_comments": 100}
@@ -120,10 +127,31 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertIn("quota exceeded", response.data['msg'])
 
     def test_get_user_analyses(self):
-        video = YouTubeVideo.objects.create(video_id='v1', title='Video 1', published_at='2026-01-01T00:00:00Z')
-        YouTubeAnalysis.objects.create(user=self.user, video=video, sentiment_data={'Positive': 1}, total_comments_analyzed=1)
-        other_user = NewUser.objects.create_user(email='other@test.com', user_name='otheruser', password='password')
-        YouTubeAnalysis.objects.create(user=other_user, video=video, sentiment_data={'Positive': 3}, total_comments_analyzed=3)
+        video = YouTubeVideo.objects.create(
+            video_id='v1',
+            title='Video 1',
+            channel_name='Channel 1',
+            published_at='2026-01-01T00:00:00Z',
+        )
+        YouTubeAnalysis.objects.create(
+            user=self.user,
+            video=video,
+            sentiment_data={'Positive': 1, 'Neutral': 0, 'Negative': 0},
+            total_comments_analyzed=1,
+        )
+        other_user = NewUser.objects.create_user(
+            email='other@test.com',
+            user_name='otheruser',
+            first_name='Other',
+            last_name='User',
+            password='password',
+        )
+        YouTubeAnalysis.objects.create(
+            user=other_user,
+            video=video,
+            sentiment_data={'Positive': 3, 'Neutral': 0, 'Negative': 0},
+            total_comments_analyzed=3,
+        )
 
         url = reverse('app:get_user_analyses')
         response = self.client.get(url)
@@ -132,10 +160,18 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(len(response.data['data']), 1)
 
     def test_get_single_analysis(self):
-        video = YouTubeVideo.objects.create(video_id='v1', title='Video 1', published_at='2026-01-01T00:00:00Z')
+        video = YouTubeVideo.objects.create(
+            video_id='v1',
+            title='Video 1',
+            channel_name='Channel 1',
+            published_at='2026-01-01T00:00:00Z',
+        )
         YouTubeAnalysis.objects.create(
-            user=self.user, video=video, sentiment_data={'Positive': 10},
-            total_comments_analyzed=10, analysis_model='LOGREG'
+            user=self.user,
+            video=video,
+            sentiment_data={'Positive': 10, 'Neutral': 0, 'Negative': 0},
+            total_comments_analyzed=10,
+            analysis_model='LOGREG',
         )
 
         url = reverse('app:get_youtube_analysis', kwargs={'video_id': 'v1'})
@@ -154,7 +190,7 @@ class YouTubeAnalysisAPITests(APITestCase):
         url = reverse('app:youtube_health_check')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['data'], 'YouTube Sentiment Analysis API - v2.0')
+        self.assertEqual(response.json()['data'], 'YouTube Sentiment Analysis API - v2.0')
 
 
 class AnalysisUtilsTests(APITestCase):

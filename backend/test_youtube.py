@@ -13,7 +13,7 @@ django.setup()
 from app.youtube_fetcher import YouTubeFetcher
 from app.youtube_scraper import YouTubeScraper
 from app.youtube_preprocessor import YouTubePreprocessor
-from app.sentiment_engines import get_sentiment_engine
+from src.sentiment import get_sentiment_engine
 
 
 def test_video_id_extraction():

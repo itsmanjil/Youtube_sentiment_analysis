@@ -18,7 +18,7 @@ import sys
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from app.sentiment_engines import get_sentiment_engine
+from src.sentiment import get_sentiment_engine
 import pandas as pd
 
 

@@ -141,7 +141,7 @@ python backend/research/train_hybrid_dl.py \
 Once trained, the model automatically integrates:
 
 ```python
-from app.sentiment_engines import get_sentiment_engine
+from src.sentiment import get_sentiment_engine
 
 # Use hybrid DL model
 engine = get_sentiment_engine('hybrid_dl')
