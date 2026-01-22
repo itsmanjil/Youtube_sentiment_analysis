@@ -741,18 +741,16 @@ Combine the hybrid DL model with existing LogReg, SVM, TF-IDF:
 
 ```python
 # After training hybrid model
-from app.sentiment_engines import get_sentiment_engine
+from src.sentiment import get_sentiment_engine
 
 # Load trained hybrid model
 hybrid_engine = get_sentiment_engine('hybrid_dl', model_path='output/.../final_model.pt')
 
-# Create stacked ensemble
-from app.sentiment_engines import EnsembleSentimentEngine
-
-ensemble = EnsembleSentimentEngine(
-    engines=['logreg', 'svm', 'tfidf', 'hybrid_dl'],
-    weights=[0.15, 0.25, 0.20, 0.40],  # Give more weight to hybrid DL
-    method='weighted'
+# Create weighted ensemble
+ensemble = get_sentiment_engine(
+    'ensemble',
+    base_models=['logreg', 'svm', 'tfidf', 'hybrid_dl'],
+    weights={'logreg': 0.15, 'svm': 0.25, 'tfidf': 0.20, 'hybrid_dl': 0.40},
 )
 
 # Use in production

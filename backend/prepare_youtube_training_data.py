@@ -37,7 +37,7 @@ django.setup()
 from app.youtube_fetcher import YouTubeFetcher
 from app.youtube_scraper import YouTubeScraper
 from app.youtube_preprocessor import YouTubePreprocessor
-from app.sentiment_engines import get_sentiment_engine
+from src.sentiment import get_sentiment_engine
 
 
 class YouTubeDataPreparer:
@@ -225,7 +225,7 @@ class YouTubeDataPreparer:
             result = self.labeler.analyze(comment['text'])
 
             # Calculate confidence (1 - entropy)
-            from app.analysis_utils import confidence_from_probs
+            from src.utils import confidence_from_probs
             confidence = confidence_from_probs(result.probs)
 
             if confidence >= confidence_threshold:
@@ -268,7 +268,7 @@ class YouTubeDataPreparer:
             raise ValueError("CSV must have 'text' and 'label' columns")
 
         # Normalize labels
-        from app.sentiment_engines import normalize_label
+        from src.sentiment import normalize_label
         df['label'] = df['label'].apply(lambda x: normalize_label(str(x)))
 
         # Convert to comment format

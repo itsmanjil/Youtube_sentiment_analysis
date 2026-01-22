@@ -11,8 +11,8 @@ from sklearn.model_selection import train_test_split
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
-from app.analysis_utils import SENTIMENT_LABELS, normalize_probs
-from app.sentiment_engines import coerce_sentiment_result, get_sentiment_engine, normalize_label
+from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.sentiment import coerce_sentiment_result, get_sentiment_engine, normalize_label
 
 
 def load_dataset(csv_path):

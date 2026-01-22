@@ -1,5 +1,5 @@
 {
-  "dataset": "data\\raw\\youtube_comments_cleaned.csv",
+  "dataset": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\data\\raw\\youtube_comments_cleaned.csv",
   "total_samples": 1032064,
   "label_distribution": {
     "Negative": 346075,
@@ -26,15 +26,15 @@
     "n_jobs": -1
   },
   "random_seed": 42,
-  "sklearn_version": "1.7.2",
+  "sklearn_version": "1.8.0",
   "pandas_version": "2.3.3",
   "accuracy": 0.7072568103753155,
-  "f1_macro": 0.7081031087653394,
+  "f1_macro": 0.7081030012573081,
   "report": {
     "Negative": {
-      "precision": 0.7058125908879131,
-      "recall": 0.7222711839919093,
-      "f1-score": 0.7139470452143613,
+      "precision": 0.7058167443173796,
+      "recall": 0.7222856317272267,
+      "f1-score": 0.7139562283551716,
       "support": 69215.0
     },
     "Neutral": {
@@ -44,22 +44,22 @@
       "support": 68534.0
     },
     "Positive": {
-      "precision": 0.7784508802176423,
-      "recall": 0.716765699638821,
-      "f1-score": 0.746335878441393,
+      "precision": 0.7784473759134478,
+      "recall": 0.7167511359664454,
+      "f1-score": 0.7463263727764888,
       "support": 68664.0
     },
     "accuracy": 0.7072568103753155,
     "macro avg": {
-      "precision": 0.7102434968775495,
-      "recall": 0.7072010670263348,
-      "f1-score": 0.7081031087653394,
+      "precision": 0.7102437132526402,
+      "recall": 0.7072010283806488,
+      "f1-score": 0.7081030012573081,
       "support": 206413.0
     },
     "weighted avg": {
-      "precision": 0.7102718357556981,
+      "precision": 0.7102720627766577,
       "recall": 0.7072568103753155,
-      "f1-score": 0.7081464683443373,
+      "f1-score": 0.708146385569106,
       "support": 206413.0
     }
   }
