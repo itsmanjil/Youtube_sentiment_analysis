@@ -51,6 +51,8 @@ class YouTubeScraper:
 
         try:
             time_str = time_str.lower().strip()
+            if not re.search(r"[a-z]", time_str):
+                return None
             now = datetime.now()
 
             # Parse patterns like "X seconds/minutes/hours/days/weeks/months/years ago"
