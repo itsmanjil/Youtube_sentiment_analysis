@@ -1,6 +1,3 @@
-from copyreg import constructor
-from email import message
-from turtle import update
 from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import login, logout

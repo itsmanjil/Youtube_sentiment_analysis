@@ -1,5 +1,5 @@
 {
-  "dataset": "data\\raw\\youtube_comments_cleaned.csv",
+  "dataset": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\data\\raw\\youtube_comments_cleaned.csv",
   "total_samples": 1032064,
   "label_distribution": {
     "Negative": 346075,
@@ -30,7 +30,7 @@
     "calibrated": true
   },
   "random_seed": 42,
-  "sklearn_version": "1.7.2",
+  "sklearn_version": "1.8.0",
   "pandas_version": "2.3.3",
   "accuracy": 0.7033181049643191,
   "f1_macro": 0.7040602155011925,

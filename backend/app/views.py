@@ -29,18 +29,20 @@ from .youtube_fetcher import YouTubeFetcher
 from .youtube_scraper import YouTubeScraper
 from .youtube_preprocessor import YouTubePreprocessor
 from .aspect_mining import extract_aspect_sentiment
-from .analysis_utils import (
+from src.utils import (
     aggregate_confidence_stats,
     bootstrap_confidence_intervals,
     build_hourly_sentiment,
     confidence_from_probs,
 )
-from .sentiment_engines import (
+from src.sentiment import (
     coerce_sentiment_result,
     get_sentiment_engine,
 )
 
 tokenizer = ToktokTokenizer()
+
+CLASSICAL_MODELS = {"logreg", "svm", "tfidf", "ensemble", "meta_learner"}
 
 
 @lru_cache(maxsize=1)
@@ -348,13 +350,14 @@ def analyze_youtube_video(request):
 
         print(f"Processed {len(processed_comments)} comments")
 
-        # Step 4: Apply additional preprocessing (contractions, negations, stopwords)
-        for item in processed_comments:
-            processed_text = item['processed_text']
-            processed_text = replace_contractions(processed_text)
-            processed_text = replace_negation(processed_text)
-            processed_text = remove_stopwords(processed_text)
-            item['processed_text'] = processed_text
+        # Step 4: Apply additional preprocessing (classical models only)
+        if sentiment_model in CLASSICAL_MODELS:
+            for item in processed_comments:
+                processed_text = item['processed_text']
+                processed_text = replace_contractions(processed_text)
+                processed_text = replace_negation(processed_text)
+                processed_text = remove_stopwords(processed_text)
+                item['processed_text'] = processed_text
 
         # Step 5: Sentiment Analysis
         print(f"Running sentiment analysis using {sentiment_model}...")

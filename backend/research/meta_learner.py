@@ -25,8 +25,8 @@ import pandas as pd
 BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
-from app.sentiment_engines import get_sentiment_engine, coerce_sentiment_result, normalize_label
-from app.analysis_utils import SENTIMENT_LABELS, normalize_probs
+from src.sentiment import get_sentiment_engine, coerce_sentiment_result, normalize_label
+from src.utils import SENTIMENT_LABELS, normalize_probs
 
 
 class MetaLearnerEnsemble:
