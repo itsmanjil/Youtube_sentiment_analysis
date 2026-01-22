@@ -8,7 +8,7 @@ django = "*"
 djangorestframework = "*"
 django-cors-headers = "*"
 djangorestframework-simplejwt = "*"
-psycopg2 = "*"
+psycopg2-binary = "*"
 nltk = "*"
 pandas = "*"
 python-dotenv = "*"
@@ -23,8 +23,9 @@ langdetect = "*"
 torch = "*"
 wordcloud = "*"
 matplotlib = "*"
+numpy = "<2"
 
 [dev-packages]
 
 [requires]
-python_version = "3.10"
+python_version = "3.12"
