@@ -6,7 +6,7 @@ psycopg2-binary
 nltk
 pandas
 python-dotenv
-scikit-learn==1.7.2
+scikit-learn==1.6.1
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
