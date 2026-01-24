@@ -1,0 +1,23 @@
+{
+  "name": "clear",
+  "version": "1.0.0",
+  "description": "![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)\r ![Django](https://img.shields.io/badge/Django-4.0+-green.svg)\r ![React](https://img.shields.io/badge/React-19-blue.svg)\r ![License](https://img.shields.io/badge/License-MIT-yellow.svg)",
+  "homepage": "https://github.com/itsmanjil/Youtube_sentiment_analysis#readme",
+  "bugs": {
+    "url": "https://github.com/itsmanjil/Youtube_sentiment_analysis/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsmanjil/Youtube_sentiment_analysis.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
