@@ -1,26 +1,29 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import '@testing-library/jest-dom';
 import Search from './Search';
 import AuthContext from '../../context/AuthContext';
 import axios from 'axios';
+import { vi } from 'vitest';
 
 // Mock axios
-jest.mock('axios');
+vi.mock('axios');
 
 // Mock navigate
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Helper to render with AuthContext
 const renderWithAuth = (component, authTokenValue = { access: 'test-token' }) => {
   const mockAuthContext = {
     authToken: authTokenValue,
-    logoutUser: jest.fn(),
+    logoutUser: vi.fn(),
   };
 
   return render(
@@ -34,7 +37,7 @@ const renderWithAuth = (component, authTokenValue = { access: 'test-token' }) =>
 
 describe('Search Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.setItem('authToken', JSON.stringify({ access: 'test-token' }));
   });
 
@@ -106,7 +109,7 @@ describe('Search Component', () => {
         expect(mockNavigate).toHaveBeenCalled();
       });
 
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     }
   });
 

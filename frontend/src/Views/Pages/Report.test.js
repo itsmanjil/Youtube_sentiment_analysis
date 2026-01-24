@@ -1,25 +1,28 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import '@testing-library/jest-dom';
 import Report from './Report';
 import AuthContext from '../../context/AuthContext';
+import { vi } from 'vitest';
 
 // Mock navigate
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Mock CSS import
-jest.mock('./report.css', () => ({}));
+vi.mock('./report.css', () => ({}));
 
 // Helper to render with AuthContext and Router
 const renderWithContext = (locationState = null, authTokenValue = { access: 'test-token' }) => {
   const mockAuthContext = {
     authToken: authTokenValue,
-    logoutUser: jest.fn(),
+    logoutUser: vi.fn(),
   };
 
   return render(
@@ -85,8 +88,8 @@ describe('Report Component', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    global.print = jest.fn();
+    vi.clearAllMocks();
+    global.print = vi.fn();
   });
 
   test('redirects to dashboard when no state is provided', () => {
@@ -225,7 +228,7 @@ describe('Report Component', () => {
   });
 
   test('print button triggers window.print', () => {
-    window.print = jest.fn();
+    window.print = vi.fn();
 
     renderWithContext(mockReportData);
 

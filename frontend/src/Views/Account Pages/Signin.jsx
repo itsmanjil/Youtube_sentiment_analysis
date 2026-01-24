@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, Redirect } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 
 // import Navbar from "../../Components/Navbar";

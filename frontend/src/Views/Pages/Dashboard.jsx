@@ -3,7 +3,6 @@ import React, { useContext, useEffect, useState, useRef } from "react";
 
 //focusing on emmail in login
 
-import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useCurrentPng } from "recharts-to-png";
 import Sidenavbar from "../../Components/Sidenavbar";
@@ -32,7 +31,7 @@ import {
   Scatter,
 } from "recharts";
 import axiosInstance from "../../axios";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
 
 const data = [
@@ -168,7 +167,7 @@ function Dashboard(props) {
   const getData = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const { user_id, user_name } = jwt_decode(token);
+      const { user_id, user_name } = jwtDecode(token);
       console.log(user_name);
       if (user_id) {
         const userDatas = await axios({
@@ -368,7 +367,7 @@ function Dashboard(props) {
 
   const navigateToReport = () => {
     const token = localStorage.getItem("authToken");
-    const { user_id, user_name } = jwt_decode(token);
+    const { user_id, user_name } = jwtDecode(token);
     navigate(`/report/${videoTitle}`, {
       state: {
         user_name,

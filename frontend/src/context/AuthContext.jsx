@@ -1,6 +1,6 @@
 import axiosInstance from "../axios";
 import { createContext, useState, useEffect } from "react";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 const AuthContext = createContext();
 
@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
 
   let [user, setUser] = useState(
     localStorage.getItem("authToken")
-      ? jwt_decode(localStorage.getItem("authToken"))
+      ? jwtDecode(localStorage.getItem("authToken"))
       : null
   );
 
@@ -40,11 +40,11 @@ export const AuthProvider = ({ children }) => {
       console.log(data);
       SetIsError(false);
       setAuthToken(data);
-      setUser(jwt_decode(data.access));
+      setUser(jwtDecode(data.access));
 
       localStorage.setItem("authToken", JSON.stringify(data));
 
-      const isFirstLoggedIn = jwt_decode(data.access).is_registered;
+      const isFirstLoggedIn = jwtDecode(data.access).is_registered;
       console.log(isFirstLoggedIn);
 
       navigate("/dashboard");
@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }) => {
 
     if (response.status === 200) {
       setAuthToken(data);
-      setUser(jwt_decode(data.access));
+      setUser(jwtDecode(data.access));
       localStorage.setItem("authToken", JSON.stringify(data));
     } else {
       console.log("problem in updating token");

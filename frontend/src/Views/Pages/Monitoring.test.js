@@ -1,27 +1,32 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import '@testing-library/jest-dom';
 import Monitoring from './Monitoring';
 import AuthContext from '../../context/AuthContext';
 import axios from 'axios';
-import jwt_decode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
+import { vi } from 'vitest';
 
 // Mock dependencies
-jest.mock('axios');
-jest.mock('jwt-decode');
-
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
+vi.mock('axios');
+vi.mock('jwt-decode', () => ({
+  jwtDecode: vi.fn(),
 }));
+
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Helper to render with AuthContext
 const renderWithAuth = (component, authTokenValue = { access: 'test-token' }) => {
   const mockAuthContext = {
     authToken: authTokenValue,
-    logoutUser: jest.fn(),
+    logoutUser: vi.fn(),
   };
 
   return render(
@@ -71,10 +76,10 @@ describe('Monitoring Component', () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.setItem('authToken', JSON.stringify({ access: 'test-token' }));
 
-    jwt_decode.mockReturnValue({
+    jwtDecode.mockReturnValue({
       user_id: '123',
       user_name: 'Test User',
     });
@@ -301,7 +306,7 @@ describe('Monitoring Component', () => {
     });
 
     // Should display placeholder icon
-    const videoIcons = screen.getAllByClassName('fa-video');
+    const videoIcons = document.querySelectorAll('.fa-video');
     expect(videoIcons.length).toBeGreaterThan(0);
   });
 
