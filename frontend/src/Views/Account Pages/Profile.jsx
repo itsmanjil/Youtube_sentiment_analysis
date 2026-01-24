@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState, useCallback } from "react";
 import Sidenavbar from "../../Components/Sidenavbar";
 import Fixedplugins from "../../Components/Fixedplugins";
 import { Link } from "react-router-dom";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import AuthContext from "../../context/AuthContext";
 
@@ -13,7 +13,7 @@ function Profile(props) {
   const getData = useCallback(async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const { user_id } = jwt_decode(token);
+      const { user_id } = jwtDecode(token);
       console.log(user_id);
       if (user_id) {
         try {

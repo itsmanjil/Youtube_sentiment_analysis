@@ -1,24 +1,26 @@
 import React from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
-import '@testing-library/jest-dom';
 import Dashboard from './Dashboard';
 import AuthContext from '../../context/AuthContext';
 import axios from 'axios';
-import jwt_decode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
+import { vi } from 'vitest';
 
 // Mock dependencies
-jest.mock('axios');
-jest.mock('jwt-decode');
-jest.mock('recharts-to-png', () => ({
-  useCurrentPng: () => [jest.fn(), { ref: { current: null } }],
+vi.mock('axios');
+vi.mock('jwt-decode', () => ({
+  jwtDecode: vi.fn(),
+}));
+vi.mock('recharts-to-png', () => ({
+  useCurrentPng: () => [vi.fn(), { ref: { current: null } }],
 }));
 
 // Helper to render with AuthContext and Router
 const renderWithContext = (component, locationState = null, authTokenValue = { access: 'test-token' }) => {
   const mockAuthContext = {
     authToken: authTokenValue,
-    logoutUser: jest.fn(),
+    logoutUser: vi.fn(),
   };
 
   return render(
@@ -32,11 +34,11 @@ const renderWithContext = (component, locationState = null, authTokenValue = { a
 
 describe('Dashboard Component', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.setItem('authToken', JSON.stringify({ access: 'test-token' }));
 
-    // Mock jwt_decode
-    jwt_decode.mockReturnValue({
+    // Mock jwtDecode
+    jwtDecode.mockReturnValue({
       user_id: '123',
       user_name: 'Test User',
     });

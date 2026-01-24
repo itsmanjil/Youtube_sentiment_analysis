@@ -32,6 +32,7 @@ from typing import Dict, List, Optional, Union
 from src.utils import SENTIMENT_LABELS, normalize_probs
 from src.utils.config import get_model_path, Config
 from src.sentiment.base import SentimentResult, normalize_label, BaseSentimentEngine
+from src.sentiment.engines.artifact_utils import format_model_load_error
 
 
 class TFIDFSentimentEngine(BaseSentimentEngine):
@@ -98,6 +99,10 @@ class TFIDFSentimentEngine(BaseSentimentEngine):
                 f"  - {vectorizer_path}\n"
                 f"Train models using: python scripts/train/train_classical.py --model tfidf"
             )
+        except Exception as exc:
+            raise RuntimeError(
+                format_model_load_error("tfidf", model_path, vectorizer_path, exc)
+            ) from exc
 
         self._validate_fitted()
 

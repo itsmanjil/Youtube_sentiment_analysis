@@ -8,10 +8,10 @@ This guide provides comprehensive information about the testing infrastructure f
 
 The application uses the following testing stack:
 
-- **Jest**: JavaScript testing framework
+- **Vitest**: JavaScript testing framework
 - **React Testing Library**: Testing utilities for React components
 - **@testing-library/user-event**: Simulates user interactions
-- **@testing-library/jest-dom**: Custom Jest matchers for DOM
+- **@testing-library/jest-dom**: Custom DOM matchers (loaded via `src/setupTests.js`)
 
 ## Test Files
 
@@ -119,8 +119,8 @@ npm test -- --testNamePattern="validation"
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import '@testing-library/jest-dom';
 import YourComponent from './YourComponent';
+import { vi } from 'vitest';
 
 describe('YourComponent', () => {
   test('renders correctly', () => {
@@ -143,7 +143,7 @@ import AuthContext from '../../context/AuthContext';
 const renderWithAuth = (component, authTokenValue = { access: 'test-token' }) => {
   const mockAuthContext = {
     authToken: authTokenValue,
-    logoutUser: jest.fn(),
+    logoutUser: vi.fn(),
   };
 
   return render(
@@ -193,7 +193,9 @@ test('button click triggers action', async () => {
 
 ```javascript
 import axios from 'axios';
-jest.mock('axios');
+import { vi } from 'vitest';
+
+vi.mock('axios');
 
 test('handles API response', async () => {
   axios.mockResolvedValue({
@@ -238,7 +240,7 @@ Prefer queries in this order:
 
 ```javascript
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   localStorage.clear();
 });
 
@@ -290,11 +292,14 @@ test('validates form input', async () => {
 ### Testing Navigation
 
 ```javascript
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 test('navigates on success', async () => {
   // ... trigger navigation
@@ -372,11 +377,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
-          node-version: '16'
+          node-version: '18'
       - name: Install dependencies
         run: cd frontend && npm install
       - name: Run tests
-        run: cd frontend && npm test -- --coverage --watchAll=false
+        run: cd frontend && npm test -- --coverage --run
       - name: Upload coverage
         uses: codecov/codecov-action@v2
         with:
@@ -394,7 +399,7 @@ Aim for:
 ### Generate Coverage Report
 
 ```bash
-npm test -- --coverage --watchAll=false
+npm test -- --coverage --run
 ```
 
 Coverage report will be generated in `frontend/coverage/lcov-report/index.html`
@@ -427,7 +432,7 @@ await waitFor(() => {
 Check that all required dependencies are installed:
 
 ```bash
-npm install --save-dev @testing-library/react @testing-library/jest-dom
+npm install --save-dev @testing-library/react @testing-library/jest-dom vitest @vitest/coverage-v8
 ```
 
 #### 4. Mock Not Working
@@ -435,14 +440,15 @@ npm install --save-dev @testing-library/react @testing-library/jest-dom
 Ensure mocks are defined before imports:
 
 ```javascript
-jest.mock('axios');
+import { vi } from 'vitest';
+vi.mock('axios');
 import axios from 'axios';
 ```
 
 ## Resources
 
 - [React Testing Library Documentation](https://testing-library.com/docs/react-testing-library/intro/)
-- [Jest Documentation](https://jestjs.io/docs/getting-started)
+- [Vitest Documentation](https://vitest.dev/guide/)
 - [Testing Library Cheatsheet](https://testing-library.com/docs/react-testing-library/cheatsheet)
 - [Common Testing Mistakes](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
 

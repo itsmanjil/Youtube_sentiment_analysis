@@ -3,7 +3,7 @@ import Sidenavbar from "../../Components/Sidenavbar";
 import Fixedplugins from "../../Components/Fixedplugins";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
 
 function Monitoring() {
@@ -56,7 +56,7 @@ function Monitoring() {
   const getUserData = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      const { user_id, user_name } = jwt_decode(token);
+      const { user_id, user_name } = jwtDecode(token);
       setUser({ user_id, user_name });
     } catch (err) {
       console.error("Error getting user data:", err);

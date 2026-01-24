@@ -1,3 +1,6 @@
+/* Font Include */
+@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@600&display=swap");
+
 :root {
   --body-bg: rgb(204, 204, 204);
   --white: #ffffff;
@@ -7,9 +10,6 @@
   --themeColor: #ff0000;
   --pageShadow: 0 0 0.5cm rgba(0, 0, 0, 0.5);
 }
-
-/* Font Include */
-@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@600&display=swap");
 
 @media screen {
   .page {

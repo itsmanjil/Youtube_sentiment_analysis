@@ -2,7 +2,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![Django](https://img.shields.io/badge/Django-4.0+-green.svg)
-![React](https://img.shields.io/badge/React-17-blue.svg)
+![React](https://img.shields.io/badge/React-19-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 A full-stack sentiment analysis platform that analyzes YouTube video comments to surface audience sentiment and engagement insights. Built with Django REST Framework and React.
@@ -161,7 +161,7 @@ Reddit-Sentiment-Analysis/
 - PostgreSQL or SQLite (SQLite by default)
 
 **Frontend:**
-- Node.js 14+
+- Node.js 18+
 - npm or yarn
 
 ### Installation
@@ -431,7 +431,7 @@ YouTube Video URL
 - **matplotlib**: Plotting
 
 ### Frontend
-- **React 17**: UI framework
+- **React 19**: UI framework
 - **React Router**: Navigation
 - **Axios**: HTTP client
 - **jwt-decode**: JWT token handling
