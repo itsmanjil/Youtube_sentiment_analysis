@@ -1,0 +1,43 @@
+{
+  "name": "thesis_demo",
+  "description": "Complete thesis experiment demonstration",
+  "experiment_type": "full_benchmark",
+  "model": {
+    "use_logreg": true,
+    "use_svm": true,
+    "use_tfidf": true,
+    "use_bert": false,
+    "use_hybrid_nn": false,
+    "use_fuzzy": true,
+    "fuzzy_defuzz_method": "centroid",
+    "fuzzy_mf_type": "gaussian",
+    "ensemble_method": "weighted_average",
+    "optimize_weights": true
+  },
+  "optimization": {
+    "optimizer_type": "pso",
+    "population_size": 15,
+    "max_iterations": 20,
+    "c1": 2.0,
+    "c2": 2.0,
+    "w_start": 0.9,
+    "w_end": 0.4,
+    "use_adaptive": true,
+    "seed": 42,
+    "n_runs": 5
+  },
+  "evaluation": {
+    "datasets": [
+      "synthetic"
+    ],
+    "use_sentiment140": false,
+    "use_imdb": false,
+    "use_amazon": false,
+    "use_sst": false,
+    "max_samples_per_dataset": 200,
+    "run_cross_domain": true,
+    "primary_metric": "f1_macro"
+  },
+  "output_dir": "./results",
+  "random_seed": 42
+}

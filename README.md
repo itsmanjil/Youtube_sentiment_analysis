@@ -1,13 +1,12 @@
 # YouTube Sentiment Analysis
 
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![Django](https://img.shields.io/badge/Django-4.0+-green.svg)
+![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)
+![Django](https://img.shields.io/badge/Django-5.0+-green.svg)
 ![React](https://img.shields.io/badge/React-19-blue.svg)
+![Vite](https://img.shields.io/badge/Vite-7-purple.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-A full-stack sentiment analysis platform that analyzes YouTube video comments to surface audience sentiment and engagement insights. Built with Django REST Framework and React.
-
-**Note:** This repository is named `Reddit-Sentiment-Analysis` for legacy reasons; the current project scope is YouTube comment analysis.
+A full-stack sentiment analysis platform that analyzes YouTube video comments to surface audience sentiment and engagement insights. Built with Django REST Framework, React 19, and Vite.
 
 ## Overview
 
@@ -15,12 +14,16 @@ This application provides comprehensive sentiment analysis of YouTube video comm
 
 **Key Capabilities:**
 - Analyze up to 1000 comments per video
-- Support for multiple sentiment models (LogReg, Linear SVM, TF-IDF, Ensemble, Hybrid-DL)
+- Support for multiple sentiment models (LogReg, Linear SVM, TF-IDF, Ensemble, Meta-Learner, Hybrid-DL, BERT/Transformer)
 - Real-time spam and language filtering
 - Like-weighted sentiment analysis
 - Word frequency analysis for word clouds
+- Aspect-based sentiment analysis
+- Confidence intervals with bootstrap estimation
+- Sentiment timeline visualization
 - JWT-authenticated user system
 - Analysis history and comparison
+- Research tools for thesis-grade evaluation
 
 ## Demo
 
@@ -91,9 +94,11 @@ This application provides comprehensive sentiment analysis of YouTube video comm
 ### Sentiment Analysis
 - **LogReg (TF-IDF)**: Trainable baseline tuned for YouTube comments
 - **Linear SVM (TF-IDF)**: Strong linear model trained on YouTube data
-- **TF-IDF**: Legacy ML baseline
-- **Hybrid-DL**: CNN-BiLSTM-Attention research model (optional)
-- **CI Ensemble**: Weighted soft-voting with PSO-optimized weights (research mode)
+- **TF-IDF**: Naive Bayes baseline (fastest)
+- **Ensemble**: Weighted soft-voting with configurable weights
+- **Meta-Learner**: Stacked ensemble that learns combination rules
+- **Hybrid-DL**: CNN-BiLSTM-Attention research model (requires PyTorch)
+- **BERT/Transformer**: Transformer-based model (requires transformers library, best accuracy)
 - **Confidence scores**: Compound sentiment scores for each comment
 - **Uncertainty scoring**: Entropy-based confidence for each prediction
 
@@ -123,7 +128,7 @@ This application provides comprehensive sentiment analysis of YouTube video comm
 ## Project Structure
 
 ```
-Reddit-Sentiment-Analysis/
+Youtube_sentiment_analysis/
 ├── backend/                    # Django REST API
 │   ├── app/                   # Main YouTube analysis app
 │   │   ├── models.py         # YouTubeVideo, YouTubeComment, YouTubeAnalysis
@@ -131,22 +136,39 @@ Reddit-Sentiment-Analysis/
 │   │   ├── youtube_fetcher.py    # YouTube API client
 │   │   ├── youtube_scraper.py    # Alternative scraper
 │   │   ├── youtube_preprocessor.py  # Text cleaning & filtering
-│   │   └── sentiment_engines.py     # LogReg, SVM, TF-IDF, Ensemble
+│   │   ├── aspect_mining.py      # Aspect-based sentiment extraction
+│   │   └── deep_models.py        # Deep learning model definitions
+│   ├── src/                  # Modular sentiment engine package
+│   │   ├── sentiment/        # Sentiment analysis engines
+│   │   │   ├── factory.py    # Engine factory with lazy loading
+│   │   │   └── engines/      # LogReg, SVM, TF-IDF, Ensemble, Meta-Learner, Hybrid-DL, Transformer
+│   │   └── utils/            # Analysis utilities (confidence, bootstrap CI)
+│   ├── research/             # Thesis-grade research tools
+│   │   ├── architectures/    # CNN-BiLSTM-Attention, BERT classifier
+│   │   ├── training/         # Trainer, evaluator, callbacks
+│   │   ├── evaluation/       # Ablation studies, statistical tests
+│   │   ├── explainability/   # LIME, SHAP, attention explainer
+│   │   ├── visualization/    # Training curves, confusion matrices
+│   │   ├── experiment_runner.py   # Full evaluation pipeline
+│   │   ├── optimize_ensemble.py   # PSO weight optimization
+│   │   └── run_thesis_pipeline.py # Complete thesis experiments
 │   ├── app_api/              # Authentication API
 │   ├── users/                # User management
 │   ├── core/                 # Django settings & config
 │   ├── files/                # Data files (contractions, negations)
-│   ├── models/               # Trained model artifacts (LogReg, TF-IDF, hybrid DL)
+│   ├── models/               # Trained model artifacts
 │   ├── test_youtube.py       # Integration tests
 │   ├── manage.py
-│   └── Pipfile               # Python dependencies
-├── frontend/                  # React application
+│   └── Pipfile               # Python dependencies (Python 3.11)
+├── frontend/                  # React 19 + Vite application
 │   ├── src/
-│   │   ├── Views/            # Pages (Dashboard, Search, Report, etc.)
+│   │   ├── Views/
+│   │   │   ├── Pages/        # Dashboard, Search, Report, Monitoring, Tables
+│   │   │   └── Account Pages/ # Signin, Register, Profile, EditProfile
 │   │   ├── Components/       # Reusable components
 │   │   ├── context/          # Auth context
-│   │   ├── axios.js          # API client
-│   │   └── App.js
+│   │   └── axios.js          # API client
+│   ├── vite.config.js        # Vite configuration
 │   └── package.json
 └── README.md
 ```
@@ -156,9 +178,10 @@ Reddit-Sentiment-Analysis/
 ### Prerequisites
 
 **Backend:**
-- Python 3.8+
+- Python 3.11+
 - pip or pipenv
 - PostgreSQL or SQLite (SQLite by default)
+- PyTorch (optional, for Hybrid-DL and Transformer models)
 
 **Frontend:**
 - Node.js 18+
@@ -168,8 +191,8 @@ Reddit-Sentiment-Analysis/
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/Reddit-Sentiment-Analysis.git
-cd Reddit-Sentiment-Analysis
+git clone https://github.com/itsmanjil/Youtube_sentiment_analysis.git
+cd Youtube_sentiment_analysis
 ```
 
 #### 2. Backend Setup
@@ -217,11 +240,11 @@ cd frontend
 # Install dependencies
 npm install
 
-# Start development server
-npm start
+# Start development server (Vite)
+npm run dev
 ```
 
-Frontend will run on http://localhost:3000
+Frontend will run on http://localhost:5173 (Vite default)
 
 ### 4. Environment Variables
 
@@ -239,8 +262,8 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 # YouTube API (Optional - scraper works without it)
 YOUTUBE_API_KEY=your-youtube-api-key-here
 
-# CORS (for frontend)
-CORS_ALLOWED_ORIGINS=http://localhost:3000
+# CORS (for frontend - Vite default port)
+CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
 **Generate a Secret Key:**
@@ -315,6 +338,8 @@ POST /api/youtube/analyze/
 ```
 
 ## Testing
+
+### Backend Tests
 ```bash
 cd backend
 python test_youtube.py
@@ -329,14 +354,44 @@ YouTube API (or Scraper)
 All tests passed
 ```
 
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
+
+Tests run using Vitest with React Testing Library.
+
 ## Research & Experiments
 
-Run thesis-grade evaluation and CI optimization scripts:
+The project includes comprehensive research tools for thesis-grade experiments:
 
 ```bash
+# Run full experiment evaluation
 python backend/research/experiment_runner.py --data path/to/labeled.csv
+
+# Optimize ensemble weights using PSO
 python backend/research/optimize_ensemble.py --data path/to/labeled.csv
+
+# Train hybrid deep learning model
+python backend/research/train_hybrid_dl.py --data path/to/labeled.csv
+
+# Train meta-learner (stacked ensemble)
+python backend/research/meta_learner.py --data path/to/labeled.csv
+
+# Run complete thesis pipeline
+python backend/research/run_thesis_pipeline.py --data path/to/labeled.csv
+
+# Generate visualizations
+python backend/research/visualization/generate_all.py
 ```
+
+### Research Features
+- **Ablation studies**: Systematic component analysis
+- **Statistical tests**: McNemar's test, paired t-tests
+- **Explainability**: LIME, SHAP, attention visualization
+- **Training curves**: Loss and accuracy plots
+- **Confusion matrices**: Per-model performance breakdown
 
 ## API Endpoints
 
@@ -365,9 +420,11 @@ python backend/research/optimize_ensemble.py --data path/to/labeled.csv
 | `emoji_mode` | string | "convert" | How to handle emojis: "remove", "convert", "keep" |
 | `filter_spam` | boolean | true | Filter spam comments |
 | `filter_language` | boolean | true | Filter non-English comments |
-| `sentiment_model` | string | "logreg" | Model to use: "logreg", "svm", "tfidf", "ensemble", "hybrid_dl" |
+| `sentiment_model` | string | "logreg" | Model to use: "logreg", "svm", "tfidf", "ensemble", "meta_learner", "hybrid_dl", "bert" |
 | `ensemble_models` | string/list | "logreg,svm,tfidf" | Base models for the ensemble |
-| `ensemble_weights` | object/list | null | Weights for ensemble (dict or list) |
+| `ensemble_weights` | object/list | null | Weights for ensemble (dict or list, or path to JSON file) |
+| `meta_learner_path` | string | null | Path to trained meta-learner model |
+| `meta_learner_models` | string/list | null | Base models for meta-learner |
 | `bootstrap_samples` | integer | 500 | Bootstrap samples for CI estimation |
 | `random_seed` | integer | 42 | Seed for reproducibility |
 | `aspect_top_n` | integer | 12 | Number of aspects to return |
@@ -379,29 +436,34 @@ python backend/research/optimize_ensemble.py --data path/to/labeled.csv
 ```
 YouTube Video URL
   -> Fetcher/Scraper
-     - API: fast, 10k quota/day
-     - Scraper: unlimited, slower
+     - YouTube API: fast, 10k quota/day
+     - Scraper (yt-dlp): unlimited, slower
   -> Preprocessor
-     - Emoji handling
+     - Emoji handling (remove/convert/keep)
      - Spam detection
      - Language filtering
-     - Text cleaning
-  -> Sentiment Engine
-     - LogReg (trained baseline)
-     - Linear SVM (trained)
-     - TF-IDF (legacy)
-     - Hybrid-DL (research)
-     - Ensemble (PSO-weighted)
-     - Confidence + uncertainty
+     - Contraction expansion
+     - Negation handling
+     - Stopword removal
+  -> Sentiment Engine Factory
+     - TF-IDF (Naive Bayes)
+     - LogReg (default)
+     - Linear SVM
+     - Ensemble (weighted voting)
+     - Meta-Learner (stacked)
+     - Hybrid-DL (CNN-BiLSTM-Attention)
+     - BERT/Transformer
+  -> Analytics
+     - Sentiment ratios + confidence intervals
+     - Bootstrap CI estimation
+     - Aspect-based sentiment
+     - Sentiment timeline
+     - Like-weighted analysis
+     - Word frequency analysis
   -> Database
      - YouTubeVideo
      - YouTubeComment
      - YouTubeAnalysis
-  -> Analytics API
-     - Sentiment ratios
-     - Like-weighted data
-     - Word frequencies
-     - Top comments
 ```
 
 ## Technology Stack
@@ -415,14 +477,17 @@ YouTube Video URL
 
 ### YouTube & Data Collection
 - **google-api-python-client**: Official YouTube Data API v3
-- **youtube-comment-downloader**: Fallback scraper
+- **youtube-comment-downloader**: Fallback comment scraper
+- **yt-dlp**: Video metadata extraction
 - **googleapiclient**: API error handling
 
 ### NLP & Sentiment Analysis
-- **scikit-learn**: TF-IDF + Logistic Regression + Linear SVM
-- **torch**: PyTorch for hybrid deep learning
+- **scikit-learn 1.8**: TF-IDF + Logistic Regression + Linear SVM + Meta-Learner
+- **torch**: PyTorch for Hybrid-DL (CNN-BiLSTM-Attention)
+- **transformers**: BERT and other transformer models (optional)
 - **NLTK**: Tokenization, stopwords, wordnet
 - **pandas**: Data processing
+- **numpy 2.0+**: Numerical computing
 
 ### Text Processing
 - **emoji**: Emoji detection and conversion
@@ -432,26 +497,33 @@ YouTube Video URL
 
 ### Frontend
 - **React 19**: UI framework
-- **React Router**: Navigation
+- **Vite 7**: Build tool and dev server
+- **React Router 7**: Navigation
 - **Axios**: HTTP client
 - **jwt-decode**: JWT token handling
-- **Recharts**: Data visualization
+- **Recharts 3**: Data visualization
 - **Bootstrap 5**: Styling
 - **Material Dashboard**: UI theme
+- **Vitest**: Testing framework
 
 ## Sentiment Models
 
 | Model | Speed | Accuracy | GPU | Best For |
 |-------|-------|----------|-----|----------|
-| LogReg (TF-IDF) | Fast | Medium-High | No | YouTube comments (trained) |
-| Linear SVM (TF-IDF) | Fast | High | No | YouTube comments (trained) |
-| TF-IDF | Fast | Medium | No | Baseline/legacy |
-| Hybrid-DL | Slow (CPU) | High | Optional | Research model |
-| Ensemble (CI) | Medium | High | Optional | Thesis-grade experiments |
+| TF-IDF (Naive Bayes) | Fastest | Medium | No | Quick baseline |
+| LogReg (TF-IDF) | Fast | Medium-High | No | YouTube comments (default) |
+| Linear SVM (TF-IDF) | Fast | High | No | Highest classical accuracy |
+| Ensemble | Medium | High | No | Combined classical models |
+| Meta-Learner | Medium | High | No | Learned model combination |
+| Hybrid-DL | Slow | High | Optional | CNN-BiLSTM-Attention research model |
+| BERT/Transformer | Slowest | Highest | Recommended | Best accuracy (requires transformers) |
 
-Hybrid-DL requires `torch` in the backend environment.
+**Requirements:**
+- Classical models (TF-IDF, LogReg, SVM, Ensemble, Meta-Learner): No additional dependencies
+- Hybrid-DL: Requires `torch`
+- BERT/Transformer: Requires `torch` and `transformers`
 
-Recommendation: Use LogReg or Linear SVM for YouTube sentiment analysis.
+Recommendation: Use LogReg or Linear SVM for production; BERT for best accuracy.
 
 ## Use Cases
 
@@ -568,10 +640,10 @@ Contributions are welcome! Here's how you can help:
 
 ### Getting Started
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/<your-username>/Reddit-Sentiment-Analysis.git`
+2. Clone your fork: `git clone https://github.com/<your-username>/Youtube_sentiment_analysis.git`
 3. Create a feature branch: `git checkout -b feature/AmazingFeature`
 4. Make your changes
-5. Run tests: `python test_youtube.py`
+5. Run tests: `python test_youtube.py` (backend) and `npm test` (frontend)
 6. Commit your changes: `git commit -m 'Add AmazingFeature'`
 7. Push to the branch: `git push origin feature/AmazingFeature`
 8. Open a Pull Request
@@ -615,18 +687,26 @@ This project is licensed under the MIT License. See the LICENSE file for details
 ## Roadmap
 - [x] YouTube sentiment analysis
 - [x] LogReg sentiment engine
+- [x] SVM and TF-IDF engines
+- [x] Ensemble and Meta-Learner engines
+- [x] Hybrid-DL (CNN-BiLSTM-Attention) engine
+- [x] BERT/Transformer engine
 - [x] Spam detection and language filtering
 - [x] Like-weighted sentiment
 - [x] React dashboard with Material Design
 - [x] JWT authentication
 - [x] User analysis history
+- [x] Aspect-based sentiment analysis
+- [x] Confidence intervals with bootstrap
+- [x] Sentiment timeline visualization
+- [x] Research tools (LIME, SHAP, ablation)
+- [x] Vite build system for frontend
 - [ ] Word cloud visualization endpoint
 - [ ] Video transcript analysis
 - [ ] Multi-language support
 - [ ] Real-time monitoring dashboard
 - [ ] Export to CSV/Excel
 - [ ] Channel-level analytics
-- [ ] Sentiment timeline visualization
 - [ ] Comment thread analysis
 
 ## Database Models
@@ -696,7 +776,7 @@ pipenv install  # or pip install -r requirements.txt
 Check `backend/core/settings.py` and ensure:
 ```python
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    "http://localhost:5173",  # Vite default port
 ]
 ```
 
@@ -710,8 +790,8 @@ python manage.py migrate
 Check that:
 1. Backend is running on http://localhost:8000
 2. Frontend `axios.js` points to correct API URL
-3. CORS is configured correctly
+3. CORS is configured correctly for http://localhost:5173
 
-Built with Django REST Framework, React, and trainable sentiment models.
+---
 
-**Pure YouTube sentiment analysis** - no Reddit or Twitter ingestion.
+Built with Django REST Framework, React 19, Vite, and a modular sentiment engine architecture supporting classical ML, ensemble methods, and deep learning models.

@@ -1,0 +1,261 @@
+{
+  "config": {
+    "name": "thesis_demo",
+    "description": "Complete thesis experiment demonstration",
+    "experiment_type": "full_benchmark",
+    "model": {
+      "use_logreg": true,
+      "use_svm": true,
+      "use_tfidf": true,
+      "use_bert": false,
+      "use_hybrid_nn": false,
+      "use_fuzzy": true,
+      "fuzzy_defuzz_method": "centroid",
+      "fuzzy_mf_type": "gaussian",
+      "ensemble_method": "weighted_average",
+      "optimize_weights": true
+    },
+    "optimization": {
+      "optimizer_type": "pso",
+      "population_size": 15,
+      "max_iterations": 20,
+      "c1": 2.0,
+      "c2": 2.0,
+      "w_start": 0.9,
+      "w_end": 0.4,
+      "use_adaptive": true,
+      "seed": 42,
+      "n_runs": 5
+    },
+    "evaluation": {
+      "datasets": [
+        "synthetic"
+      ],
+      "use_sentiment140": false,
+      "use_imdb": false,
+      "use_amazon": false,
+      "use_sst": false,
+      "max_samples_per_dataset": 200,
+      "run_cross_domain": true,
+      "primary_metric": "f1_macro"
+    },
+    "output_dir": "./results",
+    "random_seed": 42
+  },
+  "timestamp": "2026-01-26T07:00:10.329582",
+  "dataset_results": {
+    "synthetic": {
+      "dataset_name": "synthetic",
+      "model_results": {
+        "logreg": {
+          "model_name": "logreg",
+          "accuracy": 1.0,
+          "f1_macro": 0.9999999999338889,
+          "f1_weighted": 0.9999999999399999,
+          "precision_macro": 0.9999999999838889,
+          "recall_macro": 0.9999999999838889,
+          "per_class_f1": {
+            "Negative": 0.9999999999433333,
+            "Neutral": 0.9999999999166667,
+            "Positive": 0.9999999999416667
+          },
+          "confusion_matrix": [
+            [
+              15,
+              0,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ],
+            [
+              0,
+              0,
+              12
+            ]
+          ],
+          "inference_time_ms": 0.0032345453898111978,
+          "n_samples": 30
+        },
+        "svm": {
+          "model_name": "svm",
+          "accuracy": 1.0,
+          "f1_macro": 0.9999999999338889,
+          "f1_weighted": 0.9999999999399999,
+          "precision_macro": 0.9999999999838889,
+          "recall_macro": 0.9999999999838889,
+          "per_class_f1": {
+            "Negative": 0.9999999999433333,
+            "Neutral": 0.9999999999166667,
+            "Positive": 0.9999999999416667
+          },
+          "confusion_matrix": [
+            [
+              15,
+              0,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ],
+            [
+              0,
+              0,
+              12
+            ]
+          ],
+          "inference_time_ms": 0.002400080362955729,
+          "n_samples": 30
+        },
+        "tfidf": {
+          "model_name": "tfidf",
+          "accuracy": 1.0,
+          "f1_macro": 0.9999999999338889,
+          "f1_weighted": 0.9999999999399999,
+          "precision_macro": 0.9999999999838889,
+          "recall_macro": 0.9999999999838889,
+          "per_class_f1": {
+            "Negative": 0.9999999999433333,
+            "Neutral": 0.9999999999166667,
+            "Positive": 0.9999999999416667
+          },
+          "confusion_matrix": [
+            [
+              15,
+              0,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ],
+            [
+              0,
+              0,
+              12
+            ]
+          ],
+          "inference_time_ms": 0.002272923787434896,
+          "n_samples": 30
+        },
+        "fuzzy": {
+          "model_name": "fuzzy",
+          "accuracy": 0.1,
+          "f1_macro": 0.06060606060018366,
+          "f1_weighted": 0.018181818180055098,
+          "precision_macro": 0.03333333333322223,
+          "recall_macro": 0.3333333333222222,
+          "per_class_f1": {
+            "Negative": 0.0,
+            "Neutral": 0.18181818180055098,
+            "Positive": 0.0
+          },
+          "confusion_matrix": [
+            [
+              0,
+              15,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ],
+            [
+              0,
+              12,
+              0
+            ]
+          ],
+          "inference_time_ms": 0.0010093053181966145,
+          "n_samples": 30
+        }
+      },
+      "best_model": "logreg",
+      "best_score": 0.9999999999338889
+    }
+  },
+  "cross_domain_results": {},
+  "optimization_results": {
+    "pso": {
+      "algorithm": "AdaptivePSO",
+      "best_weights": [
+        0.14265459155200516,
+        0.3563444109799654,
+        0.27522603354276165,
+        0.22577496392526772
+      ],
+      "best_fitness": 1.0,
+      "convergence_history": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "n_iterations": 20,
+      "n_evaluations": 315,
+      "runtime_seconds": 0.03125500679016113
+    }
+  },
+  "ensemble_weights": [
+    0.14265459155200516,
+    0.3563444109799654,
+    0.27522603354276165,
+    0.22577496392526772
+  ],
+  "ensemble_accuracy": 1.0,
+  "statistical_tests": {
+    "summary": {
+      "logreg": {
+        "mean": 0.9999999999338889,
+        "std": 0.0,
+        "min": 0.9999999999338889,
+        "max": 0.9999999999338889,
+        "n": 1
+      },
+      "svm": {
+        "mean": 0.9999999999338889,
+        "std": 0.0,
+        "min": 0.9999999999338889,
+        "max": 0.9999999999338889,
+        "n": 1
+      },
+      "tfidf": {
+        "mean": 0.9999999999338889,
+        "std": 0.0,
+        "min": 0.9999999999338889,
+        "max": 0.9999999999338889,
+        "n": 1
+      },
+      "fuzzy": {
+        "mean": 0.06060606060018366,
+        "std": 0.0,
+        "min": 0.06060606060018366,
+        "max": 0.06060606060018366,
+        "n": 1
+      }
+    }
+  },
+  "total_runtime_seconds": 0.2275841236114502
+}
