@@ -1,0 +1,91 @@
+% Auto-generated thesis tables
+% Generated: 2026-01-26T07:00:10.561812
+
+% === main_results ===
+\begin{table}[htbp]
+\centering
+\caption{Sentiment Analysis Results on Benchmark Datasets}
+\label{tab:main_results}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Model} & \textbf{Dataset} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Time (ms)} \\
+\midrule
+logreg & synthetic & 1.0000 & 1.0000 & 1.0000 & 1.0000 & 0.00 \\
+svm &  & 1.0000 & 1.0000 & 1.0000 & 1.0000 & 0.00 \\
+tfidf &  & 1.0000 & 1.0000 & 1.0000 & 1.0000 & 0.00 \\
+fuzzy &  & 0.1000 & 0.0333 & 0.3333 & 0.0606 & 0.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% === model_comparison ===
+\begin{table}[htbp]
+\centering
+\caption{Model Performance Comparison}
+\label{tab:model_comparison}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Accuracy} & \textbf{F1 (Macro)} & \textbf{F1 (Weighted)} & \textbf{Time (ms)} \\
+\midrule
+logreg & 1.0000 & 1.0000 & 1.0000 & 0.00 \\
+svm & 1.0000 & 1.0000 & 1.0000 & 0.00 \\
+tfidf & 1.0000 & 1.0000 & 1.0000 & 0.00 \\
+fuzzy & 0.1000 & 0.0606 & 0.0182 & 0.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% === ensemble_weights ===
+\begin{table}[htbp]
+\centering
+\caption{PSO-Optimized Ensemble Weights}
+\label{tab:ensemble_weights}
+\begin{tabular}{lc}
+\toprule
+\textbf{Model} & \textbf{Weight} \\
+\midrule
+logreg & 0.1427 \\
+svm & 0.3563 \\
+tfidf & 0.2752 \\
+fuzzy & 0.2258 \\
+\midrule
+\textbf{Ensemble Accuracy} & \textbf{1.0000} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% === per_class_f1 ===
+\begin{table}[htbp]
+\centering
+\caption{Per-Class F1 Scores}
+\label{tab:per_class_f1}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Model} & \textbf{Negative} & \textbf{Neutral} & \textbf{Positive} \\
+\midrule
+logreg & 1.0000 & 1.0000 & 1.0000 \\
+svm & 1.0000 & 1.0000 & 1.0000 \\
+tfidf & 1.0000 & 1.0000 & 1.0000 \\
+fuzzy & 0.0000 & 0.1818 & 0.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% === pso_stats ===
+\begin{table}[htbp]
+\centering
+\caption{PSO Optimization Statistics}
+\label{tab:pso_stats}
+\begin{tabular}{ll}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+Algorithm & AdaptivePSO \\
+Iterations & 20 \\
+Evaluations & 315 \\
+Best Fitness & 1.0000 \\
+Runtime & 0.03s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
