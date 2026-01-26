@@ -114,12 +114,6 @@ class EvaluationConfig:
         "synthetic"  # Start with synthetic for testing
     ])
 
-    # Standard benchmarks (require download)
-    use_sentiment140: bool = False
-    use_imdb: bool = False
-    use_amazon: bool = False
-    use_sst: bool = False
-
     # Evaluation settings
     max_samples_per_dataset: int = 1000  # Limit for faster testing
     test_split_ratio: float = 0.2
@@ -139,16 +133,7 @@ class EvaluationConfig:
 
     def get_active_datasets(self) -> List[str]:
         """Get list of active dataset names."""
-        datasets = list(self.datasets)
-        if self.use_sentiment140:
-            datasets.append("sentiment140")
-        if self.use_imdb:
-            datasets.append("imdb")
-        if self.use_amazon:
-            datasets.append("amazon")
-        if self.use_sst:
-            datasets.append("sst")
-        return datasets
+        return list(self.datasets)
 
 
 @dataclass
@@ -227,10 +212,6 @@ class ExperimentConfig:
             },
             'evaluation': {
                 'datasets': self.evaluation.datasets,
-                'use_sentiment140': self.evaluation.use_sentiment140,
-                'use_imdb': self.evaluation.use_imdb,
-                'use_amazon': self.evaluation.use_amazon,
-                'use_sst': self.evaluation.use_sst,
                 'max_samples_per_dataset': self.evaluation.max_samples_per_dataset,
                 'run_cross_domain': self.evaluation.run_cross_domain,
                 'primary_metric': self.evaluation.primary_metric,
@@ -304,8 +285,6 @@ class ExperimentConfig:
             e = data['evaluation']
             config.evaluation = EvaluationConfig(
                 datasets=e.get('datasets', ['synthetic']),
-                use_sentiment140=e.get('use_sentiment140', False),
-                use_imdb=e.get('use_imdb', False),
                 max_samples_per_dataset=e.get('max_samples_per_dataset', 1000),
                 run_cross_domain=e.get('run_cross_domain', True),
                 primary_metric=e.get('primary_metric', 'f1_macro'),
@@ -342,10 +321,6 @@ def get_full_benchmark_config() -> ExperimentConfig:
         description="Complete thesis benchmark on all datasets",
         experiment_type=ExperimentType.FULL_BENCHMARK,
     )
-    config.evaluation.use_sentiment140 = True
-    config.evaluation.use_imdb = True
-    config.evaluation.use_amazon = True
-    config.evaluation.use_sst = True
     config.evaluation.max_samples_per_dataset = 5000
     config.optimization.n_runs = 10
     config.optimization.max_iterations = 100
@@ -360,8 +335,6 @@ def get_cross_domain_config() -> ExperimentConfig:
         experiment_type=ExperimentType.CROSS_DOMAIN,
     )
     config.evaluation.run_cross_domain = True
-    config.evaluation.use_sentiment140 = True
-    config.evaluation.use_imdb = True
     config.evaluation.max_samples_per_dataset = 2000
     return config
 

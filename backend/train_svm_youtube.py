@@ -8,7 +8,6 @@ import sklearn
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, classification_report, f1_score
-from sklearn.model_selection import train_test_split
 from sklearn.svm import LinearSVC
 
 
@@ -68,14 +67,11 @@ def load_dataset(
     return df
 
 
-def train_model(df, args):
-    train_texts, test_texts, train_labels, test_labels = train_test_split(
-        df["text"],
-        df["label"],
-        test_size=args.test_size,
-        random_state=args.random_seed,
-        stratify=df["label"],
-    )
+def train_model(train_df, test_df, args):
+    train_texts = train_df["text"]
+    train_labels = train_df["label"]
+    test_texts = test_df["text"]
+    test_labels = test_df["label"]
 
     vectorizer = TfidfVectorizer(
         lowercase=not args.no_lowercase,
@@ -148,7 +144,6 @@ def main():
         help="Directory to store model.sav and tfidfVectorizer.pickle",
     )
     parser.add_argument("--max_per_class", type=int, default=None)
-    parser.add_argument("--test_size", type=float, default=0.2)
     parser.add_argument("--calibration_size", type=float, default=0.1)
     parser.add_argument("--calibration_folds", type=int, default=3)
     parser.add_argument("--calibration_method", default="sigmoid")
@@ -162,8 +157,9 @@ def main():
     parser.add_argument("--class_weight", default="none")
     parser.add_argument("--no_lowercase", action="store_true")
     parser.add_argument("--strip_accents", action="store_true")
-    parser.add_argument("--text_column", default="CommentText")
-    parser.add_argument("--label_column", default="Sentiment")
+    parser.add_argument("--text_column", default="text")
+    parser.add_argument("--label_column", default="label")
+    parser.add_argument("--test_data", default=None, help="Path to test.csv")
 
     args = parser.parse_args()
 
@@ -171,7 +167,7 @@ def main():
     data_path = (
         Path(args.data)
         if args.data
-        else base_dir / "data" / "raw" / "youtube_comments_cleaned.csv"
+        else base_dir / "data" / "train.csv"
     )
     output_dir = (
         Path(args.output_dir)
@@ -185,19 +181,35 @@ def main():
     if args.calibration_size < 0 or args.calibration_size >= 1:
         raise ValueError("calibration_size must be in [0, 1)")
 
-    df = load_dataset(
+    # Load train data
+    train_df = load_dataset(
         data_path,
         text_column=args.text_column,
         label_column=args.label_column,
         max_per_class=args.max_per_class,
         random_seed=args.random_seed,
     )
-    model, vectorizer, metrics = train_model(df, args)
+
+    # Load test data
+    test_path = Path(args.test_data) if args.test_data else base_dir / "data" / "test.csv"
+    if not test_path.exists():
+        raise FileNotFoundError(f"Test dataset not found: {test_path}")
+    test_df = load_dataset(
+        test_path,
+        text_column=args.text_column,
+        label_column=args.label_column,
+        max_per_class=None,
+        random_seed=args.random_seed,
+    )
+
+    model, vectorizer, metrics = train_model(train_df, test_df, args)
 
     metadata = {
-        "dataset": str(data_path),
-        "total_samples": len(df),
-        "label_distribution": df["label"].value_counts().to_dict(),
+        "train_dataset": str(data_path),
+        "test_dataset": str(test_path),
+        "train_samples": len(train_df),
+        "test_samples": len(test_df),
+        "label_distribution": train_df["label"].value_counts().to_dict(),
         "max_per_class": args.max_per_class,
         "text_column": args.text_column,
         "label_column": args.label_column,

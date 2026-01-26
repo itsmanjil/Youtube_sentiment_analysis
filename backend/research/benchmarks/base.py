@@ -337,8 +337,7 @@ class DatasetManager:
     Example
     -------
     >>> manager = DatasetManager()
-    >>> manager.register('sentiment140', Sentiment140Dataset())
-    >>> manager.register('imdb', IMDBDataset())
+    >>> manager.register('youtube', YouTubeDataset())
     >>>
     >>> for name, dataset in manager.datasets():
     ...     print(f"{name}: {len(dataset.train)} samples")

@@ -250,36 +250,6 @@ class ThesisExperiment:
                     n_samples=self.config.evaluation.max_samples_per_dataset
                 )
 
-        # Load standard benchmarks if configured
-        if self.config.evaluation.use_sentiment140:
-            try:
-                from research.benchmarks.datasets import Sentiment140Dataset
-                ds = Sentiment140Dataset(
-                    max_samples=self.config.evaluation.max_samples_per_dataset
-                )
-                ds.load()
-                self._datasets['sentiment140'] = ds
-            except Exception as e:
-                self.logger.warning(f"Could not load Sentiment140: {e}")
-
-        if self.config.evaluation.use_imdb:
-            try:
-                from research.benchmarks.datasets import IMDBDataset
-                ds = IMDBDataset()
-                ds.load()
-                self._datasets['imdb'] = ds
-            except Exception as e:
-                self.logger.warning(f"Could not load IMDB: {e}")
-
-        if self.config.evaluation.use_sst:
-            try:
-                from research.benchmarks.datasets import SSTDataset
-                ds = SSTDataset()
-                ds.load()
-                self._datasets['sst'] = ds
-            except Exception as e:
-                self.logger.warning(f"Could not load SST: {e}")
-
         self.logger.info(f"Loaded {len(self._datasets)} datasets")
 
     def _create_synthetic_dataset(self, n_samples: int = 1000) -> Any:

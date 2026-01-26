@@ -31,10 +31,6 @@
       "datasets": [
         "synthetic"
       ],
-      "use_sentiment140": false,
-      "use_imdb": false,
-      "use_amazon": false,
-      "use_sst": false,
       "max_samples_per_dataset": 200,
       "run_cross_domain": true,
       "primary_metric": "f1_macro"
