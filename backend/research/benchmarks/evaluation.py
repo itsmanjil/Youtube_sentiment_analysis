@@ -194,8 +194,7 @@ class BenchmarkEvaluator:
     Example
     -------
     >>> evaluator = BenchmarkEvaluator()
-    >>> evaluator.register_dataset('imdb', IMDBDataset())
-    >>> evaluator.register_dataset('sst', SSTDataset())
+    >>> evaluator.register_dataset('youtube', YouTubeDataset())
     >>>
     >>> report = evaluator.evaluate(model, model_name='FuzzySentiment')
     >>> print(report.summary())
@@ -397,8 +396,7 @@ class CrossDomainEvaluator:
     Example
     -------
     >>> evaluator = CrossDomainEvaluator()
-    >>> evaluator.add_dataset('twitter', Sentiment140Dataset())
-    >>> evaluator.add_dataset('movies', IMDBDataset())
+    >>> evaluator.add_dataset('youtube', YouTubeDataset())
     >>>
     >>> report = evaluator.evaluate_cross_domain(
     ...     model_factory=lambda: FuzzySentimentClassifier(),
@@ -497,17 +495,4 @@ def create_standard_benchmark() -> BenchmarkEvaluator:
     BenchmarkEvaluator
         Pre-configured evaluator
     """
-    from .datasets import (
-        Sentiment140Dataset,
-        IMDBDataset,
-        AmazonReviewsDataset,
-        SSTDataset,
-    )
-
-    evaluator = BenchmarkEvaluator()
-    evaluator.register_dataset('sentiment140', Sentiment140Dataset(max_samples=10000))
-    evaluator.register_dataset('imdb', IMDBDataset())
-    evaluator.register_dataset('amazon', AmazonReviewsDataset(max_samples=10000))
-    evaluator.register_dataset('sst2', SSTDataset(version='sst2'))
-
-    return evaluator
+    return BenchmarkEvaluator()
