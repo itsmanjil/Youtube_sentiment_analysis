@@ -1,0 +1,3914 @@
+{
+  "results": [
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.667,
+        "macro_f1": 0.6726
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6658,
+        "macro_f1": 0.6714
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6658,
+        "macro_f1": 0.6714
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6658,
+        "macro_f1": 0.6714
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6658,
+        "macro_f1": 0.6714
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6658,
+        "macro_f1": 0.6714
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6658,
+        "macro_f1": 0.6714
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6658,
+        "macro_f1": 0.6714
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6658,
+        "macro_f1": 0.6714
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6656,
+        "macro_f1": 0.6713
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6656,
+        "macro_f1": 0.6713
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6656,
+        "macro_f1": 0.6713
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6656,
+        "macro_f1": 0.6713
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6654,
+        "macro_f1": 0.6712
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6654,
+        "macro_f1": 0.6712
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6654,
+        "macro_f1": 0.6712
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6654,
+        "macro_f1": 0.6712
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6711
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6711
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6711
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6711
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.665,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.665,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.665,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.665,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6652,
+        "macro_f1": 0.6709
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.665,
+        "macro_f1": 0.6707
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.665,
+        "macro_f1": 0.6707
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.665,
+        "macro_f1": 0.6707
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.665,
+        "macro_f1": 0.6707
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6648,
+        "macro_f1": 0.6704
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6648,
+        "macro_f1": 0.6704
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6648,
+        "macro_f1": 0.6704
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6648,
+        "macro_f1": 0.6704
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6646,
+        "macro_f1": 0.6703
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6646,
+        "macro_f1": 0.6703
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6646,
+        "macro_f1": 0.6703
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6646,
+        "macro_f1": 0.6703
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6699
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6699
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6699
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6699
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6699
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6699
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6699
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6699
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6698
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6698
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6698
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6698
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6698
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6698
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6698
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.664,
+        "macro_f1": 0.6698
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6638,
+        "macro_f1": 0.6696
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6638,
+        "macro_f1": 0.6696
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6638,
+        "macro_f1": 0.6696
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6638,
+        "macro_f1": 0.6696
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6638,
+        "macro_f1": 0.6696
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6638,
+        "macro_f1": 0.6696
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6638,
+        "macro_f1": 0.6696
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6638,
+        "macro_f1": 0.6696
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6634,
+        "macro_f1": 0.6695
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6634,
+        "macro_f1": 0.6695
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6634,
+        "macro_f1": 0.6695
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6634,
+        "macro_f1": 0.6695
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6628,
+        "macro_f1": 0.6689
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6628,
+        "macro_f1": 0.6689
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6628,
+        "macro_f1": 0.6689
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6628,
+        "macro_f1": 0.6689
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6624,
+        "macro_f1": 0.6684
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6624,
+        "macro_f1": 0.6684
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6624,
+        "macro_f1": 0.6684
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6624,
+        "macro_f1": 0.6684
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6622,
+        "macro_f1": 0.6682
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6622,
+        "macro_f1": 0.6682
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6622,
+        "macro_f1": 0.6682
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6622,
+        "macro_f1": 0.6682
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.662,
+        "macro_f1": 0.6681
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.662,
+        "macro_f1": 0.6681
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.662,
+        "macro_f1": 0.6681
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.662,
+        "macro_f1": 0.6681
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.661,
+        "macro_f1": 0.6671
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.661,
+        "macro_f1": 0.6671
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.661,
+        "macro_f1": 0.6671
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.661,
+        "macro_f1": 0.6671
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6604,
+        "macro_f1": 0.6664
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6604,
+        "macro_f1": 0.6664
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6604,
+        "macro_f1": 0.6664
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6604,
+        "macro_f1": 0.6664
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6592,
+        "macro_f1": 0.6653
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6592,
+        "macro_f1": 0.6653
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6592,
+        "macro_f1": 0.6653
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6592,
+        "macro_f1": 0.6653
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6574,
+        "macro_f1": 0.6635
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6574,
+        "macro_f1": 0.6635
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6574,
+        "macro_f1": 0.6635
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "trapezoidal",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6574,
+        "macro_f1": 0.6635
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6572,
+        "macro_f1": 0.6633
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6572,
+        "macro_f1": 0.6633
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6572,
+        "macro_f1": 0.6633
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6572,
+        "macro_f1": 0.6633
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6562,
+        "macro_f1": 0.6625
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6562,
+        "macro_f1": 0.6625
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6562,
+        "macro_f1": 0.6625
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6562,
+        "macro_f1": 0.6625
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6534,
+        "macro_f1": 0.6595
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6534,
+        "macro_f1": 0.6595
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6534,
+        "macro_f1": 0.6595
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6534,
+        "macro_f1": 0.6595
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6516,
+        "macro_f1": 0.6579
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6516,
+        "macro_f1": 0.6579
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6516,
+        "macro_f1": 0.6579
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6516,
+        "macro_f1": 0.6579
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6494,
+        "macro_f1": 0.655
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6494,
+        "macro_f1": 0.655
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6494,
+        "macro_f1": 0.655
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6494,
+        "macro_f1": 0.655
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6494,
+        "macro_f1": 0.655
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6494,
+        "macro_f1": 0.655
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6494,
+        "macro_f1": 0.655
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6494,
+        "macro_f1": 0.655
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.646,
+        "macro_f1": 0.6519
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.646,
+        "macro_f1": 0.6519
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.646,
+        "macro_f1": 0.6519
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.646,
+        "macro_f1": 0.6519
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.646,
+        "macro_f1": 0.6517
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.646,
+        "macro_f1": 0.6517
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.646,
+        "macro_f1": 0.6517
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.646,
+        "macro_f1": 0.6517
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6448,
+        "macro_f1": 0.6505
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6448,
+        "macro_f1": 0.6505
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6448,
+        "macro_f1": 0.6505
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6448,
+        "macro_f1": 0.6505
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.643,
+        "macro_f1": 0.6484
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.643,
+        "macro_f1": 0.6484
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.643,
+        "macro_f1": 0.6484
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.643,
+        "macro_f1": 0.6484
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6388,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6388,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6388,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "triangular",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6388,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.64,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.64,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.64,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.64,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.64,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.64,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.64,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.64,
+        "macro_f1": 0.6443
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6362,
+        "macro_f1": 0.6414
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6362,
+        "macro_f1": 0.6414
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6362,
+        "macro_f1": 0.6414
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "mom",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6362,
+        "macro_f1": 0.6414
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.635,
+        "macro_f1": 0.6392
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.635,
+        "macro_f1": 0.6392
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.635,
+        "macro_f1": 0.6392
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.635,
+        "macro_f1": 0.6392
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6308,
+        "macro_f1": 0.6346
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6308,
+        "macro_f1": 0.6346
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6308,
+        "macro_f1": 0.6346
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6308,
+        "macro_f1": 0.6346
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6296,
+        "macro_f1": 0.6334
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6296,
+        "macro_f1": 0.6334
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6296,
+        "macro_f1": 0.6334
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6296,
+        "macro_f1": 0.6334
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.627,
+        "macro_f1": 0.6298
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.627,
+        "macro_f1": 0.6298
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.627,
+        "macro_f1": 0.6298
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.627,
+        "macro_f1": 0.6298
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.627,
+        "macro_f1": 0.6298
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.627,
+        "macro_f1": 0.6298
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.627,
+        "macro_f1": 0.6298
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.627,
+        "macro_f1": 0.6298
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6198,
+        "macro_f1": 0.622
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6198,
+        "macro_f1": 0.622
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6198,
+        "macro_f1": 0.622
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6198,
+        "macro_f1": 0.622
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6182,
+        "macro_f1": 0.6205
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6182,
+        "macro_f1": 0.6205
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6182,
+        "macro_f1": 0.6205
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "bisector",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6182,
+        "macro_f1": 0.6205
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6176,
+        "macro_f1": 0.6197
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6176,
+        "macro_f1": 0.6197
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6176,
+        "macro_f1": 0.6197
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6176,
+        "macro_f1": 0.6197
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6084,
+        "macro_f1": 0.6084
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6084,
+        "macro_f1": 0.6084
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6084,
+        "macro_f1": 0.6084
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "min",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6084,
+        "macro_f1": 0.6084
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6022,
+        "macro_f1": 0.6009
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "max",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6022,
+        "macro_f1": 0.6009
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.0,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6022,
+        "macro_f1": 0.6009
+      }
+    },
+    {
+      "config": {
+        "base_models": [
+          "logreg",
+          "svm",
+          "tfidf"
+        ],
+        "mf_type": "gaussian",
+        "defuzz_method": "centroid",
+        "t_norm": "product",
+        "t_conorm": "prob_sum",
+        "alpha_cut": 0.1,
+        "resolution": 100
+      },
+      "metrics": {
+        "accuracy": 0.6022,
+        "macro_f1": 0.6009
+      }
+    }
+  ],
+  "best": {
+    "config": {
+      "base_models": [
+        "logreg"
+      ],
+      "mf_type": "triangular",
+      "defuzz_method": "mom",
+      "t_norm": "min",
+      "t_conorm": "max",
+      "alpha_cut": 0.0,
+      "resolution": 100
+    },
+    "metrics": {
+      "accuracy": 0.667,
+      "macro_f1": 0.6726
+    }
+  },
+  "meta": {
+    "use_full": true,
+    "limit": 5000,
+    "confidence_threshold": 0.6
+  }
+}

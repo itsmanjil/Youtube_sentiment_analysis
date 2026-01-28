@@ -234,6 +234,14 @@ def analyze_youtube_video(request):
     ensemble_weights_input = request.data.get("ensemble_weights")
     meta_learner_path = request.data.get("meta_learner_path")
     meta_learner_models = _coerce_model_list(request.data.get("meta_learner_models"))
+    fuzzy_models = _coerce_model_list(request.data.get("fuzzy_models"))
+    fuzzy_mf_type = request.data.get("fuzzy_mf_type")
+    fuzzy_defuzz_method = request.data.get("fuzzy_defuzz_method")
+    fuzzy_t_norm = request.data.get("fuzzy_t_norm")
+    fuzzy_t_conorm = request.data.get("fuzzy_t_conorm")
+    fuzzy_alpha_cut = request.data.get("fuzzy_alpha_cut")
+    fuzzy_resolution = request.data.get("fuzzy_resolution")
+    model_comparison = request.data.get("model_comparison")
 
     if ensemble_models is None:
         ensemble_models = ["logreg", "svm", "tfidf"]
@@ -490,6 +498,29 @@ def analyze_youtube_video(request):
                 "meta_learner_type": getattr(engine, "meta_learner_type", None),
                 "model_errors": getattr(engine, "model_errors", {}),
             }
+        if any(
+            value is not None
+            for value in (
+                fuzzy_models,
+                fuzzy_mf_type,
+                fuzzy_defuzz_method,
+                fuzzy_t_norm,
+                fuzzy_t_conorm,
+                fuzzy_alpha_cut,
+                fuzzy_resolution,
+            )
+        ):
+            analysis_meta["fuzzy"] = {
+                "base_models": fuzzy_models,
+                "mf_type": fuzzy_mf_type,
+                "defuzz_method": fuzzy_defuzz_method,
+                "t_norm": fuzzy_t_norm,
+                "t_conorm": fuzzy_t_conorm,
+                "alpha_cut": fuzzy_alpha_cut,
+                "resolution": fuzzy_resolution,
+            }
+        if isinstance(model_comparison, list):
+            analysis_meta["model_comparison"] = model_comparison
 
         # Step 8: Save analysis
         analysis = YouTubeAnalysis.objects.create(
