@@ -106,6 +106,11 @@ def main():
     parser.add_argument("--test-size", type=float, default=0.2)
     parser.add_argument("--random-seed", type=int, default=42)
     parser.add_argument(
+        "--use-full",
+        action="store_true",
+        help="Use the full dataset without re-splitting.",
+    )
+    parser.add_argument(
         "--models",
         default="logreg,svm,tfidf",
         help="Comma-separated model list.",
@@ -116,12 +121,15 @@ def main():
     args = parser.parse_args()
 
     df = load_dataset(args.data)
-    _, test_df = train_test_split(
-        df,
-        test_size=args.test_size,
-        random_state=args.random_seed,
-        stratify=df["label"],
-    )
+    if args.use_full:
+        test_df = df
+    else:
+        _, test_df = train_test_split(
+            df,
+            test_size=args.test_size,
+            random_state=args.random_seed,
+            stratify=df["label"],
+        )
 
     models = [
         name.strip().lower() for name in args.models.split(",") if name.strip()

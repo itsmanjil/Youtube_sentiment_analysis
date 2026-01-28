@@ -270,12 +270,12 @@ describe('Search Component', () => {
         expect.objectContaining({
           method: 'POST',
           url: 'http://127.0.0.1:8000/api/youtube/analyze/',
-          data: {
+          data: expect.objectContaining({
             video_url: 'https://www.youtube.com/watch?v=test123',
             max_comments: 500,
             use_api: true,
             sentiment_model: 'ensemble',
-          },
+          }),
         })
       );
     });

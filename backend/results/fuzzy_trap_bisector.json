@@ -1,0 +1,50 @@
+{
+  "fuzzy_ensemble": {
+    "accuracy": 0.6605,
+    "macro_f1": 0.6655,
+    "report": {
+      "Negative": {
+        "precision": 0.7217123814406562,
+        "recall": 0.6082616773970531,
+        "f1-score": 0.660148189833052,
+        "support": 69429.0
+      },
+      "Neutral": {
+        "precision": 0.525588476402389,
+        "recall": 0.7260961009545381,
+        "f1-score": 0.6097826086956522,
+        "support": 67991.0
+      },
+      "Positive": {
+        "precision": 0.826091707032815,
+        "recall": 0.6486316451714376,
+        "f1-score": 0.7266843943228782,
+        "support": 69938.0
+      },
+      "accuracy": 0.6605146654578072,
+      "macro avg": {
+        "precision": 0.69113085495862,
+        "recall": 0.6609964745076763,
+        "f1-score": 0.6655383976171941,
+        "support": 207358.0
+      },
+      "weighted avg": {
+        "precision": 0.6926101565243645,
+        "recall": 0.6605146654578072,
+        "f1-score": 0.6660751511390856,
+        "support": 207358.0
+      }
+    }
+  },
+  "config": {
+    "base_models": [
+      "logreg",
+      "svm"
+    ],
+    "mf_type": "trapezoidal",
+    "defuzz_method": "bisector",
+    "confidence_threshold": 0.6,
+    "use_full": true,
+    "limit": null
+  }
+}

@@ -25,7 +25,16 @@ def load_dataset(csv_path):
     return df
 
 
-def build_fuzzy_engine(base_models, mf_type, defuzz_method, confidence_threshold):
+def build_fuzzy_engine(
+    base_models,
+    mf_type,
+    defuzz_method,
+    confidence_threshold,
+    t_norm,
+    t_conorm,
+    alpha_cut,
+    resolution,
+):
     base_engines = {}
     for model in base_models:
         base_engines[model] = get_sentiment_engine(model)
@@ -34,6 +43,10 @@ def build_fuzzy_engine(base_models, mf_type, defuzz_method, confidence_threshold
         base_engines=base_engines,
         mf_type=mf_type,
         defuzz_method=defuzz_method,
+        t_norm=t_norm,
+        t_conorm=t_conorm,
+        alpha_cut=alpha_cut,
+        resolution=resolution,
         confidence_threshold=confidence_threshold,
     )
 
@@ -71,6 +84,10 @@ def main():
     )
     parser.add_argument("--mf-type", default="gaussian")
     parser.add_argument("--defuzz-method", default="centroid")
+    parser.add_argument("--t-norm", default="min")
+    parser.add_argument("--t-conorm", default="max")
+    parser.add_argument("--alpha-cut", type=float, default=0.0)
+    parser.add_argument("--resolution", type=int, default=100)
     parser.add_argument("--confidence-threshold", type=float, default=0.6)
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--output", default=None, help="Optional JSON output path.")
@@ -102,6 +119,10 @@ def main():
         mf_type=args.mf_type,
         defuzz_method=args.defuzz_method,
         confidence_threshold=args.confidence_threshold,
+        t_norm=args.t_norm,
+        t_conorm=args.t_conorm,
+        alpha_cut=args.alpha_cut,
+        resolution=args.resolution,
     )
 
     results = {
@@ -110,6 +131,10 @@ def main():
             "base_models": base_models,
             "mf_type": args.mf_type,
             "defuzz_method": args.defuzz_method,
+            "t_norm": args.t_norm,
+            "t_conorm": args.t_conorm,
+            "alpha_cut": args.alpha_cut,
+            "resolution": args.resolution,
             "confidence_threshold": args.confidence_threshold,
             "use_full": args.use_full,
             "limit": args.limit,

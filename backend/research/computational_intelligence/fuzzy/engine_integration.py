@@ -287,6 +287,10 @@ class FuzzySentimentEngine:
         base_engines: Dict[str, Any],
         mf_type: str = 'gaussian',
         defuzz_method: str = 'centroid',
+        t_norm: str = 'min',
+        t_conorm: str = 'max',
+        alpha_cut: float = 0.0,
+        resolution: int = 100,
         confidence_threshold: float = 0.6,
         enable_logging: bool = False
     ):
@@ -298,6 +302,10 @@ class FuzzySentimentEngine:
         }
         self.mf_type = mf_type
         self.defuzz_method = defuzz_method
+        self.t_norm = t_norm
+        self.t_conorm = t_conorm
+        self.alpha_cut = alpha_cut
+        self.resolution = resolution
         self.confidence_threshold = confidence_threshold
         self.enable_logging = enable_logging
 
@@ -305,7 +313,11 @@ class FuzzySentimentEngine:
         self.classifier = FuzzySentimentClassifier(
             base_models=list(base_engines.keys()),
             mf_type=mf_type,
-            defuzz_method=defuzz_method
+            defuzz_method=defuzz_method,
+            t_norm=t_norm,
+            t_conorm=t_conorm,
+            alpha_cut=alpha_cut,
+            resolution=resolution,
         )
 
         # Performance tracking
@@ -472,6 +484,10 @@ class FuzzySentimentEngine:
             'base_models': list(self.base_engines.keys()),
             'mf_type': self.mf_type,
             'defuzz_method': self.defuzz_method,
+            't_norm': self.t_norm,
+            't_conorm': self.t_conorm,
+            'alpha_cut': self.alpha_cut,
+            'resolution': self.resolution,
             'confidence_threshold': self.confidence_threshold,
             'num_rules': len(self.classifier.fis.rules),
         }

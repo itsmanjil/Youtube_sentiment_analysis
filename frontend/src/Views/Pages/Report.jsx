@@ -20,6 +20,9 @@ export default function Report() {
   const sentimentTimeline = sentimentData?.sentimentTimeline || [];
   const ensembleModels = analysisMeta?.ensemble?.models || [];
   const ensembleWeights = analysisMeta?.ensemble?.weights || null;
+  const ensembleWeightsSource = analysisMeta?.ensemble?.weights_source || null;
+  const metaLearnerInfo = analysisMeta?.meta_learner || null;
+  const fuzzyInfo = analysisMeta?.fuzzy || null;
   const ensembleWeightSummary = ensembleWeights
     ? Object.entries(ensembleWeights)
         .map(([key, value]) => `${key}: ${value}`)
@@ -222,6 +225,80 @@ export default function Report() {
                         <td>{ensembleWeightSummary}</td>
                       </tr>
                     )}
+                    {ensembleWeightsSource && (
+                      <tr>
+                        <td>Ensemble Weights Source</td>
+                        <td>{ensembleWeightsSource}</td>
+                      </tr>
+                    )}
+                    {metaLearnerInfo && (
+                      <>
+                        {metaLearnerInfo.model_path && (
+                          <tr>
+                            <td>Meta-Learner Path</td>
+                            <td>{metaLearnerInfo.model_path}</td>
+                          </tr>
+                        )}
+                        {metaLearnerInfo.base_models && (
+                          <tr>
+                            <td>Meta-Learner Base Models</td>
+                            <td>{metaLearnerInfo.base_models.join(", ")}</td>
+                          </tr>
+                        )}
+                        {metaLearnerInfo.feature_type && (
+                          <tr>
+                            <td>Meta-Learner Feature Type</td>
+                            <td>{metaLearnerInfo.feature_type}</td>
+                          </tr>
+                        )}
+                        {metaLearnerInfo.meta_learner_type && (
+                          <tr>
+                            <td>Meta-Learner Type</td>
+                            <td>{metaLearnerInfo.meta_learner_type}</td>
+                          </tr>
+                        )}
+                      </>
+                    )}
+                    {fuzzyInfo && (
+                      <>
+                        {fuzzyInfo.base_models && (
+                          <tr>
+                            <td>Fuzzy Base Models</td>
+                            <td>{fuzzyInfo.base_models.join(", ")}</td>
+                          </tr>
+                        )}
+                        {fuzzyInfo.mf_type && (
+                          <tr>
+                            <td>Fuzzy MF Type</td>
+                            <td>{fuzzyInfo.mf_type}</td>
+                          </tr>
+                        )}
+                        {fuzzyInfo.defuzz_method && (
+                          <tr>
+                            <td>Defuzz Method</td>
+                            <td>{fuzzyInfo.defuzz_method}</td>
+                          </tr>
+                        )}
+                        {fuzzyInfo.t_norm && (
+                          <tr>
+                            <td>T-Norm</td>
+                            <td>{fuzzyInfo.t_norm}</td>
+                          </tr>
+                        )}
+                        {fuzzyInfo.t_conorm && (
+                          <tr>
+                            <td>T-Conorm</td>
+                            <td>{fuzzyInfo.t_conorm}</td>
+                          </tr>
+                        )}
+                        {fuzzyInfo.alpha_cut !== undefined && (
+                          <tr>
+                            <td>Alpha Cut</td>
+                            <td>{fuzzyInfo.alpha_cut}</td>
+                          </tr>
+                        )}
+                      </>
+                    )}
                     {analysisMeta?.bootstrap_samples !== undefined && (
                       <tr>
                         <td>Bootstrap Samples</td>
@@ -234,6 +311,29 @@ export default function Report() {
                         <td>{analysisMeta.random_seed}</td>
                       </tr>
                     )}
+                  </tbody>
+                </table>
+              </section>
+            )}
+            {Array.isArray(analysisMeta?.model_comparison) && analysisMeta.model_comparison.length > 0 && (
+              <section className="product-area mt-4">
+                <h6>Model Comparison (Research Mode)</h6>
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <td>Model</td>
+                      <td>Accuracy</td>
+                      <td>Macro F1</td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analysisMeta.model_comparison.map((row, index) => (
+                      <tr key={index}>
+                        <td>{row.name || row.model}</td>
+                        <td>{row.accuracy}</td>
+                        <td>{row.macro_f1}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </section>

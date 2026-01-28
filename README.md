@@ -204,7 +204,7 @@ pipenv install
 pipenv shell
 
 # Option B: Using pip and venv
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt  # If requirements.txt exists
 # OR install from Pipfile: pip install django djangorestframework django-cors-headers ...
@@ -216,19 +216,19 @@ cp .env.example .env
 #   - YOUTUBE_API_KEY (optional - get from Google Cloud Console)
 
 # Download NLTK data
-python -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('punkt')"
+python3 -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('punkt')"
 
 # Run migrations
-python manage.py migrate
+python3 manage.py migrate
 
 # Create superuser (admin account)
-python manage.py createsuperuser
+python3 manage.py createsuperuser
 
 # Run tests (optional)
-python test_youtube.py
+python3 test_youtube.py
 
 # Start development server
-python manage.py runserver
+python3 manage.py runserver
 ```
 
 Backend will run on http://localhost:8000
@@ -368,10 +368,16 @@ The project includes comprehensive research tools for thesis-grade experiments:
 
 ```bash
 # Run full experiment evaluation
-python backend/research/experiment_runner.py --data path/to/labeled.csv
+python backend/research/experiment_runner.py --data path/to/labeled.csv --use-full
 
 # Optimize ensemble weights using PSO
-python backend/research/optimize_ensemble.py --data path/to/labeled.csv
+python backend/research/optimize_ensemble.py --data path/to/labeled.csv --use-full
+
+# Evaluate fuzzy ensemble (uncertainty-aware)
+python backend/research/fuzzy_experiment_runner.py --data path/to/labeled.csv --use-full
+
+# Grid search fuzzy configs (CI tuning)
+python backend/research/fuzzy_grid_search.py --data path/to/labeled.csv --use-full --limit 5000
 
 # Train hybrid deep learning model
 python backend/research/train_hybrid_dl.py --data path/to/labeled.csv
@@ -392,6 +398,7 @@ python backend/research/visualization/generate_all.py
 - **Explainability**: LIME, SHAP, attention visualization
 - **Training curves**: Loss and accuracy plots
 - **Confusion matrices**: Per-model performance breakdown
+- **CI tuning**: PSO ensemble weights + fuzzy config grid search
 
 ## API Endpoints
 
@@ -430,6 +437,29 @@ python backend/research/visualization/generate_all.py
 | `aspect_top_n` | integer | 12 | Number of aspects to return |
 | `aspect_min_freq` | integer | 3 | Minimum aspect frequency |
 | `confidence_threshold` | float | 0.6 | Threshold for low-confidence ratio |
+| `fuzzy_models` | list | null | Fuzzy base models (e.g., ["logreg","svm"]) |
+| `fuzzy_mf_type` | string | null | MF type: triangular, trapezoidal, gaussian |
+| `fuzzy_defuzz_method` | string | null | Defuzz: centroid, bisector, mom, som, lom |
+| `fuzzy_t_norm` | string | null | T-norm: min, product, lukasiewicz |
+| `fuzzy_t_conorm` | string | null | T-conorm: max, prob_sum, bounded_sum |
+| `fuzzy_alpha_cut` | float | null | Alpha-cut threshold |
+| `fuzzy_resolution` | integer | null | Fuzzy resolution (e.g., 100) |
+| `model_comparison` | list | null | Optional metrics list for report tables |
+
+## Dataset Preparation (HF YouTube Dataset)
+
+Use the Hugging Face YouTube dataset and generate fixed train/val/test splits:
+
+```bash
+python backend/scripts/prepare/prepare_hf_dataset.py
+```
+
+This creates:
+- `backend/data/train.csv`
+- `backend/data/val.csv`
+- `backend/data/test.csv`
+
+These splits should be used consistently across classical, ensemble, PSO, and fuzzy experiments.
 
 ## Architecture
 

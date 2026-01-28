@@ -163,6 +163,8 @@ function Dashboard(props) {
   const ensembleModels = ensembleInfo?.models || [];
   const ensembleWeights = ensembleInfo?.weights || {};
   const ensembleWeightEntries = Object.entries(ensembleWeights);
+  const metaLearnerInfo = analysisMeta?.meta_learner;
+  const fuzzyInfo = analysisMeta?.fuzzy;
 
   const getData = async () => {
     try {
@@ -658,6 +660,53 @@ function Dashboard(props) {
                               </li>
                             ))}
                           </ul>
+                          {ensembleInfo?.weights_source && (
+                            <p className="text-xs text-muted mb-0">
+                              Weights source: {ensembleInfo.weights_source}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {metaLearnerInfo && (
+                        <div className="text-sm mb-2">
+                          <strong>Meta-Learner:</strong>
+                          <ul className="mb-0">
+                            {metaLearnerInfo.model_path && (
+                              <li>Model Path: {metaLearnerInfo.model_path}</li>
+                            )}
+                            {metaLearnerInfo.base_models && (
+                              <li>
+                                Base Models: {metaLearnerInfo.base_models.join(", ")}
+                              </li>
+                            )}
+                            {metaLearnerInfo.feature_type && (
+                              <li>Feature Type: {metaLearnerInfo.feature_type}</li>
+                            )}
+                            {metaLearnerInfo.meta_learner_type && (
+                              <li>Type: {metaLearnerInfo.meta_learner_type}</li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                      {fuzzyInfo && (
+                        <div className="text-sm mb-2">
+                          <strong>Fuzzy Configuration:</strong>
+                          <ul className="mb-0">
+                            {fuzzyInfo.base_models && (
+                              <li>Base Models: {fuzzyInfo.base_models.join(", ")}</li>
+                            )}
+                            {fuzzyInfo.mf_type && <li>MF Type: {fuzzyInfo.mf_type}</li>}
+                            {fuzzyInfo.defuzz_method && (
+                              <li>Defuzz: {fuzzyInfo.defuzz_method}</li>
+                            )}
+                            {fuzzyInfo.t_norm && <li>T-Norm: {fuzzyInfo.t_norm}</li>}
+                            {fuzzyInfo.t_conorm && (
+                              <li>T-Conorm: {fuzzyInfo.t_conorm}</li>
+                            )}
+                            {fuzzyInfo.alpha_cut !== undefined && (
+                              <li>Alpha Cut: {fuzzyInfo.alpha_cut}</li>
+                            )}
+                          </ul>
                         </div>
                       )}
                       {analysisMeta?.bootstrap_samples !== undefined && (
@@ -822,6 +871,42 @@ function Dashboard(props) {
                                 </tr>
                               );
                             })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {Array.isArray(analysisMeta?.model_comparison) && analysisMeta.model_comparison.length > 0 && (
+              <div className="row mb-4">
+                <div className="col-12">
+                  <div className="card">
+                    <div className="card-header pb-0">
+                      <h6>Model Comparison (Research Mode)</h6>
+                      <p className="text-sm text-muted mb-0">
+                        Summary metrics for CI experiments.
+                      </p>
+                    </div>
+                    <div className="card-body">
+                      <div className="table-responsive">
+                        <table className="table align-items-center mb-0">
+                          <thead>
+                            <tr>
+                              <th>Model</th>
+                              <th>Accuracy</th>
+                              <th>Macro F1</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {analysisMeta.model_comparison.map((row, index) => (
+                              <tr key={index}>
+                                <td>{row.name || row.model}</td>
+                                <td>{row.accuracy}</td>
+                                <td>{row.macro_f1}</td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>
