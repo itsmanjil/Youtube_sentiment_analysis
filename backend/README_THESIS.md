@@ -27,6 +27,7 @@ This is a thesis-grade sentiment analysis system for YouTube comments, implement
 - Aspect-Based Sentiment Analysis (ABSA)
 - Temporal sentiment dynamics
 - Engagement-weighted analysis
+- Ethical Bias Analysis (e.g., Dialect, Demographics)
 - Confidence scoring (entropy-based)
 
 ## Quick Start
@@ -248,7 +249,12 @@ Hybrid CNN-BiLSTM-Attention model combining:
    - Explainability insights
    - Limitations
 
-6. **Conclusion**
+7. **Ethical Considerations**
+   - Data Privacy and Anonymization
+   - Algorithmic Bias Analysis
+   - Potential for Misuse and Mitigation
+
+8. **Conclusion**
    - Contributions
    - Future work
 
