@@ -399,7 +399,36 @@ class YouTubeDataPreparer:
 
         return train, val, test
 
-    def export_to_csv(self, train_df, val_df, test_df, output_dir='./data/youtube_training'):
+    def split_train_val(self, comments, train_ratio=0.85, val_ratio=0.15, random_seed=42):
+        """
+        Split data into train/val sets with stratification.
+
+        Args:
+            comments (list): Labeled comments
+            train_ratio (float): Training set proportion
+            val_ratio (float): Validation set proportion
+            random_seed (int): Random seed
+
+        Returns:
+            tuple: (train_df, val_df)
+        """
+        from sklearn.model_selection import train_test_split
+
+        print(f"\n✂️  Splitting data (train={train_ratio}, val={val_ratio})...")
+
+        df = pd.DataFrame(comments)
+        val_ratio_adjusted = val_ratio / (train_ratio + val_ratio)
+        train, val = train_test_split(
+            df, test_size=val_ratio_adjusted, random_state=random_seed, stratify=df['label']
+        )
+
+        print(f"   ✅ Split complete:")
+        print(f"      Train: {len(train)} samples")
+        print(f"      Val:   {len(val)} samples")
+
+        return train, val
+
+    def export_to_csv(self, train_df, val_df, test_df, output_dir='./data/youtube_training', heldout_source=None):
         """
         Export datasets to CSV files
 
@@ -436,6 +465,7 @@ class YouTubeDataPreparer:
             'val_samples': len(val_df),
             'test_samples': len(test_df),
             'total_samples': len(train_df) + len(val_df) + len(test_df),
+            'heldout_source': heldout_source,
             'label_distribution': {
                 'train': train_df['label'].value_counts().to_dict(),
                 'val': val_df['label'].value_counts().to_dict(),
@@ -484,6 +514,8 @@ def main():
                        help='Min confidence for auto-labeling (0-1)')
     parser.add_argument('--labeled_csv', type=str,
                        help='Pre-labeled CSV file (text,label columns)')
+    parser.add_argument('--heldout_labeled_csv', type=str,
+                       help='Manually labeled CSV used only for held-out test set')
     parser.add_argument('--merge_mode', choices=['replace', 'append'], default='replace',
                        help='How to handle labeled data: replace (only use labeled) or append (mix with auto-labeled)')
 
@@ -568,17 +600,60 @@ def main():
         print("\n❌ No comments passed validation. Exiting.")
         return
 
-    # 4. Split
-    train_df, val_df, test_df = preparer.split_train_val_test(
-        comments,
-        train_ratio=args.train_ratio,
-        val_ratio=args.val_ratio,
-        test_ratio=args.test_ratio,
-        random_seed=args.random_seed
-    )
+    # 4. Split (support manual held-out test set)
+    heldout_df = None
+    heldout_source = None
+    if args.heldout_labeled_csv:
+        heldout_comments = preparer.load_labeled_csv(args.heldout_labeled_csv)
+        heldout_comments = preparer.validate_data(heldout_comments)
+
+        if not heldout_comments:
+            print("\n❌ No held-out comments passed validation. Exiting.")
+            return
+
+        heldout_df = pd.DataFrame(heldout_comments)
+        heldout_source = args.heldout_labeled_csv
+
+        # Prevent leakage: remove any held-out texts from training/validation pool
+        heldout_texts = set(heldout_df['text'].astype(str).str.strip().tolist())
+        comments = [c for c in comments if c['text'].strip() not in heldout_texts]
+        if not comments:
+            print("\n❌ No comments left after removing held-out overlap. Exiting.")
+            return
+
+        if args.label_method == 'auto':
+            print("\n✅ Using manually labeled held-out test set for evaluation.")
+        else:
+            print("\n✅ Using manually labeled held-out test set.")
+
+        train_df, val_df = preparer.split_train_val(
+            comments,
+            train_ratio=args.train_ratio,
+            val_ratio=args.val_ratio,
+            random_seed=args.random_seed
+        )
+        test_df = heldout_df
+    else:
+        if args.label_method == 'auto':
+            print("\n⚠️  Auto-labeled data without a manual held-out test set.")
+            print("    Reported test metrics will be scientifically invalid.")
+
+        train_df, val_df, test_df = preparer.split_train_val_test(
+            comments,
+            train_ratio=args.train_ratio,
+            val_ratio=args.val_ratio,
+            test_ratio=args.test_ratio,
+            random_seed=args.random_seed
+        )
 
     # 5. Export
-    paths = preparer.export_to_csv(train_df, val_df, test_df, output_dir=args.output_dir)
+    paths = preparer.export_to_csv(
+        train_df,
+        val_df,
+        test_df,
+        output_dir=args.output_dir,
+        heldout_source=heldout_source
+    )
 
     print("\n" + "="*80)
     print("✅ DATA PREPARATION COMPLETE")

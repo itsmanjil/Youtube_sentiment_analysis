@@ -104,6 +104,7 @@ def main():
     )
     parser.add_argument("--data", required=True, help="Path to labeled CSV dataset.")
     parser.add_argument("--test-size", type=float, default=0.2)
+    parser.add_argument("--val-size", type=float, default=0.2)
     parser.add_argument("--random-seed", type=int, default=42)
     parser.add_argument(
         "--use-full",
@@ -122,32 +123,49 @@ def main():
 
     df = load_dataset(args.data)
     if args.use_full:
-        test_df = df
+        val_df = df
+        test_df = None
+        print(
+            "\n⚠️  Using full dataset for optimization. "
+            "No held-out test evaluation will be reported."
+        )
     else:
-        _, test_df = train_test_split(
+        train_val_df, test_df = train_test_split(
             df,
             test_size=args.test_size,
             random_state=args.random_seed,
             stratify=df["label"],
         )
+        _, val_df = train_test_split(
+            train_val_df,
+            test_size=args.val_size,
+            random_state=args.random_seed,
+            stratify=train_val_df["label"],
+        )
 
     models = [
         name.strip().lower() for name in args.models.split(",") if name.strip()
     ]
-    texts = test_df["text"].tolist()
-    labels = test_df["label"].tolist()
-    model_probs = precompute_model_probs(models, texts)
+    val_texts = val_df["text"].tolist()
+    val_labels = val_df["label"].tolist()
+    val_probs = precompute_model_probs(models, val_texts)
 
     weights, score = pso_optimize(
         models,
-        labels,
-        model_probs,
+        val_labels,
+        val_probs,
         n_particles=args.particles,
         n_iters=args.iterations,
         seed=args.random_seed,
     )
 
-    result = {"weights": weights, "macro_f1": round(score, 4)}
+    result = {"weights": weights, "val_macro_f1": round(score, 4)}
+    if test_df is not None:
+        test_texts = test_df["text"].tolist()
+        test_labels = test_df["label"].tolist()
+        test_probs = precompute_model_probs(models, test_texts)
+        test_score = evaluate_weights(weights, models, test_labels, test_probs)
+        result["test_macro_f1"] = round(test_score, 4)
     if args.output:
         Path(args.output).write_text(json.dumps(result, indent=2))
     else:
