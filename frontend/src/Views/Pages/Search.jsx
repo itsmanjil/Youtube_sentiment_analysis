@@ -334,6 +334,7 @@ function Search() {
                       <option value="svm">Linear SVM (trained)</option>
                       <option value="tfidf">TF-IDF (legacy)</option>
                       <option value="ensemble">Ensemble (custom weights)</option>
+                      <option value="fuzzy_ensemble">Fuzzy Ensemble (uncertainty-aware)</option>
                       <option value="meta_learner">Meta-Learner (stacking)</option>
                       <option value="hybrid_dl">Hybrid CNN-BiLSTM-Attention</option>
                       <option value="bert">Transformer (BERT)</option>

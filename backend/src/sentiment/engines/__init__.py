@@ -10,6 +10,7 @@ This package contains individual implementations of sentiment analysis engines:
 - meta_learner_engine: Stacked ensemble
 - hybrid_dl_engine: CNN-BiLSTM-Attention
 - transformer_engine: BERT-based classifier
+- fuzzy_engine: Fuzzy inference ensemble
 """
 
 from .tfidf_engine import TFIDFSentimentEngine
@@ -17,6 +18,7 @@ from .logreg_engine import LogRegSentimentEngine
 from .svm_engine import SVMSentimentEngine
 from .ensemble_engine import EnsembleSentimentEngine
 from .meta_learner_engine import MetaLearnerSentimentEngine
+from .fuzzy_engine import FuzzyEnsembleSentimentEngine
 
 __all__ = [
     "TFIDFSentimentEngine",
@@ -24,6 +26,7 @@ __all__ = [
     "SVMSentimentEngine",
     "EnsembleSentimentEngine",
     "MetaLearnerSentimentEngine",
+    "FuzzyEnsembleSentimentEngine",
 ]
 
 # Lazy imports for optional dependencies

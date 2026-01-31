@@ -42,7 +42,7 @@ from src.sentiment import (
 
 tokenizer = ToktokTokenizer()
 
-CLASSICAL_MODELS = {"logreg", "svm", "tfidf", "ensemble", "meta_learner"}
+CLASSICAL_MODELS = {"logreg", "svm", "tfidf", "ensemble", "meta_learner", "fuzzy_ensemble"}
 
 
 @lru_cache(maxsize=1)
@@ -261,6 +261,11 @@ def analyze_youtube_video(request):
         sentiment_model = "ensemble"
     if sentiment_model in ("meta", "meta_learner", "meta-learner", "stacking"):
         sentiment_model = "meta_learner"
+    if sentiment_model in ("fuzzy", "fuzzy_ensemble", "fuzzy-ensemble"):
+        sentiment_model = "fuzzy_ensemble"
+
+    if sentiment_model == "fuzzy_ensemble" and not fuzzy_models:
+        fuzzy_models = ["logreg", "svm", "tfidf"]
 
     if not video_url:
         return Response({"msg": "video_url is required"}, status=400)
@@ -380,6 +385,30 @@ def analyze_youtube_video(request):
                 engine_kwargs["meta_model_path"] = meta_learner_path
             if meta_learner_models:
                 engine_kwargs["base_models"] = meta_learner_models
+        elif sentiment_model == "fuzzy_ensemble":
+            alpha_cut = 0.0
+            if fuzzy_alpha_cut is not None:
+                try:
+                    alpha_cut = float(fuzzy_alpha_cut)
+                except (TypeError, ValueError):
+                    alpha_cut = 0.0
+            resolution = 100
+            if fuzzy_resolution is not None:
+                try:
+                    resolution = int(fuzzy_resolution)
+                except (TypeError, ValueError):
+                    resolution = 100
+
+            engine_kwargs = {
+                "base_models": fuzzy_models,
+                "mf_type": fuzzy_mf_type or "gaussian",
+                "defuzz_method": fuzzy_defuzz_method or "centroid",
+                "t_norm": fuzzy_t_norm or "min",
+                "t_conorm": fuzzy_t_conorm or "max",
+                "alpha_cut": alpha_cut,
+                "resolution": resolution,
+                "confidence_threshold": confidence_threshold,
+            }
         try:
             engine = get_sentiment_engine(sentiment_model, **engine_kwargs)
         except (ValueError, RuntimeError, ImportError, FileNotFoundError) as exc:
@@ -498,26 +527,18 @@ def analyze_youtube_video(request):
                 "meta_learner_type": getattr(engine, "meta_learner_type", None),
                 "model_errors": getattr(engine, "model_errors", {}),
             }
-        if any(
-            value is not None
-            for value in (
-                fuzzy_models,
-                fuzzy_mf_type,
-                fuzzy_defuzz_method,
-                fuzzy_t_norm,
-                fuzzy_t_conorm,
-                fuzzy_alpha_cut,
-                fuzzy_resolution,
-            )
-        ):
+        if sentiment_model == "fuzzy_ensemble":
             analysis_meta["fuzzy"] = {
-                "base_models": fuzzy_models,
-                "mf_type": fuzzy_mf_type,
-                "defuzz_method": fuzzy_defuzz_method,
-                "t_norm": fuzzy_t_norm,
-                "t_conorm": fuzzy_t_conorm,
-                "alpha_cut": fuzzy_alpha_cut,
-                "resolution": fuzzy_resolution,
+                "requested_models": getattr(engine, "requested_models", fuzzy_models),
+                "base_models": getattr(engine, "base_models", fuzzy_models),
+                "mf_type": getattr(engine, "mf_type", fuzzy_mf_type),
+                "defuzz_method": getattr(engine, "defuzz_method", fuzzy_defuzz_method),
+                "t_norm": getattr(engine, "t_norm", fuzzy_t_norm),
+                "t_conorm": getattr(engine, "t_conorm", fuzzy_t_conorm),
+                "alpha_cut": getattr(engine, "alpha_cut", fuzzy_alpha_cut),
+                "resolution": getattr(engine, "resolution", fuzzy_resolution),
+                "confidence_threshold": getattr(engine, "confidence_threshold", confidence_threshold),
+                "model_errors": getattr(engine, "model_errors", {}),
             }
         if isinstance(model_comparison, list):
             analysis_meta["model_comparison"] = model_comparison

@@ -19,6 +19,7 @@ Available Engines
 - 'svm': TF-IDF + Linear SVM (highest accuracy among classical)
 - 'ensemble': Weighted soft voting (combines classical models)
 - 'meta_learner': Stacked ensemble (learns combination rules)
+- 'fuzzy_ensemble': Fuzzy inference ensemble (uncertainty-aware)
 - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
 - 'bert': BERT transformer (requires transformers, best accuracy)
 """
@@ -30,6 +31,7 @@ from .engines.logreg_engine import LogRegSentimentEngine
 from .engines.svm_engine import SVMSentimentEngine
 from .engines.ensemble_engine import EnsembleSentimentEngine
 from .engines.meta_learner_engine import MetaLearnerSentimentEngine
+from .engines.fuzzy_engine import FuzzyEnsembleSentimentEngine
 
 
 # Registry of available engines
@@ -41,6 +43,8 @@ _ENGINE_REGISTRY = {
     "ci_ensemble": EnsembleSentimentEngine,  # Alias
     "meta_learner": MetaLearnerSentimentEngine,
     "stacking": MetaLearnerSentimentEngine,  # Alias
+    "fuzzy_ensemble": FuzzyEnsembleSentimentEngine,
+    "fuzzy": FuzzyEnsembleSentimentEngine,  # Alias
 }
 
 # Base engines (exclude ensemble methods)
@@ -81,7 +85,7 @@ def list_available_engines() -> List[str]:
         pass
 
     # Remove aliases for cleaner output
-    engines = [e for e in engines if e not in ("ci_ensemble", "stacking")]
+    engines = [e for e in engines if e not in ("ci_ensemble", "stacking", "fuzzy")]
     return sorted(set(engines))
 
 
@@ -98,6 +102,7 @@ def get_sentiment_engine(engine_type: str = "logreg", **kwargs) -> Any:
         - 'svm': TF-IDF + Linear SVM
         - 'ensemble': Weighted soft voting
         - 'meta_learner': Stacked ensemble
+        - 'fuzzy_ensemble': Fuzzy inference ensemble (uncertainty-aware)
         - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
         - 'bert': BERT transformer (requires transformers)
     **kwargs
@@ -125,6 +130,14 @@ def get_sentiment_engine(engine_type: str = "logreg", **kwargs) -> Any:
 
     >>> # Ensemble with custom weights
     >>> engine = get_sentiment_engine('ensemble', weights={'logreg': 0.5, 'svm': 0.5})
+
+    >>> # Fuzzy ensemble (uncertainty-aware)
+    >>> engine = get_sentiment_engine(
+    ...     'fuzzy_ensemble',
+    ...     base_models=['logreg', 'svm'],
+    ...     mf_type='gaussian',
+    ...     defuzz_method='centroid',
+    ... )
 
     >>> # BERT transformer
     >>> engine = get_sentiment_engine('bert', model_name_or_path='bert-base-uncased')
