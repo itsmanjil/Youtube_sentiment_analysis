@@ -14,8 +14,13 @@ statistical rigor and reproducibility.
 
 from .statistical_tests import StatisticalSignificanceTester
 from .ablation import AblationStudyFramework
+from .calibration import compute_calibration_metrics, compute_ece, compute_brier_multiclass, probs_to_matrix
 
 __all__ = [
     "StatisticalSignificanceTester",
     "AblationStudyFramework",
+    "compute_calibration_metrics",
+    "compute_ece",
+    "compute_brier_multiclass",
+    "probs_to_matrix",
 ]

@@ -233,7 +233,8 @@ class YouTubeDataPreparer:
                     **comment,
                     'label': result.label,
                     'confidence': confidence,
-                    'sentiment_score': result.score
+                    'sentiment_score': result.score,
+                    'label_source': 'auto_logreg'
                 })
             else:
                 low_confidence += 1
@@ -283,7 +284,8 @@ class YouTubeDataPreparer:
                 'published_at': '',
                 'video_id': 'manual',
                 'confidence': 1.0,  # High confidence for manual labels
-                'sentiment_score': 0.0
+                'sentiment_score': 0.0,
+                'label_source': 'manual'
             })
 
         print(f"   ✅ Loaded {len(comments)} pre-labeled comments")
@@ -361,7 +363,15 @@ class YouTubeDataPreparer:
 
         return validated
 
-    def split_train_val_test(self, comments, train_ratio=0.7, val_ratio=0.15, test_ratio=0.15, random_seed=42):
+    def split_train_val_test(
+        self,
+        comments,
+        train_ratio=0.7,
+        val_ratio=0.15,
+        test_ratio=0.15,
+        random_seed=42,
+        group_by: str | None = None,
+    ):
         """
         Split data into train/val/test sets with stratification
 
@@ -382,15 +392,45 @@ class YouTubeDataPreparer:
         # Convert to DataFrame
         df = pd.DataFrame(comments)
 
-        # Stratified split
-        train_val, test = train_test_split(
-            df, test_size=test_ratio, random_state=random_seed, stratify=df['label']
-        )
+        if group_by and group_by in df.columns:
+            from sklearn.model_selection import GroupShuffleSplit
+
+            print(f"   🔒 Group-aware split by '{group_by}' to prevent leakage")
+            groups = df[group_by].astype(str)
+            splitter = GroupShuffleSplit(
+                n_splits=1, test_size=test_ratio, random_state=random_seed
+            )
+            train_val_idx, test_idx = next(splitter.split(df, groups=groups))
+            train_val = df.iloc[train_val_idx].reset_index(drop=True)
+            test = df.iloc[test_idx].reset_index(drop=True)
+        else:
+            if group_by:
+                print(
+                    f"   ⚠️  group_by='{group_by}' not found; falling back to stratified split."
+                )
+            # Stratified split
+            train_val, test = train_test_split(
+                df, test_size=test_ratio, random_state=random_seed, stratify=df['label']
+            )
 
         val_ratio_adjusted = val_ratio / (train_ratio + val_ratio)
-        train, val = train_test_split(
-            train_val, test_size=val_ratio_adjusted, random_state=random_seed, stratify=train_val['label']
-        )
+        if group_by and group_by in train_val.columns:
+            from sklearn.model_selection import GroupShuffleSplit
+
+            groups = train_val[group_by].astype(str)
+            splitter = GroupShuffleSplit(
+                n_splits=1, test_size=val_ratio_adjusted, random_state=random_seed
+            )
+            train_idx, val_idx = next(splitter.split(train_val, groups=groups))
+            train = train_val.iloc[train_idx].reset_index(drop=True)
+            val = train_val.iloc[val_idx].reset_index(drop=True)
+        else:
+            train, val = train_test_split(
+                train_val,
+                test_size=val_ratio_adjusted,
+                random_state=random_seed,
+                stratify=train_val['label'],
+            )
 
         print(f"   ✅ Split complete:")
         print(f"      Train: {len(train)} samples")
@@ -399,7 +439,14 @@ class YouTubeDataPreparer:
 
         return train, val, test
 
-    def split_train_val(self, comments, train_ratio=0.85, val_ratio=0.15, random_seed=42):
+    def split_train_val(
+        self,
+        comments,
+        train_ratio=0.85,
+        val_ratio=0.15,
+        random_seed=42,
+        group_by: str | None = None,
+    ):
         """
         Split data into train/val sets with stratification.
 
@@ -418,9 +465,28 @@ class YouTubeDataPreparer:
 
         df = pd.DataFrame(comments)
         val_ratio_adjusted = val_ratio / (train_ratio + val_ratio)
-        train, val = train_test_split(
-            df, test_size=val_ratio_adjusted, random_state=random_seed, stratify=df['label']
-        )
+        if group_by and group_by in df.columns:
+            from sklearn.model_selection import GroupShuffleSplit
+
+            print(f"   🔒 Group-aware split by '{group_by}' to prevent leakage")
+            groups = df[group_by].astype(str)
+            splitter = GroupShuffleSplit(
+                n_splits=1, test_size=val_ratio_adjusted, random_state=random_seed
+            )
+            train_idx, val_idx = next(splitter.split(df, groups=groups))
+            train = df.iloc[train_idx].reset_index(drop=True)
+            val = df.iloc[val_idx].reset_index(drop=True)
+        else:
+            if group_by:
+                print(
+                    f"   ⚠️  group_by='{group_by}' not found; falling back to stratified split."
+                )
+            train, val = train_test_split(
+                df,
+                test_size=val_ratio_adjusted,
+                random_state=random_seed,
+                stratify=df['label'],
+            )
 
         print(f"   ✅ Split complete:")
         print(f"      Train: {len(train)} samples")
@@ -428,7 +494,15 @@ class YouTubeDataPreparer:
 
         return train, val
 
-    def export_to_csv(self, train_df, val_df, test_df, output_dir='./data/youtube_training', heldout_source=None):
+    def export_to_csv(
+        self,
+        train_df,
+        val_df,
+        test_df,
+        output_dir='./data/youtube_training',
+        heldout_source=None,
+        group_by: str | None = None,
+    ):
         """
         Export datasets to CSV files
 
@@ -452,8 +526,24 @@ class YouTubeDataPreparer:
         val_path = output_path / f'val_{timestamp}.csv'
         test_path = output_path / f'test_{timestamp}.csv'
 
-        # Save only essential columns
-        columns = ['text', 'label']
+        # Save essential + provenance columns when available
+        base_columns = ['text', 'label']
+        extra_columns = [
+            'video_id',
+            'label_source',
+            'confidence',
+            'sentiment_score',
+            'published_at',
+            'author',
+            'likes',
+        ]
+        available_columns = set(train_df.columns) | set(val_df.columns) | set(test_df.columns)
+        columns = [col for col in base_columns + extra_columns if col in available_columns]
+
+        for df in (train_df, val_df, test_df):
+            for col in columns:
+                if col not in df.columns:
+                    df[col] = None
         train_df[columns].to_csv(train_path, index=False)
         val_df[columns].to_csv(val_path, index=False)
         test_df[columns].to_csv(test_path, index=False)
@@ -470,8 +560,23 @@ class YouTubeDataPreparer:
                 'train': train_df['label'].value_counts().to_dict(),
                 'val': val_df['label'].value_counts().to_dict(),
                 'test': test_df['label'].value_counts().to_dict()
-            }
+            },
+            'columns': columns,
+            'group_by': group_by,
         }
+        if 'label_source' in columns:
+            metadata['label_source_distribution'] = {
+                'train': train_df['label_source'].value_counts().to_dict(),
+                'val': val_df['label_source'].value_counts().to_dict(),
+                'test': test_df['label_source'].value_counts().to_dict(),
+            }
+        if group_by and group_by in columns:
+            metadata['group_counts'] = {
+                'column': group_by,
+                'train_unique': int(train_df[group_by].nunique()),
+                'val_unique': int(val_df[group_by].nunique()),
+                'test_unique': int(test_df[group_by].nunique()),
+            }
 
         metadata_path = output_path / f'metadata_{timestamp}.json'
         with open(metadata_path, 'w') as f:
@@ -524,6 +629,12 @@ def main():
     parser.add_argument('--val_ratio', type=float, default=0.15)
     parser.add_argument('--test_ratio', type=float, default=0.15)
     parser.add_argument('--random_seed', type=int, default=42)
+    parser.add_argument(
+        '--group_by',
+        type=str,
+        default=None,
+        help="Optional column for group-aware split (e.g., 'video_id')",
+    )
 
     # Output
     parser.add_argument('--output_dir', type=str, default='./data/youtube_training',
@@ -630,7 +741,8 @@ def main():
             comments,
             train_ratio=args.train_ratio,
             val_ratio=args.val_ratio,
-            random_seed=args.random_seed
+            random_seed=args.random_seed,
+            group_by=args.group_by,
         )
         test_df = heldout_df
     else:
@@ -643,7 +755,8 @@ def main():
             train_ratio=args.train_ratio,
             val_ratio=args.val_ratio,
             test_ratio=args.test_ratio,
-            random_seed=args.random_seed
+            random_seed=args.random_seed,
+            group_by=args.group_by,
         )
 
     # 5. Export
@@ -652,7 +765,8 @@ def main():
         val_df,
         test_df,
         output_dir=args.output_dir,
-        heldout_source=heldout_source
+        heldout_source=heldout_source,
+        group_by=args.group_by,
     )
 
     print("\n" + "="*80)

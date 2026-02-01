@@ -150,6 +150,22 @@ python prepare_youtube_training_data.py \
     --use_api
 ```
 
+#### Optional: Group-aware split to prevent leakage
+If you want to avoid comments from the same video appearing in both train and test:
+
+```bash
+python prepare_youtube_training_data.py \
+    --video_list videos.txt \
+    --max_comments 200 \
+    --label_method auto \
+    --confidence_threshold 0.7 \
+    --group_by video_id \
+    --output_dir ./data/youtube_training \
+    --use_api
+```
+
+This also exports provenance columns (e.g., `video_id`, `label_source`, `confidence`) for thesis analysis.
+
 **What this does:**
 1. Fetches comments from all videos in the list
 2. Preprocesses (removes spam, non-English, etc.)
@@ -167,6 +183,44 @@ Test:  750 samples
 
 Files saved to: ./data/youtube_training/
 ```
+
+---
+
+## Small Human-Labeled Gold Set (Recommended)
+
+To validate weak labels, build a small manual gold set and reserve it for testing.
+
+### 1) Create an annotation template
+
+```bash
+python backend/scripts/prepare/create_gold_set.py \
+    --input_csv backend/data/youtube_training/train_*.csv \
+    --sample_size 300 \
+    --stratify balanced \
+    --include_columns video_id
+```
+
+This creates `gold_set_template.csv` with an empty `label` column.
+
+### 2) Manually label
+
+Fill the `label` column with one of:
+`Positive`, `Neutral`, `Negative`
+
+Save as `gold_set_labeled.csv`.
+
+### 3) Use the gold set as held‑out test data
+
+```bash
+python prepare_youtube_training_data.py \
+    --video_list videos.txt \
+    --label_method auto \
+    --heldout_labeled_csv gold_set_labeled.csv \
+    --group_by video_id \
+    --output_dir ./data/youtube_training
+```
+
+This ensures the test set is human‑labeled and prevents video leakage.
 
 ---
 

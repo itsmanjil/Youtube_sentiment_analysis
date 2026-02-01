@@ -19,7 +19,6 @@ function Search() {
   const { logoutUser, authToken } = useContext(AuthContext);
   const [video_url, setVideoUrl] = useState("");
   const [max_comments, setMaxComments] = useState(200);
-  const [use_api, setUseApi] = useState(false);
   const [sentimentModel, setSentimentModel] = useState("logreg");
   const [showResearchOptions, setShowResearchOptions] = useState(false);
   const [ensembleModels, setEnsembleModels] = useState(["logreg", "svm", "tfidf"]);
@@ -38,6 +37,7 @@ function Search() {
   const [fuzzyTConorm, setFuzzyTConorm] = useState("prob_sum");
   const [fuzzyAlphaCut, setFuzzyAlphaCut] = useState(0.1);
   const [fuzzyResolution, setFuzzyResolution] = useState(100);
+  const [ensembleWeightsError, setEnsembleWeightsError] = useState("");
   const [modelComparison, setModelComparison] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchError, setSearchError] = useState(false);
@@ -73,6 +73,45 @@ function Search() {
       console.warn("Invalid model comparison JSON:", err);
       return null;
     }
+  };
+
+  const parseEnsembleWeights = (rawValue) => {
+    if (!rawValue) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(rawValue);
+      const weights = parsed?.weights && typeof parsed.weights === "object" ? parsed.weights : parsed;
+      if (!weights || typeof weights !== "object") {
+        throw new Error("Invalid weights format.");
+      }
+      return weights;
+    } catch (err) {
+      return null;
+    }
+  };
+
+  const handleEnsembleWeightsFile = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const raw = reader.result;
+        const parsed = JSON.parse(raw);
+        const weights = parsed?.weights && typeof parsed.weights === "object" ? parsed.weights : parsed;
+        if (!weights || typeof weights !== "object") {
+          throw new Error("Invalid weights file.");
+        }
+        setEnsembleWeights(JSON.stringify(weights));
+        setEnsembleWeightsError("");
+      } catch (err) {
+        setEnsembleWeightsError("Invalid JSON weights file.");
+      }
+    };
+    reader.readAsText(file);
   };
 
   // YouTube URL validation helper
@@ -111,6 +150,38 @@ function Search() {
       return;
     }
 
+    if (sentimentModel === "ensemble" && ensembleWeights) {
+      const parsedWeights = parseEnsembleWeights(ensembleWeights);
+      if (!parsedWeights) {
+        setHasError(true);
+        setErrorMessage("Ensemble weights must be valid JSON.");
+        return;
+      }
+    }
+
+    if (sentimentModel === "fuzzy_ensemble") {
+      if (!Array.isArray(fuzzyModels) || fuzzyModels.length === 0) {
+        setHasError(true);
+        setErrorMessage("Select at least one fuzzy base model.");
+        return;
+      }
+      if (Number.isNaN(fuzzyResolution) || fuzzyResolution < 50 || fuzzyResolution > 500) {
+        setHasError(true);
+        setErrorMessage("Fuzzy resolution must be between 50 and 500.");
+        return;
+      }
+      if (fuzzyAlphaCut < 0 || fuzzyAlphaCut > 1) {
+        setHasError(true);
+        setErrorMessage("Fuzzy alpha-cut must be between 0 and 1.");
+        return;
+      }
+      if (confidenceThreshold < 0 || confidenceThreshold > 1) {
+        setHasError(true);
+        setErrorMessage("Confidence threshold must be between 0 and 1.");
+        return;
+      }
+    }
+
     try {
       setIsLoading(true);
       const resp = await axios({
@@ -123,7 +194,7 @@ function Search() {
         data: {
           video_url: video_url,
           max_comments: max_comments,
-          use_api: use_api,
+          use_api: true,
           sentiment_model: sentimentModel,
           ensemble_models: ensembleModels,
           ensemble_weights: ensembleWeights || null,
@@ -309,20 +380,6 @@ function Search() {
                     />
                   </div>
                   <div className="col-md-12 mt-3">
-                    <label className="labels">
-                      <input
-                        type="checkbox"
-                        checked={use_api}
-                        onChange={(e) => setUseApi(e.target.checked)}
-                        style={{ marginRight: "8px" }}
-                      />
-                      Use YouTube API (faster, requires API key)
-                    </label>
-                    <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                      Uncheck to use scraper mode (slower but no API key needed)
-                    </p>
-                  </div>
-                  <div className="col-md-12 mt-3">
                     <label className="labels" htmlFor="sentiment-model">Sentiment Model</label>
                     <select
                       id="sentiment-model"
@@ -336,11 +393,9 @@ function Search() {
                       <option value="ensemble">Ensemble (custom weights)</option>
                       <option value="fuzzy_ensemble">Fuzzy Ensemble (uncertainty-aware)</option>
                       <option value="meta_learner">Meta-Learner (stacking)</option>
-                      <option value="hybrid_dl">Hybrid CNN-BiLSTM-Attention</option>
-                      <option value="bert">Transformer (BERT)</option>
                     </select>
                     <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                      Choose a model for inference. Enable research options to customize CI settings and export metadata.
+                      Baselines: LogReg/SVM/TF‑IDF. Ensemble combines models (use PSO‑optimized weights if available). Fuzzy adds uncertainty‑aware fusion.
                     </p>
                   </div>
                   <div className="col-md-12 mt-3">
@@ -394,11 +449,27 @@ function Search() {
                               rows="3"
                               placeholder='{"logreg": 0.4, "svm": 0.4, "tfidf": 0.2}'
                               value={ensembleWeights}
-                              onChange={(e) => setEnsembleWeights(e.target.value)}
+                              onChange={(e) => {
+                                setEnsembleWeights(e.target.value);
+                                if (ensembleWeightsError) {
+                                  setEnsembleWeightsError("");
+                                }
+                              }}
                             />
                             <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                              Optional. Provide JSON weights or a file path. Example: {"{\"logreg\":0.4,\"svm\":0.4,\"tfidf\":0.2}"}.
+                              Optional. Provide JSON weights or upload a JSON file. Example: {"{\"logreg\":0.4,\"svm\":0.4,\"tfidf\":0.2}"}.
                             </p>
+                            <input
+                              type="file"
+                              accept=".json,application/json"
+                              className="form-control mt-2"
+                              onChange={handleEnsembleWeightsFile}
+                            />
+                            {ensembleWeightsError && (
+                              <p style={{ fontSize: "12px", color: "#b00020", marginTop: "6px" }}>
+                                {ensembleWeightsError}
+                              </p>
+                            )}
                           </div>
                         </>
                       )}
@@ -445,122 +516,127 @@ function Search() {
                           </div>
                         </>
                       )}
-                      <div className="col-md-12 mt-4">
-                        <h6 className="mb-2">Fuzzy Configuration</h6>
-                        <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                          Adjust fuzzification and inference settings for uncertainty-aware analysis.
-                        </p>
-                      </div>
-                      <div className="col-md-12 mt-2">
-                        <label className="labels">Fuzzy Base Models</label>
-                        <div className="d-flex flex-wrap gap-3">
-                          {["logreg", "svm", "tfidf"].map((model) => (
-                            <label key={model} className="labels" style={{ marginRight: "12px" }}>
-                              <input
-                                type="checkbox"
-                                checked={fuzzyModels.includes(model)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setFuzzyModels([...fuzzyModels, model]);
-                                  } else {
-                                    setFuzzyModels(fuzzyModels.filter((item) => item !== model));
-                                  }
-                                }}
-                                style={{ marginRight: "6px" }}
-                              />
-                              {model.toUpperCase()}
-                            </label>
-                          ))}
-                        </div>
-                        <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                          Keep this small (1-2 models) for faster inference.
-                        </p>
-                      </div>
-                      <div className="col-md-4 mt-3">
-                        <label className="labels" htmlFor="fuzzy-mf-type">MF Type</label>
-                        <select
-                          id="fuzzy-mf-type"
-                          className="form-control"
-                          value={fuzzyMfType}
-                          onChange={(e) => setFuzzyMfType(e.target.value)}
-                        >
-                          <option value="triangular">Triangular</option>
-                          <option value="trapezoidal">Trapezoidal</option>
-                          <option value="gaussian">Gaussian</option>
-                        </select>
-                      </div>
-                      <div className="col-md-4 mt-3">
-                        <label className="labels" htmlFor="fuzzy-defuzz-method">Defuzz Method</label>
-                        <select
-                          id="fuzzy-defuzz-method"
-                          className="form-control"
-                          value={fuzzyDefuzzMethod}
-                          onChange={(e) => setFuzzyDefuzzMethod(e.target.value)}
-                        >
-                          <option value="centroid">Centroid</option>
-                          <option value="bisector">Bisector</option>
-                          <option value="mom">MOM</option>
-                          <option value="som">SOM</option>
-                          <option value="lom">LOM</option>
-                          <option value="weighted_average">Weighted Average</option>
-                        </select>
-                      </div>
-                      <div className="col-md-4 mt-3">
-                        <label className="labels" htmlFor="fuzzy-resolution">Resolution</label>
-                        <input
-                          id="fuzzy-resolution"
-                          className="form-control"
-                          type="number"
-                          min="50"
-                          value={fuzzyResolution}
-                          onChange={(e) => setFuzzyResolution(parseInt(e.target.value, 10))}
-                        />
-                        <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                          Higher resolution improves stability but increases runtime.
-                        </p>
-                      </div>
-                      <div className="col-md-4 mt-3">
-                        <label className="labels" htmlFor="fuzzy-t-norm">T-Norm</label>
-                        <select
-                          id="fuzzy-t-norm"
-                          className="form-control"
-                          value={fuzzyTNorm}
-                          onChange={(e) => setFuzzyTNorm(e.target.value)}
-                        >
-                          <option value="min">Min</option>
-                          <option value="product">Product</option>
-                          <option value="lukasiewicz">Lukasiewicz</option>
-                        </select>
-                      </div>
-                      <div className="col-md-4 mt-3">
-                        <label className="labels" htmlFor="fuzzy-t-conorm">T-Conorm</label>
-                        <select
-                          id="fuzzy-t-conorm"
-                          className="form-control"
-                          value={fuzzyTConorm}
-                          onChange={(e) => setFuzzyTConorm(e.target.value)}
-                        >
-                          <option value="max">Max</option>
-                          <option value="prob_sum">Probabilistic Sum</option>
-                          <option value="bounded_sum">Bounded Sum</option>
-                        </select>
-                      </div>
-                      <div className="col-md-4 mt-3">
-                        <label className="labels" htmlFor="fuzzy-alpha-cut">Alpha Cut</label>
-                        <input
-                          id="fuzzy-alpha-cut"
-                          className="form-control"
-                          type="number"
-                          min="0"
-                          max="1"
-                          step="0.01"
-                          value={fuzzyAlphaCut}
-                          onChange={(e) => setFuzzyAlphaCut(parseFloat(e.target.value))}
-                        />
-                        <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                          Use 0.0 for no alpha-cut (default).
-                        </p>
-                      </div>
+                      {sentimentModel === "fuzzy_ensemble" && (
+                        <>
+                          <div className="col-md-12 mt-4">
+                            <h6 className="mb-2">Fuzzy Configuration</h6>
+                            <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                              Adjust fuzzification and inference settings for uncertainty-aware analysis.
+                            </p>
+                          </div>
+                          <div className="col-md-12 mt-2">
+                            <label className="labels">Fuzzy Base Models</label>
+                            <div className="d-flex flex-wrap gap-3">
+                              {["logreg", "svm", "tfidf"].map((model) => (
+                                <label key={model} className="labels" style={{ marginRight: "12px" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={fuzzyModels.includes(model)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setFuzzyModels([...fuzzyModels, model]);
+                                      } else {
+                                        setFuzzyModels(fuzzyModels.filter((item) => item !== model));
+                                      }
+                                    }}
+                                    style={{ marginRight: "6px" }}
+                                  />
+                                  {model.toUpperCase()}
+                                </label>
+                              ))}
+                            </div>
+                            <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                              Keep this small (1-2 models) for faster inference.
+                            </p>
+                          </div>
+                          <div className="col-md-4 mt-3">
+                            <label className="labels" htmlFor="fuzzy-mf-type">MF Type</label>
+                            <select
+                              id="fuzzy-mf-type"
+                              className="form-control"
+                              value={fuzzyMfType}
+                              onChange={(e) => setFuzzyMfType(e.target.value)}
+                            >
+                              <option value="triangular">Triangular</option>
+                              <option value="trapezoidal">Trapezoidal</option>
+                              <option value="gaussian">Gaussian</option>
+                            </select>
+                          </div>
+                          <div className="col-md-4 mt-3">
+                            <label className="labels" htmlFor="fuzzy-defuzz-method">Defuzz Method</label>
+                            <select
+                              id="fuzzy-defuzz-method"
+                              className="form-control"
+                              value={fuzzyDefuzzMethod}
+                              onChange={(e) => setFuzzyDefuzzMethod(e.target.value)}
+                            >
+                              <option value="centroid">Centroid</option>
+                              <option value="bisector">Bisector</option>
+                              <option value="mom">MOM</option>
+                              <option value="som">SOM</option>
+                              <option value="lom">LOM</option>
+                              <option value="weighted_average">Weighted Average</option>
+                            </select>
+                          </div>
+                          <div className="col-md-4 mt-3">
+                            <label className="labels" htmlFor="fuzzy-resolution">Resolution</label>
+                            <input
+                              id="fuzzy-resolution"
+                              className="form-control"
+                              type="number"
+                              min="50"
+                              max="500"
+                              value={fuzzyResolution}
+                              onChange={(e) => setFuzzyResolution(parseInt(e.target.value, 10))}
+                            />
+                            <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                              Higher resolution improves stability but increases runtime.
+                            </p>
+                          </div>
+                          <div className="col-md-4 mt-3">
+                            <label className="labels" htmlFor="fuzzy-t-norm">T-Norm</label>
+                            <select
+                              id="fuzzy-t-norm"
+                              className="form-control"
+                              value={fuzzyTNorm}
+                              onChange={(e) => setFuzzyTNorm(e.target.value)}
+                            >
+                              <option value="min">Min</option>
+                              <option value="product">Product</option>
+                              <option value="lukasiewicz">Lukasiewicz</option>
+                            </select>
+                          </div>
+                          <div className="col-md-4 mt-3">
+                            <label className="labels" htmlFor="fuzzy-t-conorm">T-Conorm</label>
+                            <select
+                              id="fuzzy-t-conorm"
+                              className="form-control"
+                              value={fuzzyTConorm}
+                              onChange={(e) => setFuzzyTConorm(e.target.value)}
+                            >
+                              <option value="max">Max</option>
+                              <option value="prob_sum">Probabilistic Sum</option>
+                              <option value="bounded_sum">Bounded Sum</option>
+                            </select>
+                          </div>
+                          <div className="col-md-4 mt-3">
+                            <label className="labels" htmlFor="fuzzy-alpha-cut">Alpha Cut</label>
+                            <input
+                              id="fuzzy-alpha-cut"
+                              className="form-control"
+                              type="number"
+                              min="0"
+                              max="1"
+                              step="0.01"
+                              value={fuzzyAlphaCut}
+                              onChange={(e) => setFuzzyAlphaCut(parseFloat(e.target.value))}
+                            />
+                            <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                              Use 0.0 for no alpha-cut (default).
+                            </p>
+                          </div>
+                        </>
+                      )}
                       <div className="col-md-12 mt-3">
                         <label className="labels" htmlFor="model-comparison">Model Comparison (JSON)</label>
                         <textarea

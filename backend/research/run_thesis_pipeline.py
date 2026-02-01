@@ -133,11 +133,21 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--video", default=None, help="Single YouTube video URL")
     parser.add_argument("--video_list", default=None, help="File with YouTube URLs")
     parser.add_argument("--labeled_csv", default=None, help="Pre-labeled CSV (text,label)")
+    parser.add_argument(
+        "--heldout_labeled_csv",
+        default=None,
+        help="Manually labeled CSV used only for held-out test set",
+    )
     parser.add_argument("--label_method", default="auto", choices=["auto", "manual"])
     parser.add_argument("--confidence_threshold", type=float, default=0.6)
     parser.add_argument("--merge_mode", default="replace", choices=["replace", "append"])
     parser.add_argument("--max_comments", type=int, default=500)
     parser.add_argument("--prepare_output_dir", default=None)
+    parser.add_argument(
+        "--group_by",
+        default=None,
+        help="Optional column for group-aware split (e.g., video_id)",
+    )
 
     # Hybrid DL
     parser.add_argument("--train_csv", default=None)
@@ -211,10 +221,14 @@ def run_prepare(args) -> Path:
         cmd += ["--video_list", args.video_list]
     if args.labeled_csv:
         cmd += ["--labeled_csv", args.labeled_csv]
+    if args.heldout_labeled_csv:
+        cmd += ["--heldout_labeled_csv", args.heldout_labeled_csv]
     cmd += ["--label_method", args.label_method]
     cmd += ["--confidence_threshold", str(args.confidence_threshold)]
     cmd += ["--merge_mode", args.merge_mode]
     cmd += ["--max_comments", str(args.max_comments)]
+    if args.group_by:
+        cmd += ["--group_by", args.group_by]
     cmd += ["--output_dir", str(output_dir)]
     run_command(cmd)
 

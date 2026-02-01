@@ -53,14 +53,28 @@ pip install shap lime
 
 ```bash
 # Train classical ML models
-python scripts/train/train_classical.py --model logreg --data data/train.csv
-python scripts/train/train_classical.py --model svm --data data/train.csv
+python train_logreg_youtube.py --data data/train.csv --test_data data/test.csv
+python train_svm_youtube.py --data data/train.csv --test_data data/test.csv
+python train_tfidf_youtube.py --data data/train.csv --test_data data/test.csv
 
 # Train deep learning model
-python scripts/train/train_hybrid_dl.py --config configs/model_configs/hybrid_dl.yaml
+python research/train_hybrid_dl.py --config research/config/hybrid_dl_config.yaml
 
-# Train BERT transformer
-python scripts/train/train_transformer.py --model bert-base-uncased --epochs 5
+# Train BERT transformer (fine-tuning script not included)
+# Use HuggingFace Trainer to fine-tune and save to ./models/transformers/bert
+```
+
+### Gold Set (Human-Labeled Test)
+
+```bash
+# Create a small annotation template
+python scripts/prepare/create_gold_set.py --input_csv data/train.csv --sample_size 300
+
+# After manual labeling, use it as a held-out test set
+python prepare_youtube_training_data.py \
+  --video_list videos.txt \
+  --label_method auto \
+  --heldout_labeled_csv gold_set_labeled.csv
 ```
 
 ### Using the API

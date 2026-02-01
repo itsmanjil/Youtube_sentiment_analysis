@@ -15,6 +15,7 @@ from scipy import stats
 from typing import Dict, List, Tuple, Any
 import json
 from datetime import datetime
+from research.evaluation.calibration import compute_calibration_metrics
 
 
 class ThesisEvaluationFramework:
@@ -79,6 +80,8 @@ class ThesisEvaluationFramework:
             'recall_micro': [],
             'f1_micro': [],
             'cohen_kappa': [],
+            'ece': [],
+            'brier': [],
             'per_class_f1': {label: [] for label in np.unique(y)},
             'confusion_matrices': [],
             'predictions': [],
@@ -126,6 +129,22 @@ class ThesisEvaluationFramework:
             # Cohen's Kappa (agreement beyond chance)
             fold_results['cohen_kappa'].append(cohen_kappa_score(y_test, y_pred))
 
+            # Calibration metrics (if probabilities available)
+            if hasattr(model, "predict_proba"):
+                try:
+                    y_prob = model.predict_proba(X_test)
+                    labels_order = getattr(model, "classes_", np.unique(y))
+                    ece, brier = compute_calibration_metrics(
+                        y_test,
+                        y_prob,
+                        labels=list(labels_order),
+                        n_bins=15,
+                    )
+                    fold_results['ece'].append(ece)
+                    fold_results['brier'].append(brier)
+                except Exception:
+                    pass
+
             # Per-class F1 scores
             _, _, f1_per_class, _ = precision_recall_fscore_support(
                 y_test, y_pred, average=None, zero_division=0
@@ -167,8 +186,11 @@ class ThesisEvaluationFramework:
 
         # Compute mean and std for each metric
         for metric in ['accuracy', 'precision_macro', 'recall_macro', 'f1_macro',
-                       'precision_micro', 'recall_micro', 'f1_micro', 'cohen_kappa']:
+                       'precision_micro', 'recall_micro', 'f1_micro', 'cohen_kappa',
+                       'ece', 'brier']:
             values = fold_results[metric]
+            if not values:
+                continue
             aggregated['metrics'][metric] = {
                 'mean': float(np.mean(values)),
                 'std': float(np.std(values)),

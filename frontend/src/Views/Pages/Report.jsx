@@ -23,6 +23,29 @@ export default function Report() {
   const ensembleWeightsSource = analysisMeta?.ensemble?.weights_source || null;
   const metaLearnerInfo = analysisMeta?.meta_learner || null;
   const fuzzyInfo = analysisMeta?.fuzzy || null;
+  const calibrationInfo =
+    analysisMeta?.calibration ||
+    analysisMeta?.calibration_metrics ||
+    analysisMeta?.fuzzy?.calibration ||
+    analysisMeta?.fuzzy?.calibration_metrics ||
+    null;
+  const calibrationECE =
+    calibrationInfo?.ece ??
+    calibrationInfo?.expected_calibration_error ??
+    null;
+  const calibrationBrier =
+    calibrationInfo?.brier ??
+    calibrationInfo?.brier_score ??
+    null;
+  const calibrationMCE =
+    calibrationInfo?.mce ??
+    calibrationInfo?.maximum_calibration_error ??
+    null;
+  const calibrationBins = calibrationInfo?.bins ?? null;
+  const hasCalibration =
+    calibrationECE !== null ||
+    calibrationBrier !== null ||
+    calibrationMCE !== null;
   const ensembleWeightSummary = ensembleWeights
     ? Object.entries(ensembleWeights)
         .map(([key, value]) => `${key}: ${value}`)
@@ -34,6 +57,30 @@ export default function Report() {
       return "0%";
     }
     return `${(value * 100).toFixed(1)}%`;
+  };
+
+  const exportModelComparisonCSV = () => {
+    if (!Array.isArray(analysisMeta?.model_comparison) || analysisMeta.model_comparison.length === 0) {
+      return;
+    }
+    const headers = ["Model", "Accuracy", "Macro F1"];
+    const rows = analysisMeta.model_comparison.map((row) => [
+      row.name || row.model || "",
+      row.accuracy ?? "",
+      row.macro_f1 ?? "",
+    ]);
+    const csv = [headers, ...rows]
+      .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "model_comparison.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const sentimentTotals = (sentimentData?.sentimentBreakdown || []).reduce(
@@ -315,9 +362,51 @@ export default function Report() {
                 </table>
               </section>
             )}
+            {hasCalibration && (
+              <section className="product-area mt-4">
+                <h6>Calibration Metrics</h6>
+                <table className="table table-hover">
+                  <tbody>
+                    {calibrationECE !== null && (
+                      <tr>
+                        <td>Expected Calibration Error (ECE)</td>
+                        <td>{calibrationECE}</td>
+                      </tr>
+                    )}
+                    {calibrationBrier !== null && (
+                      <tr>
+                        <td>Multiclass Brier Score</td>
+                        <td>{calibrationBrier}</td>
+                      </tr>
+                    )}
+                    {calibrationMCE !== null && (
+                      <tr>
+                        <td>Maximum Calibration Error (MCE)</td>
+                        <td>{calibrationMCE}</td>
+                      </tr>
+                    )}
+                    {calibrationBins !== null && (
+                      <tr>
+                        <td>Calibration Bins</td>
+                        <td>{calibrationBins}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </section>
+            )}
             {Array.isArray(analysisMeta?.model_comparison) && analysisMeta.model_comparison.length > 0 && (
               <section className="product-area mt-4">
-                <h6>Model Comparison (Research Mode)</h6>
+                <div className="d-flex align-items-center justify-content-between">
+                  <h6 className="mb-0">Model Comparison (Research Mode)</h6>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary"
+                    onClick={exportModelComparisonCSV}
+                  >
+                    Export CSV
+                  </button>
+                </div>
                 <table className="table table-hover">
                   <thead>
                     <tr>

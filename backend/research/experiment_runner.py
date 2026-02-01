@@ -11,6 +11,8 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
 from src.sentiment import coerce_sentiment_result, get_sentiment_engine, normalize_label
+from research.evaluation.calibration import compute_calibration_metrics, probs_to_matrix
+from src.utils import SENTIMENT_LABELS
 
 
 def load_dataset(csv_path):
@@ -50,18 +52,34 @@ def _load_ensemble_weights(value):
     return None
 
 
-def evaluate_engine(engine_type, texts, labels, **kwargs):
+def evaluate_engine(engine_type, texts, labels, calibration_bins=15, **kwargs):
     engine = get_sentiment_engine(engine_type, **kwargs)
     results = engine.batch_analyze(texts)
     predictions = [
         coerce_sentiment_result(result, engine_type).label
         for result in results
     ]
+    probs_list = [
+        coerce_sentiment_result(result, engine_type).probs
+        for result in results
+    ]
+    prob_matrix = probs_to_matrix(probs_list, labels=SENTIMENT_LABELS)
+    ece, brier = compute_calibration_metrics(
+        labels,
+        prob_matrix,
+        labels=SENTIMENT_LABELS,
+        n_bins=calibration_bins,
+    )
 
     metrics = {
         "accuracy": round(accuracy_score(labels, predictions), 4),
         "macro_f1": round(f1_score(labels, predictions, average="macro"), 4),
         "report": classification_report(labels, predictions, output_dict=True),
+        "calibration": {
+            "ece": round(ece, 6),
+            "brier": round(brier, 6),
+            "bins": calibration_bins,
+        },
     }
     return metrics
 
@@ -92,6 +110,12 @@ def main():
         "--ensemble-weights",
         default=None,
         help="Optional JSON dict or a path to a JSON weights file.",
+    )
+    parser.add_argument(
+        "--calibration-bins",
+        type=int,
+        default=15,
+        help="Number of bins for Expected Calibration Error (default: 15).",
     )
     parser.add_argument("--output", default=None, help="Optional JSON output path.")
     args = parser.parse_args()
@@ -131,11 +155,17 @@ def main():
                 "ensemble",
                 texts,
                 labels,
+                calibration_bins=args.calibration_bins,
                 base_models=ensemble_models,
                 weights=ensemble_weights,
             )
         else:
-            metrics = evaluate_engine(model, texts, labels)
+            metrics = evaluate_engine(
+                model,
+                texts,
+                labels,
+                calibration_bins=args.calibration_bins,
+            )
         results[model] = metrics
 
     if args.output:
