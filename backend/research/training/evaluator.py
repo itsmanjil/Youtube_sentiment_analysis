@@ -84,9 +84,10 @@ class SentimentEvaluator:
         else:
             pred_classes = predictions
 
-        # Move to CPU and convert to numpy
-        pred_classes = pred_classes.detach().cpu().numpy()
-        labels = labels.detach().cpu().numpy()
+        # Avoid `.numpy()` because Torch can be built without a working NumPy bridge
+        # (common with NumPy 2.x ABI mismatches). Lists work fine for sklearn/numpy.
+        pred_classes = pred_classes.detach().cpu().tolist()
+        labels = labels.detach().cpu().tolist()
 
         self.all_predictions.extend(pred_classes)
         self.all_labels.extend(labels)

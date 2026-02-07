@@ -703,7 +703,27 @@ def main():
     parser = argparse.ArgumentParser(
         description='Train and evaluate meta-learner ensemble'
     )
-    parser.add_argument('--data', required=True, help='Path to labeled CSV dataset')
+    parser.add_argument(
+        '--data',
+        required=False,
+        help=(
+            "Path to a labeled CSV dataset with 'text' and 'label' columns. "
+            "If provided, the script will create an internal train/test split. "
+            "Prefer --train_csv/--test_csv for thesis-grade reproducibility."
+        ),
+    )
+    parser.add_argument(
+        '--train_csv',
+        required=False,
+        help="Explicit training split CSV (expects 'text' and 'label' columns by default).",
+    )
+    parser.add_argument(
+        '--test_csv',
+        required=False,
+        help="Explicit test split CSV (expects 'text' and 'label' columns by default).",
+    )
+    parser.add_argument('--text_column', default='text', help='Name of the text column')
+    parser.add_argument('--label_column', default='label', help='Name of the label column')
     parser.add_argument('--test_size', type=float, default=0.2)
     parser.add_argument('--random_seed', type=int, default=42)
     parser.add_argument(
@@ -741,16 +761,39 @@ def main():
 
     args = parser.parse_args()
 
-    # Load data
-    print("Loading dataset...")
-    df = pd.read_csv(args.data)
-    df = df.dropna(subset=['text', 'label'])
+    def _load_split(path: str) -> pd.DataFrame:
+        df = pd.read_csv(path)
+        if args.text_column not in df.columns or args.label_column not in df.columns:
+            raise ValueError(
+                f"Dataset must contain '{args.text_column}' and '{args.label_column}' columns. "
+                f"Got columns: {list(df.columns)}"
+            )
+        df = df.dropna(subset=[args.text_column, args.label_column])
+        df = df.rename(columns={args.text_column: "text", args.label_column: "label"})
+        return df
 
-    # Split
-    from sklearn.model_selection import train_test_split
-    train_df, test_df = train_test_split(
-        df, test_size=args.test_size, random_state=args.random_seed, stratify=df['label']
-    )
+    # Load data
+    if args.train_csv:
+        if not args.test_csv:
+            raise ValueError("--test_csv is required when using --train_csv")
+        print("Loading predefined splits...")
+        train_df = _load_split(args.train_csv)
+        test_df = _load_split(args.test_csv)
+    else:
+        if not args.data:
+            raise ValueError("Provide either --data or --train_csv/--test_csv")
+
+        print("Loading dataset...")
+        df = _load_split(args.data)
+
+        # Split
+        from sklearn.model_selection import train_test_split
+        train_df, test_df = train_test_split(
+            df,
+            test_size=args.test_size,
+            random_state=args.random_seed,
+            stratify=df['label'],
+        )
 
     train_texts = train_df['text'].tolist()
     train_labels = train_df['label'].tolist()

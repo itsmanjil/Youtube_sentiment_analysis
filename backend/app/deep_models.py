@@ -276,8 +276,10 @@ class HybridDLSentimentEngine:
             probabilities = F.softmax(logits, dim=-1)  # (1, 3)
 
         # Get prediction
-        probs = probabilities[0].cpu().numpy()  # (3,)
-        pred_idx = int(probs.argmax())
+        # Avoid `.numpy()` because Torch can be built without a working NumPy bridge
+        # (common with NumPy 2.x ABI mismatches). Use pure Torch + `.tolist()`.
+        probs = probabilities[0].detach().cpu().tolist()  # (3,)
+        pred_idx = int(torch.argmax(probabilities[0]).item())
         pred_label = self.idx2label[pred_idx]
         pred_score = float(probs[pred_idx])
 
@@ -298,8 +300,8 @@ class HybridDLSentimentEngine:
             probs=probs_dict,
             model="hybrid_dl",
             raw={
-                'logits': logits[0].cpu().numpy().tolist(),
-                'attention_pooling_weights': attention_weights['attention_pooling'][0].cpu().numpy().tolist()[:50],  # First 50 weights
+                'logits': logits[0].detach().cpu().tolist(),
+                'attention_pooling_weights': attention_weights['attention_pooling'][0].detach().cpu().tolist()[:50],  # First 50 weights
             }
         )
 
@@ -344,11 +346,11 @@ class HybridDLSentimentEngine:
                 logits, attention_weights = self.model(batch_tensor)
                 probabilities = F.softmax(logits, dim=-1)  # (batch_size, 3)
 
-            # Process each prediction
-            probs_batch = probabilities.cpu().numpy()
-
-            for j, probs in enumerate(probs_batch):
-                pred_idx = int(probs.argmax())
+            # Process each prediction (stay in Torch; `.numpy()` may be unavailable)
+            for j in range(probabilities.shape[0]):
+                row = probabilities[j]
+                probs = row.detach().cpu().tolist()
+                pred_idx = int(torch.argmax(row).item())
                 pred_label = self.idx2label[pred_idx]
                 pred_score = float(probs[pred_idx])
 
@@ -365,7 +367,7 @@ class HybridDLSentimentEngine:
                     score=pred_score,
                     probs=probs_dict,
                     model="hybrid_dl",
-                    raw={'logits': logits[j].cpu().numpy().tolist()}
+                    raw={'logits': logits[j].detach().cpu().tolist()}
                 )
 
                 results.append(result)

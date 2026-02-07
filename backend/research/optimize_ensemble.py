@@ -24,10 +24,13 @@ def load_dataset(csv_path):
     return df
 
 
-def precompute_model_probs(models, texts):
+def precompute_model_probs(models, texts, *, preprocess: bool = False):
     model_probs = {}
     for model in models:
-        engine = get_sentiment_engine(model)
+        engine_kwargs = {}
+        if preprocess and model in {"tfidf", "logreg", "svm"}:
+            engine_kwargs["preprocess"] = True
+        engine = get_sentiment_engine(model, **engine_kwargs)
         results = engine.batch_analyze(texts)
         model_probs[model] = [
             normalize_probs(coerce_sentiment_result(result, model).probs)
@@ -116,6 +119,14 @@ def main():
         default="logreg,svm,tfidf",
         help="Comma-separated model list.",
     )
+    parser.add_argument(
+        "--preprocess",
+        action="store_true",
+        help=(
+            "Enable the shared classical preprocessing for the underlying base models. "
+            "Use this only if the corresponding artifacts were trained with preprocessing enabled."
+        ),
+    )
     parser.add_argument("--particles", type=int, default=20)
     parser.add_argument("--iterations", type=int, default=30)
     parser.add_argument("--output", default=None, help="Optional JSON output path.")
@@ -148,7 +159,7 @@ def main():
     ]
     val_texts = val_df["text"].tolist()
     val_labels = val_df["label"].tolist()
-    val_probs = precompute_model_probs(models, val_texts)
+    val_probs = precompute_model_probs(models, val_texts, preprocess=bool(args.preprocess))
 
     weights, score = pso_optimize(
         models,
@@ -159,11 +170,16 @@ def main():
         seed=args.random_seed,
     )
 
-    result = {"weights": weights, "val_macro_f1": round(score, 4)}
+    result = {
+        "weights": weights,
+        "val_macro_f1": round(score, 4),
+        "models": models,
+        "preprocess": bool(args.preprocess),
+    }
     if test_df is not None:
         test_texts = test_df["text"].tolist()
         test_labels = test_df["label"].tolist()
-        test_probs = precompute_model_probs(models, test_texts)
+        test_probs = precompute_model_probs(models, test_texts, preprocess=bool(args.preprocess))
         test_score = evaluate_weights(weights, models, test_labels, test_probs)
         result["test_macro_f1"] = round(test_score, 4)
     if args.output:

@@ -34,10 +34,14 @@ def build_fuzzy_engine(
     t_conorm,
     alpha_cut,
     resolution,
+    preprocess: bool = False,
 ):
     base_engines = {}
     for model in base_models:
-        base_engines[model] = get_sentiment_engine(model)
+        engine_kwargs = {}
+        if preprocess and model in {"tfidf", "logreg", "svm"}:
+            engine_kwargs["preprocess"] = True
+        base_engines[model] = get_sentiment_engine(model, **engine_kwargs)
 
     return FuzzySentimentEngine(
         base_engines=base_engines,
@@ -89,6 +93,14 @@ def main():
     parser.add_argument("--alpha-cut", type=float, default=0.0)
     parser.add_argument("--resolution", type=int, default=100)
     parser.add_argument("--confidence-threshold", type=float, default=0.6)
+    parser.add_argument(
+        "--preprocess",
+        action="store_true",
+        help=(
+            "Enable the shared classical preprocessing for the underlying base models. "
+            "Use this only if the corresponding artifacts were trained with preprocessing enabled."
+        ),
+    )
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--output", default=None, help="Optional JSON output path.")
     args = parser.parse_args()
@@ -123,6 +135,7 @@ def main():
         t_conorm=args.t_conorm,
         alpha_cut=args.alpha_cut,
         resolution=args.resolution,
+        preprocess=bool(args.preprocess),
     )
 
     results = {
@@ -138,6 +151,7 @@ def main():
             "confidence_threshold": args.confidence_threshold,
             "use_full": args.use_full,
             "limit": args.limit,
+            "preprocess": bool(args.preprocess),
         },
     }
 

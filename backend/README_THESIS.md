@@ -42,8 +42,12 @@ cd Youtube_sentiment_analysis/backend
 # Install dependencies
 pip install -r requirements.txt
 
-# Install optional dependencies for deep learning
-pip install torch transformers
+# Optional: deep learning engines (Hybrid-DL / Transformers)
+# PyTorch wheels can be sensitive to the NumPy ABI. Prefer a separate env:
+#   python -m venv venv-dl
+#   source venv-dl/bin/activate
+#   pip install -r requirements-dl.txt
+#   pip install -r requirements.txt
 
 # Install explainability tools
 pip install shap lime
@@ -63,6 +67,21 @@ python research/train_hybrid_dl.py --config research/config/hybrid_dl_config.yam
 # Train BERT transformer (fine-tuning script not included)
 # Use HuggingFace Trainer to fine-tune and save to ./models/transformers/bert
 ```
+
+### Dataset Leakage Check (Important)
+
+Exact-duplicate texts across `train/val/test` can inflate reported metrics. This repo includes a checker:
+
+```bash
+python scripts/prepare/check_split_leakage.py \
+  --train data/train.csv --val data/val.csv --test data/test.csv
+```
+
+When generating splits with `scripts/prepare/prepare_hf_dataset.py`, the pipeline:
+- Drops texts with conflicting labels
+- Deduplicates by normalized text before splitting
+
+Split provenance is written to `data/split_metadata.json`.
 
 ### Gold Set (Human-Labeled Test)
 

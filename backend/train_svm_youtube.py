@@ -106,12 +106,47 @@ def train_model(train_df, test_df, args):
         class_weight=_parse_class_weight(args.class_weight),
     )
     if args.calibration_folds and args.calibration_folds >= 2:
-        model = CalibratedClassifierCV(
-            svc,
-            method=args.calibration_method,
-            cv=args.calibration_folds,
-        )
-        model.fit(train_vectors, train_labels)
+        # Thesis note: we prefer a dedicated calibration split when `calibration_size` > 0.
+        # This is much faster than CV calibration on large corpora and avoids training
+        # multiple expensive SVMs.
+        if args.calibration_size and args.calibration_size > 0:
+            from sklearn.model_selection import train_test_split, PredefinedSplit
+
+            X_fit, X_cal, y_fit, y_cal = train_test_split(
+                train_vectors,
+                train_labels,
+                test_size=args.calibration_size,
+                random_state=args.random_seed,
+                stratify=train_labels,
+            )
+
+            # scikit-learn 1.8 removed `cv='prefit'` for CalibratedClassifierCV.
+            # Use a PredefinedSplit with a single calibration fold instead.
+            from scipy.sparse import vstack
+            import numpy as np
+
+            X_all = vstack([X_fit, X_cal])
+            y_all = np.concatenate([y_fit.to_numpy(), y_cal.to_numpy()])
+            test_fold = np.concatenate(
+                [
+                    np.full(X_fit.shape[0], -1, dtype=int),
+                    np.zeros(X_cal.shape[0], dtype=int),
+                ]
+            )
+            split = PredefinedSplit(test_fold=test_fold)
+            model = CalibratedClassifierCV(
+                svc,
+                method=args.calibration_method,
+                cv=split,
+            )
+            model.fit(X_all, y_all)
+        else:
+            model = CalibratedClassifierCV(
+                svc,
+                method=args.calibration_method,
+                cv=args.calibration_folds,
+            )
+            model.fit(train_vectors, train_labels)
     else:
         model = svc
         model.fit(train_vectors, train_labels)
@@ -265,6 +300,16 @@ def main():
             "calibration_size": args.calibration_size,
             "calibration_folds": args.calibration_folds,
             "calibrated": bool(args.calibration_folds and args.calibration_folds >= 2),
+            "strategy": (
+                "prefit_split"
+                if bool(args.calibration_folds and args.calibration_folds >= 2)
+                and bool(args.calibration_size and args.calibration_size > 0)
+                else (
+                    "cv"
+                    if bool(args.calibration_folds and args.calibration_folds >= 2)
+                    else "none"
+                )
+            ),
         },
         "random_seed": args.random_seed,
         "sklearn_version": sklearn.__version__,

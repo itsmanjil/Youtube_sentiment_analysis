@@ -158,11 +158,14 @@ class AttentionExplainer:
 
         # Extract attention from specified layer
         # Shape: (batch, num_heads, seq_len, seq_len)
-        attention = outputs.attentions[layer][0].cpu().numpy()
+        att_tensor = outputs.attentions[layer][0]
+        num_heads = int(att_tensor.shape[0])
+        # Avoid `.numpy()`; Torch may not have a working NumPy bridge.
+        attention = att_tensor.detach().cpu().tolist()
 
         if head is not None:
             # Use specific head
-            attention_weights = attention[head]
+            attention_weights = np.asarray(attention[head])
         else:
             # Average across heads
             attention_weights = np.mean(attention, axis=0)
@@ -176,7 +179,7 @@ class AttentionExplainer:
             "tokens": tokens,
             "attention_weights": attention_weights.tolist(),
             "token_importance": token_importance,
-            "num_heads": attention.shape[0],
+            "num_heads": num_heads,
             "layer": layer,
             "head": head,
             "model_type": "bert",
@@ -215,7 +218,7 @@ class AttentionExplainer:
         if isinstance(attention_weights, np.ndarray):
             attention_weights = attention_weights.tolist()
         elif hasattr(attention_weights, "cpu"):
-            attention_weights = attention_weights.cpu().numpy().tolist()
+            attention_weights = attention_weights.detach().cpu().tolist()
 
         # Flatten if needed
         if isinstance(attention_weights, list) and len(attention_weights) > 0:

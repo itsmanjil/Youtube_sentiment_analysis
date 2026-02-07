@@ -1,12 +1,12 @@
 {
   "train_dataset": "backend/data/train.csv",
-  "test_dataset": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv",
-  "train_samples": 663984,
-  "test_samples": 207313,
+  "test_dataset": "backend/data/test.csv",
+  "train_samples": 634528,
+  "test_samples": 199045,
   "label_distribution": {
-    "Negative": 222269,
-    "Neutral": 221649,
-    "Positive": 220066
+    "Negative": 217608,
+    "Neutral": 209674,
+    "Positive": 207246
   },
   "max_per_class": null,
   "text_column": "text",
@@ -19,6 +19,15 @@
     "lowercase": true,
     "strip_accents": false
   },
+  "preprocessing": {
+    "enabled": false,
+    "type": "classical_v1",
+    "config": {
+      "expand_negation_contractions": true,
+      "negation_tag": true,
+      "remove_stopwords": true
+    }
+  },
   "model": {
     "type": "MultinomialNB",
     "alpha": 0.5
@@ -26,39 +35,39 @@
   "random_seed": 42,
   "sklearn_version": "1.8.0",
   "pandas_version": "3.0.0",
-  "accuracy": 0.6500798309802087,
-  "f1_macro": 0.6500252399135765,
+  "accuracy": 0.6504559270516718,
+  "f1_macro": 0.650287416001872,
   "report": {
     "Negative": {
-      "precision": 0.596273958234004,
-      "recall": 0.7205202437021994,
-      "f1-score": 0.6525354638839067,
-      "support": 69429.0
+      "precision": 0.6047947648744726,
+      "recall": 0.7216367745912466,
+      "f1-score": 0.6580696107233439,
+      "support": 68134.0
     },
     "Neutral": {
-      "precision": 0.6072891853263459,
-      "recall": 0.5628145880552203,
-      "f1-score": 0.5842066668703596,
-      "support": 67946.0
+      "precision": 0.6025967581872312,
+      "recall": 0.561743528069445,
+      "f1-score": 0.5814534340911448,
+      "support": 64857.0
     },
     "Positive": {
-      "precision": 0.769335120022499,
-      "recall": 0.6649317967342503,
-      "f1-score": 0.7133335889864632,
-      "support": 69938.0
+      "precision": 0.7657624633431085,
+      "recall": 0.664138432191843,
+      "f1-score": 0.7113392031911271,
+      "support": 66054.0
     },
-    "accuracy": 0.6500798309802087,
+    "accuracy": 0.6504559270516718,
     "macro avg": {
-      "precision": 0.6576327545276163,
-      "recall": 0.6494222094972234,
-      "f1-score": 0.6500252399135765,
-      "support": 207313.0
+      "precision": 0.6577179954682708,
+      "recall": 0.6491729116175117,
+      "f1-score": 0.650287416001872,
+      "support": 199045.0
     },
     "weighted avg": {
-      "precision": 0.6582671383682939,
-      "recall": 0.6500798309802087,
-      "f1-score": 0.650651504998261,
-      "support": 207313.0
+      "precision": 0.6574964365312982,
+      "recall": 0.6504559270516718,
+      "f1-score": 0.6507826871283399,
+      "support": 199045.0
     }
   }
 }

@@ -117,6 +117,15 @@ def main():
         default=15,
         help="Number of bins for Expected Calibration Error (default: 15).",
     )
+    parser.add_argument(
+        "--preprocess",
+        action="store_true",
+        help=(
+            "Enable the shared classical preprocessing (negation expansion/tagging, "
+            "stopword removal) for classical models and derived ensembles. "
+            "Use this only if you also trained the underlying models with preprocessing enabled."
+        ),
+    )
     parser.add_argument("--output", default=None, help="Optional JSON output path.")
     args = parser.parse_args()
 
@@ -150,6 +159,16 @@ def main():
 
     results = {}
     for model in model_list:
+        base_kwargs = {}
+        if args.preprocess and model in {
+            "tfidf",
+            "logreg",
+            "svm",
+            "ensemble",
+            "meta_learner",
+            "fuzzy_ensemble",
+        }:
+            base_kwargs["preprocess"] = True
         if model == "ensemble":
             metrics = evaluate_engine(
                 "ensemble",
@@ -158,6 +177,7 @@ def main():
                 calibration_bins=args.calibration_bins,
                 base_models=ensemble_models,
                 weights=ensemble_weights,
+                **base_kwargs,
             )
         else:
             metrics = evaluate_engine(
@@ -165,6 +185,7 @@ def main():
                 texts,
                 labels,
                 calibration_bins=args.calibration_bins,
+                **base_kwargs,
             )
         results[model] = metrics
 
