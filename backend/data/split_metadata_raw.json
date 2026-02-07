@@ -1,0 +1,64 @@
+{
+  "created_at": "2026-02-07T05:22:54Z",
+  "source": {
+    "type": "local_backup_splits",
+    "paths": {
+      "train": "backend/data/train_leaky.csv",
+      "val": "backend/data/val_leaky.csv",
+      "test": "backend/data/test_leaky.csv"
+    },
+    "raw_rows": 1032225
+  },
+  "normalization": {
+    "text_whitespace_collapse": true,
+    "text_strip": true,
+    "label_title_case": true,
+    "keep_labels": [
+      "Negative",
+      "Neutral",
+      "Positive"
+    ],
+    "drop_empty_text": true,
+    "drop_conflicting_labels_by_text": true,
+    "dedupe_by_text": true
+  },
+  "filter_stats": {
+    "conflicting_texts_dropped": 1802,
+    "rows_after_conflict_drop": 1011379,
+    "duplicate_text_rows_removed": 24149,
+    "final_unique_text_rows": 987230
+  },
+  "split": {
+    "strategy": "stratified",
+    "random_state": 42,
+    "test_size": 0.2,
+    "val_size": 0.2,
+    "paths": {
+      "train": "backend/data/train.csv",
+      "val": "backend/data/val.csv",
+      "test": "backend/data/test.csv"
+    },
+    "rows": {
+      "train": 634528,
+      "val": 153657,
+      "test": 199045
+    },
+    "label_distribution": {
+      "train": {
+        "Negative": 217608,
+        "Neutral": 209674,
+        "Positive": 207246
+      },
+      "val": {
+        "Negative": 53304,
+        "Neutral": 50311,
+        "Positive": 50042
+      },
+      "test": {
+        "Negative": 68134,
+        "Positive": 66054,
+        "Neutral": 64857
+      }
+    }
+  }
+}

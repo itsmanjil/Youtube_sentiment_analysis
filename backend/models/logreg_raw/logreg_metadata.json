@@ -1,0 +1,77 @@
+{
+  "train_dataset": "backend/data/train.csv",
+  "test_dataset": "backend/data/test.csv",
+  "train_samples": 634528,
+  "test_samples": 199045,
+  "label_distribution": {
+    "Negative": 217608,
+    "Neutral": 209674,
+    "Positive": 207246
+  },
+  "max_per_class": null,
+  "text_column": "text",
+  "label_column": "label",
+  "vectorizer": {
+    "max_features": 75000,
+    "min_df": 2,
+    "max_df": 0.95,
+    "ngram_range": "1,2",
+    "lowercase": true,
+    "strip_accents": false
+  },
+  "preprocessing": {
+    "enabled": false,
+    "type": "classical_v1",
+    "config": {
+      "expand_negation_contractions": true,
+      "negation_tag": true,
+      "remove_stopwords": true
+    }
+  },
+  "model": {
+    "type": "LogisticRegression",
+    "C": 1.0,
+    "max_iter": 200,
+    "solver": "saga",
+    "class_weight": "none",
+    "n_jobs": -1
+  },
+  "random_seed": 42,
+  "sklearn_version": "1.8.0",
+  "pandas_version": "3.0.0",
+  "accuracy": 0.6874827300359215,
+  "f1_macro": 0.6885218897391964,
+  "report": {
+    "Negative": {
+      "precision": 0.6881546902966462,
+      "recall": 0.6884374908269,
+      "f1-score": 0.6882960615131772,
+      "support": 68134.0
+    },
+    "Neutral": {
+      "precision": 0.6150615702185209,
+      "recall": 0.6661578549732489,
+      "f1-score": 0.6395908276709449,
+      "support": 64857.0
+    },
+    "Positive": {
+      "precision": 0.7706223820046836,
+      "recall": 0.7074363399642717,
+      "f1-score": 0.737678780033467,
+      "support": 66054.0
+    },
+    "accuracy": 0.6874827300359215,
+    "macro avg": {
+      "precision": 0.691279547506617,
+      "recall": 0.6873438952548069,
+      "f1-score": 0.6885218897391964,
+      "support": 199045.0
+    },
+    "weighted avg": {
+      "precision": 0.6917052462974287,
+      "recall": 0.6874827300359215,
+      "f1-score": 0.6888137873431833,
+      "support": 199045.0
+    }
+  }
+}

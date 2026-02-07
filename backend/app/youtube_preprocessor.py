@@ -3,6 +3,15 @@ import re
 import emoji
 from nltk.tokenize import word_tokenize
 
+# Ensure deterministic language detection when langdetect is used.
+# Without this, results may vary run-to-run, which is a thesis-grade reproducibility risk.
+try:  # pragma: no cover - depends on optional runtime environment
+    from langdetect import DetectorFactory
+
+    DetectorFactory.seed = 0
+except Exception:
+    pass
+
 
 class YouTubePreprocessor:
 

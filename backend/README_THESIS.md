@@ -79,9 +79,19 @@ python scripts/prepare/check_split_leakage.py \
 
 When generating splits with `scripts/prepare/prepare_hf_dataset.py`, the pipeline:
 - Drops texts with conflicting labels
-- Deduplicates by normalized text before splitting
+- Optionally applies the same YouTube preprocessing used by the API (`--youtube_preprocess`)
+- Deduplicates by final model-input text before splitting
+- Uses group-aware splitting by `VideoID` when available
 
 Split provenance is written to `data/split_metadata.json`.
+
+To generate leakage-safe, API-aligned splits:
+
+```bash
+python scripts/prepare/prepare_hf_dataset.py --youtube_preprocess
+```
+
+For production-aligned filtering (slower), add `--filter_spam` and/or `--filter_language`.
 
 ### Gold Set (Human-Labeled Test)
 
