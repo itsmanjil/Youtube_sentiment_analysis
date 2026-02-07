@@ -4,7 +4,6 @@ from __future__ import print_function
 import json
 import os
 import logging
-from functools import lru_cache
 from collections import Counter
 from pathlib import Path
 
@@ -14,15 +13,11 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 from googleapiclient.errors import HttpError
-import nltk
 
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
-from nltk.tokenize import ToktokTokenizer, word_tokenize
-from nltk.corpus import wordnet
 
 from .models import *
 from .youtube_fetcher import YouTubeFetcher
@@ -40,111 +35,8 @@ from src.sentiment import (
     get_sentiment_engine,
 )
 
-tokenizer = ToktokTokenizer()
-
-CLASSICAL_MODELS = {"logreg", "svm", "tfidf", "ensemble", "meta_learner", "fuzzy_ensemble"}
-
-
-@lru_cache(maxsize=1)
-def get_stopword_list():
-    try:
-        return set(nltk.corpus.stopwords.words("english"))
-    except LookupError:
-        return set()
-
-
 # Use absolute paths from Django project root
 BASE_DIR = Path(__file__).resolve().parent.parent
-CONTRACTIONS_PATH = BASE_DIR / 'files' / 'contractions.json'
-NEGATIONS_PATH = BASE_DIR / 'files' / 'negations.json'
-
-# Load contractions with error handling
-if CONTRACTIONS_PATH.exists():
-    with open(CONTRACTIONS_PATH, "r") as f:
-        contractions_dict = json.load(f)
-    contractions = contractions_dict.get("contractions", {})
-    logger.info(f"Loaded {len(contractions)} contractions from {CONTRACTIONS_PATH}")
-else:
-    logger.error(f"Contractions file not found: {CONTRACTIONS_PATH}")
-    contractions = {}
-
-# Load negations with error handling
-if NEGATIONS_PATH.exists():
-    with open(NEGATIONS_PATH, "r") as f:
-        neg_dict = json.load(f)
-    negations = neg_dict.get("negations", [])
-    logger.info(f"Loaded {len(negations)} negations from {NEGATIONS_PATH}")
-else:
-    logger.error(f"Negations file not found: {NEGATIONS_PATH}")
-    negations = []
-
-
-def replace_contractions(text):
-    for word in text.split():
-        w = word.lower()
-        if w in contractions:
-            text = text.replace(word, contractions[w])
-    return text
-
-
-class AntonymReplacer(object):
-    def replace(self, word):
-        antonyms = set()
-        try:
-            synsets = wordnet.synsets(word)
-        except LookupError:
-            return None
-
-        for syn in synsets:
-            if syn.pos() in ["a", "s"]:
-                for lemma in syn.lemmas():
-                    for antonym in lemma.antonyms():
-                        antonyms.add(antonym.name())
-
-        if len(antonyms) == 1:
-            return antonyms.pop()
-        else:
-            if word in negations:
-                word = word.replace(word, negations[word])
-                return word
-        return None
-
-    def negReplacer(self, string):
-        i = 0
-        finalSent = ""
-        try:
-            sent = word_tokenize(string)
-        except LookupError:
-            # Fall back when NLTK punkt data isn't available.
-            sent = tokenizer.tokenize(string)
-        length_sent = len(sent)
-
-        while i < length_sent:
-            word = sent[i]
-            if word == "not" and i + 1 < length_sent:
-                antonymWord = self.replace(sent[i + 1])
-                if antonymWord:
-                    finalSent += antonymWord + " "
-                    i += 2
-                    continue
-
-            finalSent += word + " "
-            i += 1
-
-        return finalSent
-
-
-def replace_negation(text):
-    replacer = AntonymReplacer()
-    return replacer.negReplacer(text)
-
-
-def remove_stopwords(text):
-    stopword_list = get_stopword_list()
-    tokens = tokenizer.tokenize(text)
-    tokens = [token.strip().lower() for token in tokens]
-    filtered_tokens = [token for token in tokens if token not in stopword_list]
-    return " ".join(filtered_tokens)
 
 
 def _coerce_model_list(value):
@@ -363,16 +255,7 @@ def analyze_youtube_video(request):
 
         print(f"Processed {len(processed_comments)} comments")
 
-        # Step 4: Apply additional preprocessing (classical models only)
-        if sentiment_model in CLASSICAL_MODELS:
-            for item in processed_comments:
-                processed_text = item['processed_text']
-                processed_text = replace_contractions(processed_text)
-                processed_text = replace_negation(processed_text)
-                processed_text = remove_stopwords(processed_text)
-                item['processed_text'] = processed_text
-
-        # Step 5: Sentiment Analysis
+        # Step 4: Sentiment Analysis
         print(f"Running sentiment analysis using {sentiment_model}...")
         engine_kwargs = {}
         if sentiment_model == "ensemble":
@@ -424,7 +307,7 @@ def analyze_youtube_video(request):
             item['sentiment_probs'] = result.probs
             item['confidence'] = confidence_from_probs(result.probs)
 
-        # Step 6: Save comments to database
+        # Step 5: Save comments to database
         print("Saving comments to database...")
         for item in processed_comments:
             try:
@@ -447,7 +330,7 @@ def analyze_youtube_video(request):
                 print(f"Error saving comment: {e}")
                 continue
 
-        # Step 7: Generate analytics
+        # Step 6: Generate analytics
         print("Generating analytics...")
         sentiments = [item['sentiment'] for item in processed_comments]
         sentiment_counts = Counter(sentiments)
@@ -543,7 +426,7 @@ def analyze_youtube_video(request):
         if isinstance(model_comparison, list):
             analysis_meta["model_comparison"] = model_comparison
 
-        # Step 8: Save analysis
+        # Step 7: Save analysis
         analysis = YouTubeAnalysis.objects.create(
             user=user,
             video=video,
@@ -560,7 +443,7 @@ def analyze_youtube_video(request):
             analysis_meta=analysis_meta,
         )
 
-        # Step 9: Calculate percentages
+        # Step 8: Calculate percentages
         total = len(processed_comments)
         sentiment_ratio = {
             'positive_percent': round(sentiment_data['Positive'] / total * 100, 2) if total > 0 else 0,
@@ -570,7 +453,7 @@ def analyze_youtube_video(request):
 
         print("Analysis complete!")
 
-        # Step 10: Return response
+        # Step 9: Return response
         return Response({
             'msg': 'Analysis complete',
             'video': {

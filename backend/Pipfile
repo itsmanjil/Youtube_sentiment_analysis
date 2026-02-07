@@ -20,10 +20,13 @@ youtube-comment-downloader = "*"
 yt-dlp = "*"
 emoji = "*"
 langdetect = "*"
-torch = "*"
 wordcloud = "*"
 matplotlib = "*"
-numpy = ">=2.0.0"
+numpy = "*"
+
+# Deep-learning extras (Hybrid-DL / Transformers)
+# - Install separately to avoid NumPy ABI issues with PyTorch wheels.
+# - See: backend/requirements-dl.txt
 
 [dev-packages]
 

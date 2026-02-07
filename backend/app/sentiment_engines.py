@@ -125,8 +125,8 @@ class TFIDFSentimentEngine:
             raise RuntimeError(
                 "TF-IDF model/vectorizer is not fitted or is incompatible with "
                 f"the current scikit-learn version.{version_note} "
-                "Reinstall scikit-learn==0.24.2 or retrain/re-serialize the model "
-                "with your current environment."
+                "Install the scikit-learn version used during training (see the model "
+                "metadata) or retrain/re-serialize the model with your current environment."
             )
 
     def _predict_probs(self, vector):

@@ -71,18 +71,15 @@ def list_available_engines() -> List[str]:
     """
     engines = list(_ENGINE_REGISTRY.keys())
 
-    # Check for optional engines
-    try:
-        import torch
-        engines.append("hybrid_dl")
-    except ImportError:
-        pass
+    # Check for optional engines without importing heavyweight deps.
+    # Importing torch/transformers can be slow and may emit ABI warnings.
+    import importlib.util
 
-    try:
-        import transformers
+    if importlib.util.find_spec("torch") is not None:
+        engines.append("hybrid_dl")
+
+    if importlib.util.find_spec("transformers") is not None:
         engines.extend(["bert", "transformer"])
-    except ImportError:
-        pass
 
     # Remove aliases for cleaner output
     engines = [e for e in engines if e not in ("ci_ensemble", "stacking", "fuzzy")]

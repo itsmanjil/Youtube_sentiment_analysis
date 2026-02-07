@@ -10,6 +10,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.svm import LinearSVC
 
+from src.preprocessing import ClassicalPreprocessConfig, preprocess_classical_texts
+
 
 LABELS = ("Negative", "Neutral", "Positive")
 
@@ -73,6 +75,19 @@ def train_model(train_df, test_df, args):
     test_texts = test_df["text"]
     test_labels = test_df["label"]
 
+    preprocess_cfg = ClassicalPreprocessConfig()
+    train_texts_clean = train_texts.tolist()
+    test_texts_clean = test_texts.tolist()
+    if args.preprocess:
+        train_texts_clean = preprocess_classical_texts(
+            train_texts_clean,
+            config=preprocess_cfg,
+        )
+        test_texts_clean = preprocess_classical_texts(
+            test_texts_clean,
+            config=preprocess_cfg,
+        )
+
     vectorizer = TfidfVectorizer(
         lowercase=not args.no_lowercase,
         max_features=args.max_features,
@@ -82,8 +97,8 @@ def train_model(train_df, test_df, args):
         strip_accents="unicode" if args.strip_accents else None,
     )
 
-    train_vectors = vectorizer.fit_transform(train_texts)
-    test_vectors = vectorizer.transform(test_texts)
+    train_vectors = vectorizer.fit_transform(train_texts_clean)
+    test_vectors = vectorizer.transform(test_texts_clean)
 
     svc = LinearSVC(
         C=args.C,
@@ -157,6 +172,15 @@ def main():
     parser.add_argument("--class_weight", default="none")
     parser.add_argument("--no_lowercase", action="store_true")
     parser.add_argument("--strip_accents", action="store_true")
+    parser.add_argument(
+        "--preprocess",
+        action="store_true",
+        help=(
+            "Enable the shared classical preprocessing (negation expansion/tagging, "
+            "stopword removal). If enabled, you must also enable preprocessing at "
+            "inference time (engine `preprocess=True`) for consistency."
+        ),
+    )
     parser.add_argument("--text_column", default="text")
     parser.add_argument("--label_column", default="label")
     parser.add_argument("--test_data", default=None, help="Path to test.csv")
@@ -220,6 +244,15 @@ def main():
             "ngram_range": args.ngram_range,
             "lowercase": not args.no_lowercase,
             "strip_accents": args.strip_accents,
+        },
+        "preprocessing": {
+            "enabled": bool(args.preprocess),
+            "type": "classical_v1",
+            "config": {
+                "expand_negation_contractions": True,
+                "negation_tag": True,
+                "remove_stopwords": True,
+            },
         },
         "model": {
             "type": "LinearSVC",

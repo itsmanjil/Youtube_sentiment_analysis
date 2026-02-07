@@ -1,0 +1,23 @@
+# Deep-learning extras for Hybrid-DL and Transformer engines.
+#
+# Why this is separate
+# --------------------
+# PyTorch wheels can be sensitive to the NumPy ABI version. If you install torch
+# into an environment with an incompatible NumPy major version, importing torch
+# can fail at runtime.
+#
+# If torch fails to import with an error mentioning "NumPy 2.x", create a fresh
+# environment, install this file first (pinning NumPy < 2), then install the
+# core requirements.
+#
+# Example (fresh venv):
+#   python -m venv venv-dl
+#   source venv-dl/bin/activate
+#   pip install -r backend/requirements-dl.txt
+#   pip install -r backend/requirements.txt
+
+numpy<2
+pandas<3
+scikit-learn==1.8.0
+torch==2.2.2
+transformers

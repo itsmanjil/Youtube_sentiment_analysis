@@ -39,6 +39,11 @@ import numpy as np
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
 from src.utils.config import get_model_path
+from src.preprocessing import (
+    ClassicalPreprocessConfig,
+    preprocess_classical_text,
+    preprocess_classical_texts,
+)
 from src.sentiment.base import SentimentResult, normalize_label, BaseSentimentEngine
 from src.sentiment.engines.artifact_utils import format_model_load_error
 
@@ -88,7 +93,12 @@ class SVMSentimentEngine(BaseSentimentEngine):
         self,
         model_path: Union[str, Path] = "./models/svm/model.sav",
         vectorizer_path: Union[str, Path] = "./models/svm/tfidfVectorizer.pickle",
+        preprocess: bool = False,
+        preprocess_config: Optional[ClassicalPreprocessConfig] = None,
     ):
+        self.preprocess = bool(preprocess)
+        self.preprocess_config = preprocess_config or ClassicalPreprocessConfig()
+
         model_path = get_model_path(model_path)
         vectorizer_path = get_model_path(vectorizer_path)
 
@@ -208,10 +218,13 @@ class SVMSentimentEngine(BaseSentimentEngine):
         SentimentResult
             Sentiment prediction with label, score, and probabilities.
         """
-        import pandas as pd
-
-        df = pd.DataFrame([{"text": text}])
-        text_vec = self.vectorizer.transform(df["text"])
+        raw_text = "" if text is None else str(text)
+        cleaned = (
+            preprocess_classical_text(raw_text, config=self.preprocess_config)
+            if self.preprocess
+            else raw_text
+        )
+        text_vec = self.vectorizer.transform([cleaned])
         prediction = self.model.predict(text_vec)[0]
 
         sentiment = normalize_label(prediction)
@@ -243,10 +256,13 @@ class SVMSentimentEngine(BaseSentimentEngine):
         List[SentimentResult]
             List of sentiment predictions.
         """
-        import pandas as pd
-
-        df = pd.DataFrame([{"text": text} for text in texts])
-        text_vec = self.vectorizer.transform(df["text"])
+        raw_texts = ["" if text is None else str(text) for text in texts]
+        cleaned_texts = (
+            preprocess_classical_texts(raw_texts, config=self.preprocess_config)
+            if self.preprocess
+            else raw_texts
+        )
+        text_vec = self.vectorizer.transform(cleaned_texts)
         predictions = self.model.predict(text_vec)
 
         probs = self._predict_probs(text_vec)

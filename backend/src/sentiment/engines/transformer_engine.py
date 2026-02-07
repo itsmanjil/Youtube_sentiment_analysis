@@ -206,9 +206,11 @@ class TransformerSentimentEngine(BaseSentimentEngine):
 
         # Convert to results
         results = []
-        probs_np = probs.cpu().numpy()
+        # Avoid `.numpy()` because Torch can be built without a working NumPy bridge
+        # (common when the NumPy ABI is incompatible). `.tolist()` is always safe.
+        probs_list = probs.detach().cpu().tolist()
 
-        for i, prob_row in enumerate(probs_np):
+        for i, prob_row in enumerate(probs_list):
             prob_dict = {
                 self.idx2label[j]: float(prob_row[j])
                 for j in range(self.num_labels)
@@ -266,10 +268,10 @@ class TransformerSentimentEngine(BaseSentimentEngine):
             )
             cls_embedding = outputs.last_hidden_state[0, 0, :]  # [CLS] token
 
-        tokens = self.tokenizer.convert_ids_to_tokens(input_ids[0])
+        tokens = self.tokenizer.convert_ids_to_tokens(input_ids[0].tolist())
 
         return {
-            "cls_embedding": cls_embedding.cpu().numpy().tolist(),
+            "cls_embedding": cls_embedding.detach().cpu().tolist(),
             "tokens": tokens,
         }
 
@@ -310,10 +312,10 @@ class TransformerSentimentEngine(BaseSentimentEngine):
             # outputs.attentions is tuple of (batch, num_heads, seq_len, seq_len)
             attention = outputs.attentions[layer][0]  # (num_heads, seq_len, seq_len)
 
-        tokens = self.tokenizer.convert_ids_to_tokens(input_ids[0])
+        tokens = self.tokenizer.convert_ids_to_tokens(input_ids[0].tolist())
 
         return {
-            "attention_weights": attention.cpu().numpy().tolist(),
+            "attention_weights": attention.detach().cpu().tolist(),
             "tokens": tokens,
             "num_heads": attention.shape[0],
         }

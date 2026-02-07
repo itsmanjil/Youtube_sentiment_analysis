@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from src.sentiment.base import BaseSentimentEngine, SentimentResult, normalize_label
 from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.preprocessing import ClassicalPreprocessConfig
 
 
 class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
@@ -65,6 +66,8 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
         resolution: int = 100,
         confidence_threshold: float = 0.6,
         enable_logging: bool = False,
+        preprocess: bool = False,
+        preprocess_config: Optional[ClassicalPreprocessConfig] = None,
     ):
         if base_models is None:
             base_models = ["logreg", "svm", "tfidf"]
@@ -77,14 +80,22 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
 
         self.requested_models = requested
         self.model_errors: Dict[str, str] = {}
+        self.preprocess = bool(preprocess)
+        self.preprocess_config = preprocess_config
 
         # Create base engines (avoid nested ensembles by using get_base_engine).
         from src.sentiment.factory import get_base_engine
 
         base_engines: Dict[str, Any] = {}
+        classical_models = {"tfidf", "logreg", "svm"}
         for model in self.requested_models:
             try:
-                base_engines[model] = get_base_engine(model)
+                engine_kwargs = {}
+                if model in classical_models and self.preprocess:
+                    engine_kwargs["preprocess"] = True
+                    if self.preprocess_config is not None:
+                        engine_kwargs["preprocess_config"] = self.preprocess_config
+                base_engines[model] = get_base_engine(model, **engine_kwargs)
             except Exception as exc:
                 self.model_errors[model] = str(exc)
 
@@ -199,4 +210,3 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
                 "resolution": self.resolution,
                 "confidence_threshold": self.confidence_threshold,
             }
-

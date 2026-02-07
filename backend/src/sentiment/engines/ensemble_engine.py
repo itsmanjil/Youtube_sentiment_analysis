@@ -32,6 +32,7 @@ Weights can be optimized using various methods:
 from typing import Dict, List, Optional, Union
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.preprocessing import ClassicalPreprocessConfig
 from src.sentiment.base import SentimentResult, coerce_sentiment_result, BaseSentimentEngine
 
 
@@ -89,9 +90,14 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         self,
         base_models: Optional[List[str]] = None,
         weights: Optional[Union[Dict[str, float], List[float]]] = None,
+        preprocess: bool = False,
+        preprocess_config: Optional[ClassicalPreprocessConfig] = None,
     ):
         if base_models is None:
             base_models = ["logreg", "svm", "tfidf"]
+
+        self.preprocess = bool(preprocess)
+        self.preprocess_config = preprocess_config
 
         self.requested_models = base_models
         self.engines = {}
@@ -100,9 +106,16 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         # Import factory function to get base engines
         from src.sentiment.factory import get_base_engine
 
+        classical_models = {"tfidf", "logreg", "svm"}
+
         for model in base_models:
             try:
-                self.engines[model] = get_base_engine(model)
+                engine_kwargs = {}
+                if model in classical_models and self.preprocess:
+                    engine_kwargs["preprocess"] = True
+                    if self.preprocess_config is not None:
+                        engine_kwargs["preprocess_config"] = self.preprocess_config
+                self.engines[model] = get_base_engine(model, **engine_kwargs)
             except Exception as exc:
                 self.model_errors[model] = str(exc)
 

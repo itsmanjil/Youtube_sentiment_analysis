@@ -41,6 +41,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
 from src.utils.config import get_model_path
+from src.preprocessing import ClassicalPreprocessConfig
 from src.sentiment.base import SentimentResult, normalize_label, coerce_sentiment_result, BaseSentimentEngine
 
 
@@ -95,7 +96,12 @@ class MetaLearnerSentimentEngine(BaseSentimentEngine):
         self,
         meta_model_path: Union[str, Path] = "./models/meta_learner.pkl",
         base_models: Optional[List[str]] = None,
+        preprocess: bool = False,
+        preprocess_config: Optional[ClassicalPreprocessConfig] = None,
     ):
+        self.preprocess = bool(preprocess)
+        self.preprocess_config = preprocess_config
+
         self.meta_model_path = get_model_path(meta_model_path)
 
         if not self.meta_model_path.exists():
@@ -164,6 +170,7 @@ class MetaLearnerSentimentEngine(BaseSentimentEngine):
         self.engines = {}
         self.model_errors = {}
 
+        classical_models = {"tfidf", "logreg", "svm"}
         for model in self.base_models:
             if model in ("ensemble", "meta_learner", "stacking"):
                 self.model_errors[model] = (
@@ -171,7 +178,12 @@ class MetaLearnerSentimentEngine(BaseSentimentEngine):
                 )
                 continue
             try:
-                self.engines[model] = get_base_engine(model)
+                engine_kwargs = {}
+                if model in classical_models and self.preprocess:
+                    engine_kwargs["preprocess"] = True
+                    if self.preprocess_config is not None:
+                        engine_kwargs["preprocess_config"] = self.preprocess_config
+                self.engines[model] = get_base_engine(model, **engine_kwargs)
             except Exception as exc:
                 self.model_errors[model] = str(exc)
 

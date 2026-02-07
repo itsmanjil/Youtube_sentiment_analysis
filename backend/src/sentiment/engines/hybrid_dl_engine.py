@@ -22,14 +22,15 @@ For training, see: scripts/train/train_hybrid_dl.py
 For architecture details, see: research/architectures/hybrid_cnn_bilstm.py
 """
 
-import pickle
 import json
+import pickle
+import re
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from src.utils import SENTIMENT_LABELS, normalize_probs
-from src.utils.config import get_model_path, Config
-from src.sentiment.base import SentimentResult, normalize_label, BaseSentimentEngine
+from src.utils import normalize_probs
+from src.utils.config import get_model_path
+from src.sentiment.base import SentimentResult, BaseSentimentEngine
 
 
 class HybridDLSentimentEngine(BaseSentimentEngine):
@@ -88,11 +89,15 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         try:
             import torch
             import torch.nn.functional as F
-        except ImportError:
+        except Exception as exc:
+            # In practice, PyTorch can fail to import for reasons other than a
+            # missing installation (most commonly a NumPy ABI mismatch).
             raise ImportError(
-                "HybridDLSentimentEngine requires PyTorch. "
-                "Install with: pip install torch"
-            )
+                "HybridDLSentimentEngine requires a working PyTorch install.\n"
+                "If you see an error mentioning NumPy 2.x, install a PyTorch build "
+                "compatible with NumPy 2.x or pin NumPy to <2 and reinstall the ML stack.\n"
+                f"Original error: {exc}"
+            ) from exc
 
         self.torch = torch
         self.F = F
@@ -124,64 +129,101 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         else:
             self.device = torch.device(device)
 
-        # Load vocabulary
+        # Load vocabulary (supports both dict and `Vocabulary` object formats).
         with open(vocab_path, "rb") as f:
-            self.vocab = pickle.load(f)
+            vocab_obj = pickle.load(f)
+
+        word2idx = None
+        if isinstance(vocab_obj, dict):
+            # Two common formats:
+            # 1) {"word2idx": {...}, "idx2word": {...}, ...}
+            # 2) {"<PAD>": 0, "<UNK>": 1, ...}
+            if isinstance(vocab_obj.get("word2idx"), dict):
+                word2idx = vocab_obj["word2idx"]
+            else:
+                word2idx = vocab_obj
+        elif hasattr(vocab_obj, "word2idx"):
+            word2idx = getattr(vocab_obj, "word2idx")
+
+        if not isinstance(word2idx, dict) or not word2idx:
+            raise RuntimeError(
+                "Unsupported vocabulary format. Expected a dict mapping tokens to indices, "
+                "or an object with a `.word2idx` dict."
+            )
+
+        self.word2idx = {str(key): int(value) for key, value in word2idx.items()}
+        self.vocab_size = len(self.word2idx)
 
         # Load model configuration if available
         metadata_path = model_path.parent / "metadata.json"
-        self.config = {}
+        self.metadata: Dict[str, Any] = {}
+        self.hyperparams: Dict[str, Any] = {}
         if metadata_path.exists():
             with open(metadata_path, "r") as f:
-                self.config = json.load(f)
+                self.metadata = json.load(f)
+            if isinstance(self.metadata, dict):
+                self.hyperparams = self.metadata.get("hyperparameters", {}) or {}
 
         # Load model architecture from research module
         from research.architectures.hybrid_cnn_bilstm import HybridCNNBiLSTM
 
         # Get model hyperparameters
-        vocab_size = len(self.vocab)
-        embed_dim = self.config.get("embed_dim", 300)
-        hidden_dim = self.config.get("hidden_dim", 128)
-        num_classes = self.config.get("num_classes", 3)
+        embedding_dim = int(self.hyperparams.get("embedding_dim", 300))
+        num_classes = int(self.hyperparams.get("num_classes", 3))
 
         # Initialize model
         self.model = HybridCNNBiLSTM(
-            vocab_size=vocab_size,
-            embed_dim=embed_dim,
-            hidden_dim=hidden_dim,
+            vocab_size=self.vocab_size,
+            embedding_dim=embedding_dim,
             num_classes=num_classes,
+            cnn_filter_sizes=self.hyperparams.get("cnn_filter_sizes", [3, 4, 5]),
+            cnn_num_filters=int(self.hyperparams.get("cnn_num_filters", 128)),
+            lstm_hidden_size=int(self.hyperparams.get("lstm_hidden_size", 128)),
+            lstm_num_layers=int(self.hyperparams.get("lstm_num_layers", 2)),
+            attention_num_heads=int(self.hyperparams.get("attention_num_heads", 4)),
+            classifier_hidden_sizes=self.hyperparams.get("classifier_hidden_sizes", [256, 128]),
+            dropout_cnn=float(self.hyperparams.get("dropout_cnn", 0.3)),
+            dropout_lstm=float(self.hyperparams.get("dropout_lstm", 0.3)),
+            dropout_attention=float(self.hyperparams.get("dropout_attention", 0.1)),
+            dropout_classifier=self.hyperparams.get("dropout_classifier", [0.5, 0.4]),
         )
 
         # Load weights
         checkpoint = torch.load(model_path, map_location=self.device)
-        if "model_state_dict" in checkpoint:
-            self.model.load_state_dict(checkpoint["model_state_dict"])
-        else:
-            self.model.load_state_dict(checkpoint)
+        state_dict = checkpoint
+        if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
+            state_dict = checkpoint["model_state_dict"]
+        self.model.load_state_dict(state_dict)
 
         self.model.to(self.device)
         self.model.eval()
 
         # Settings
-        self.max_len = self.config.get("max_len", 200)
-        self.pad_idx = self.vocab.get("<PAD>", 0)
-        self.unk_idx = self.vocab.get("<UNK>", 1)
+        self.max_len = int(self.hyperparams.get("max_len", 200))
+        self.pad_idx = int(self.word2idx.get("<PAD>", 0))
+        self.unk_idx = int(self.word2idx.get("<UNK>", 1))
 
         # Label mapping
         self.idx2label = {0: "Negative", 1: "Neutral", 2: "Positive"}
 
-    def _tokenize(self, text: str) -> List[int]:
-        """Convert text to token indices."""
-        tokens = text.lower().split()
-        indices = [self.vocab.get(token, self.unk_idx) for token in tokens]
+    def _tokenize(self, text: str) -> List[str]:
+        """Tokenize text in a way that matches the training pipeline."""
+        if text is None:
+            return []
+        cleaned = re.sub(r"[^a-zA-Z\\s]", " ", str(text))
+        cleaned = " ".join(cleaned.lower().split())
+        return cleaned.split() if cleaned else []
+
+    def _encode(self, tokens: List[str]) -> Tuple[List[int], int]:
+        """Convert tokens to padded/truncated indices and return (indices, length)."""
+        length = min(len(tokens), self.max_len)
+        indices = [self.word2idx.get(token, self.unk_idx) for token in tokens[: self.max_len]]
 
         # Truncate or pad
-        if len(indices) > self.max_len:
-            indices = indices[: self.max_len]
-        else:
+        if len(indices) < self.max_len:
             indices = indices + [self.pad_idx] * (self.max_len - len(indices))
 
-        return indices
+        return indices, length
 
     def analyze(self, text: str) -> SentimentResult:
         """
@@ -216,26 +258,30 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         if not texts:
             return []
 
-        # Tokenize all texts
-        token_ids = [self._tokenize(text) for text in texts]
+        token_lists = [self._tokenize(text) for text in texts]
+        encoded = [self._encode(tokens) for tokens in token_lists]
+        token_ids = [row[0] for row in encoded]
+        lengths_list = [row[1] for row in encoded]
         batch_tensor = self.torch.tensor(token_ids, dtype=self.torch.long).to(self.device)
 
         # Compute sequence lengths (for packing)
-        lengths = self.torch.tensor(
-            [min(len(text.split()), self.max_len) for text in texts],
-            dtype=self.torch.long
-        )
+        lengths = self.torch.tensor(lengths_list, dtype=self.torch.long)
 
         # Inference
         with self.torch.no_grad():
-            logits = self.model(batch_tensor, lengths)
+            outputs = self.model(batch_tensor, lengths)
+            if isinstance(outputs, tuple) and len(outputs) == 2:
+                logits, _attention = outputs
+            else:
+                logits = outputs
             probs = self.F.softmax(logits, dim=-1)
 
         # Convert to results
         results = []
-        probs_np = probs.cpu().numpy()
+        probs_rows = probs.detach().cpu().tolist()
+        logits_rows = logits.detach().cpu().tolist()
 
-        for i, prob_row in enumerate(probs_np):
+        for i, prob_row in enumerate(probs_rows):
             prob_dict = {
                 "Negative": float(prob_row[0]),
                 "Neutral": float(prob_row[1]),
@@ -250,7 +296,7 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
                     score=float(prob_dict[label]),
                     probs=prob_dict,
                     model="hybrid_dl",
-                    raw={"logits": logits[i].cpu().tolist()},
+                    raw={"logits": logits_rows[i]},
                 )
             )
 
@@ -270,16 +316,23 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         Dict
             Attention weights and token information.
         """
-        tokens = text.lower().split()
-        token_ids = self._tokenize(text)
+        tokens = self._tokenize(text)
+        token_ids, length = self._encode(tokens)
         batch_tensor = self.torch.tensor([token_ids], dtype=self.torch.long).to(self.device)
-        lengths = self.torch.tensor([min(len(tokens), self.max_len)], dtype=self.torch.long)
+        lengths = self.torch.tensor([length], dtype=self.torch.long)
 
         with self.torch.no_grad():
-            # Get attention weights from model
-            _, attention_weights = self.model(batch_tensor, lengths, return_attention=True)
+            outputs = self.model(batch_tensor, lengths)
+            attention = None
+            if isinstance(outputs, tuple) and len(outputs) == 2:
+                _logits, attention = outputs
 
-        return {
-            "tokens": tokens[: self.max_len],
-            "attention_weights": attention_weights[0].cpu().numpy().tolist(),
-        }
+        payload: Dict[str, Any] = {"tokens": tokens[:length]}
+        if isinstance(attention, dict):
+            pooling = attention.get("attention_pooling")
+            if pooling is not None:
+                try:
+                    payload["attention_pooling"] = pooling[0].detach().cpu().tolist()[:length]
+                except Exception:
+                    payload["attention_pooling"] = None
+        return payload

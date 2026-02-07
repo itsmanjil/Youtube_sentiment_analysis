@@ -9,6 +9,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.naive_bayes import MultinomialNB
 
+from src.preprocessing import ClassicalPreprocessConfig, preprocess_classical_texts
+
 
 LABELS = ("Negative", "Neutral", "Positive")
 
@@ -61,6 +63,19 @@ def train_model(train_df, test_df, args):
     test_texts = test_df["text"]
     test_labels = test_df["label"]
 
+    preprocess_cfg = ClassicalPreprocessConfig()
+    train_texts_clean = train_texts.tolist()
+    test_texts_clean = test_texts.tolist()
+    if args.preprocess:
+        train_texts_clean = preprocess_classical_texts(
+            train_texts_clean,
+            config=preprocess_cfg,
+        )
+        test_texts_clean = preprocess_classical_texts(
+            test_texts_clean,
+            config=preprocess_cfg,
+        )
+
     vectorizer = TfidfVectorizer(
         lowercase=not args.no_lowercase,
         max_features=args.max_features,
@@ -70,8 +85,8 @@ def train_model(train_df, test_df, args):
         strip_accents="unicode" if args.strip_accents else None,
     )
 
-    train_vectors = vectorizer.fit_transform(train_texts)
-    test_vectors = vectorizer.transform(test_texts)
+    train_vectors = vectorizer.fit_transform(train_texts_clean)
+    test_vectors = vectorizer.transform(test_texts_clean)
 
     model = MultinomialNB(alpha=args.alpha)
     model.fit(train_vectors, train_labels)
@@ -127,6 +142,15 @@ def main():
     parser.add_argument("--alpha", type=float, default=0.5)
     parser.add_argument("--no_lowercase", action="store_true")
     parser.add_argument("--strip_accents", action="store_true")
+    parser.add_argument(
+        "--preprocess",
+        action="store_true",
+        help=(
+            "Enable the shared classical preprocessing (negation expansion/tagging, "
+            "stopword removal). If enabled, you must also enable preprocessing at "
+            "inference time (engine `preprocess=True`) for consistency."
+        ),
+    )
     parser.add_argument("--text_column", default="text")
     parser.add_argument("--label_column", default="label")
     parser.add_argument("--test_data", default=None, help="Path to test.csv (uses split from train if not provided)")
@@ -187,6 +211,15 @@ def main():
             "ngram_range": args.ngram_range,
             "lowercase": not args.no_lowercase,
             "strip_accents": args.strip_accents,
+        },
+        "preprocessing": {
+            "enabled": bool(args.preprocess),
+            "type": "classical_v1",
+            "config": {
+                "expand_negation_contractions": True,
+                "negation_tag": True,
+                "remove_stopwords": True,
+            },
         },
         "model": {"type": "MultinomialNB", "alpha": args.alpha},
         "random_seed": args.random_seed,

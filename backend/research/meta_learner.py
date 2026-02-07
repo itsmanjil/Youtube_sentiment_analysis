@@ -16,9 +16,12 @@ import sys
 from pathlib import Path
 import numpy as np
 import pickle
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, f1_score, classification_report
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import LinearSVC
 import pandas as pd
 
 # Add parent directory to path
@@ -26,7 +29,8 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BASE_DIR))
 
 from src.sentiment import get_sentiment_engine, coerce_sentiment_result, normalize_label
-from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.utils import normalize_probs
+from src.preprocessing import ClassicalPreprocessConfig, preprocess_classical_texts
 
 
 class MetaLearnerEnsemble:
@@ -62,7 +66,9 @@ class MetaLearnerEnsemble:
         n_folds=5,
         random_state=42,
         meta_params=None,
-        feature_type='probs'  # 'probs' or 'probs+logits'
+        feature_type='probs',  # 'probs' or 'probs+logits'
+        base_training_mode: str = "per_fold",  # 'per_fold' (proper stacking) or 'pretrained' (legacy)
+        preprocess: bool = False,
     ):
         """
         Args:
@@ -76,28 +82,60 @@ class MetaLearnerEnsemble:
         if base_models is None:
             base_models = ['logreg', 'svm', 'tfidf']
 
+        base_models = [
+            str(model).strip().lower()
+            for model in base_models
+            if str(model).strip()
+        ]
         self.base_models = base_models
         self.meta_learner_type = meta_learner_type
         self.n_folds = n_folds
         self.random_state = random_state
         self.feature_type = feature_type
+        self.base_training_mode = str(base_training_mode or "per_fold").strip().lower()
 
-        # Initialize base model engines
+        if self.base_training_mode not in {"per_fold", "pretrained"}:
+            raise ValueError(
+                "base_training_mode must be one of: per_fold, pretrained"
+            )
+
+        # Optional shared preprocessing used by classical models.
+        # Keep this OFF by default to match existing baseline artifacts/training.
+        self.enable_preprocessing = bool(preprocess)
+        self.preprocess_config = ClassicalPreprocessConfig()
+
+        # Vectorizer + base-model defaults (aligned with backend/train_*.py).
+        self.vectorizer_params = {
+            "lowercase": True,
+            "max_features": 75000,
+            "min_df": 2,
+            "max_df": 0.95,
+            "ngram_range": (1, 2),
+            "strip_accents": None,
+        }
+
+        # In per-fold mode we fit these in-memory to avoid leakage.
+        self._fitted_vectorizer = None
+        self._fitted_base_models = None
+
+        # Initialize base model engines (only required for legacy pretrained mode,
+        # or for deployment-time usage with `src.sentiment.engines.meta_learner_engine`).
         self.engines = {}
         self.model_errors = {}
 
-        for model_name in base_models:
-            try:
-                self.engines[model_name] = get_sentiment_engine(model_name)
-                print(f"[OK] Loaded base model: {model_name}")
-            except Exception as e:
-                self.model_errors[model_name] = str(e)
-                print(f"[ERROR] Failed to load {model_name}: {e}")
+        if self.base_training_mode == "pretrained":
+            for model_name in self.base_models:
+                try:
+                    self.engines[model_name] = get_sentiment_engine(model_name)
+                    print(f"[OK] Loaded base model: {model_name}")
+                except Exception as e:
+                    self.model_errors[model_name] = str(e)
+                    print(f"[ERROR] Failed to load {model_name}: {e}")
 
-        if not self.engines:
-            raise RuntimeError(
-                f"No base models could be loaded. Errors: {self.model_errors}"
-            )
+            if not self.engines:
+                raise RuntimeError(
+                    f"No base models could be loaded. Errors: {self.model_errors}"
+                )
 
         # Initialize meta-learner
         self.meta_learner = self._create_meta_learner(meta_params)
@@ -161,6 +199,12 @@ class MetaLearnerEnsemble:
         """
         Get predictions from all base models
 
+        Notes
+        -----
+        This method is used only when `base_training_mode='pretrained'`.
+        In thesis-grade experiments, prefer `base_training_mode='per_fold'`
+        which re-trains base models inside each fold to avoid leakage.
+
         Args:
             texts (list): List of text strings
 
@@ -168,6 +212,8 @@ class MetaLearnerEnsemble:
             dict: {model_name: [SentimentResult objects]}
         """
         predictions = {}
+
+        self._ensure_engines_loaded()
 
         for model_name, engine in self.engines.items():
             try:
@@ -189,6 +235,153 @@ class MetaLearnerEnsemble:
                 ]
 
         return predictions
+
+    def _ensure_engines_loaded(self) -> None:
+        """Lazy-load base engines (used for prediction when in-memory models are absent)."""
+        if self.engines:
+            return
+        for model_name in self.base_models:
+            try:
+                self.engines[model_name] = get_sentiment_engine(model_name)
+                print(f"[OK] Loaded base model: {model_name}")
+            except Exception as exc:
+                self.model_errors[model_name] = str(exc)
+                print(f"[ERROR] Failed to load {model_name}: {exc}")
+
+        if not self.engines:
+            raise RuntimeError(
+                "No base models could be loaded for prediction. "
+                f"Errors: {self.model_errors}"
+            )
+
+    def _fit_base_models(self, train_texts, train_labels):
+        """
+        Fit classical base models + a shared TF-IDF vectorizer on the given data.
+
+        Returns
+        -------
+        (vectorizer, models_dict)
+        """
+        supported = {"logreg", "svm", "tfidf"}
+        unknown = [m for m in self.base_models if m not in supported]
+        if unknown:
+            raise ValueError(
+                "per_fold mode currently supports only classical base models "
+                f"{sorted(supported)}. Unsupported: {unknown}"
+            )
+
+        train_texts = ["" if text is None else str(text) for text in train_texts]
+        train_clean = (
+            preprocess_classical_texts(train_texts, config=self.preprocess_config)
+            if self.enable_preprocessing
+            else train_texts
+        )
+        vectorizer = TfidfVectorizer(**self.vectorizer_params)
+        X_train = vectorizer.fit_transform(train_clean)
+
+        models = {}
+
+        if "tfidf" in self.base_models:
+            nb = MultinomialNB(alpha=0.5)
+            nb.fit(X_train, train_labels)
+            models["tfidf"] = nb
+
+        if "logreg" in self.base_models:
+            # Match backend/train_logreg_youtube.py defaults.
+            import inspect
+
+            lr_kwargs = {
+                "C": 1.0,
+                "max_iter": 200,
+                "solver": "saga",
+                "n_jobs": -1,
+                "class_weight": None,
+                "random_state": self.random_state,
+            }
+            if "multi_class" in inspect.signature(LogisticRegression).parameters:
+                # Keep behavior consistent across scikit-learn versions.
+                lr_kwargs["multi_class"] = "multinomial"
+
+            lr = LogisticRegression(**lr_kwargs)
+            lr.fit(X_train, train_labels)
+            models["logreg"] = lr
+
+        if "svm" in self.base_models:
+            svm = LinearSVC(
+                C=1.0,
+                max_iter=2000,
+                class_weight=None,
+                random_state=self.random_state,
+            )
+            svm.fit(X_train, train_labels)
+            models["svm"] = svm
+
+        return vectorizer, models
+
+    def _predict_proba_matrix(self, model_name, model, X_vec):
+        """
+        Return probabilities as a (n_samples, 3) matrix in (Negative, Neutral, Positive) order.
+        """
+        # Prefer calibrated probabilities when available.
+        if hasattr(model, "predict_proba"):
+            raw = model.predict_proba(X_vec)
+            classes = getattr(model, "classes_", ["Negative", "Neutral", "Positive"])
+            matrix = np.zeros((raw.shape[0], 3), dtype=float)
+            for class_idx, label in enumerate(classes):
+                norm = normalize_label(label)
+                out_idx = self.label2idx.get(norm)
+                if out_idx is not None:
+                    matrix[:, out_idx] = raw[:, class_idx]
+            return matrix
+
+        # LinearSVC: use decision_function scores -> softmax (pseudo-probabilities).
+        if hasattr(model, "decision_function"):
+            scores = model.decision_function(X_vec)
+            if getattr(scores, "ndim", 1) == 1:
+                scores = np.vstack([-scores, scores]).T
+            scores = scores - np.max(scores, axis=1, keepdims=True)
+            exp_scores = np.exp(scores)
+            probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+
+            classes = getattr(model, "classes_", ["Negative", "Neutral", "Positive"])
+            matrix = np.zeros((probs.shape[0], 3), dtype=float)
+            for class_idx, label in enumerate(classes):
+                norm = normalize_label(label)
+                out_idx = self.label2idx.get(norm)
+                if out_idx is not None:
+                    matrix[:, out_idx] = probs[:, class_idx]
+            return matrix
+
+        # Fallback: uniform
+        return np.full((X_vec.shape[0], 3), 1.0 / 3.0, dtype=float)
+
+    def _base_feature_matrix(self, vectorizer, models, texts):
+        """
+        Build Level-0 feature matrix from fitted base models for the given texts.
+        """
+        texts = ["" if text is None else str(text) for text in texts]
+        texts_clean = (
+            preprocess_classical_texts(texts, config=self.preprocess_config)
+            if self.enable_preprocessing
+            else texts
+        )
+        X = vectorizer.transform(texts_clean)
+
+        n_samples = X.shape[0]
+        per_model = 3 if self.feature_type == "probs" else 4
+        features = np.zeros((n_samples, len(self.base_models) * per_model), dtype=float)
+
+        for model_idx, model_name in enumerate(self.base_models):
+            model = models.get(model_name)
+            if model is None:
+                raise RuntimeError(f"Missing fitted base model: {model_name}")
+            probs = self._predict_proba_matrix(model_name, model, X)
+            start = model_idx * per_model
+            features[:, start : start + 3] = probs
+            if self.feature_type == "probs+logits":
+                features[:, start + 3] = probs.max(axis=1)
+
+        return features
 
     def _extract_features(self, base_predictions):
         """
@@ -241,10 +434,18 @@ class MetaLearnerEnsemble:
 
     def fit(self, texts, labels, verbose=True):
         """
-        Train meta-learner using cross-validated out-of-fold predictions
+        Train meta-learner using cross-validated Level-0 predictions.
 
-        This prevents overfitting by training the meta-learner on predictions
-        made on data the base models haven't seen during training.
+        Thesis-grade default (`base_training_mode='per_fold'`)
+        ------------------------------------------------------
+        For each fold, base models + TF-IDF vectorizer are trained on the
+        fold's training split, and predictions are generated on the held-out
+        split. The meta-learner is then trained on these out-of-fold features.
+
+        Legacy mode (`base_training_mode='pretrained'`)
+        ------------------------------------------------
+        Uses already-trained base engines from disk. This can leak information
+        if those engines were trained using the same data supplied here.
 
         Args:
             texts (list): Training texts
@@ -260,6 +461,7 @@ class MetaLearnerEnsemble:
             print("="*80)
             print(f"Base models: {self.base_models}")
             print(f"Meta-learner: {self.meta_learner_type}")
+            print(f"Base training mode: {self.base_training_mode}")
             print(f"Training samples: {len(texts)}")
             print(f"Cross-validation folds: {self.n_folds}")
 
@@ -271,7 +473,8 @@ class MetaLearnerEnsemble:
         if verbose:
             print("\n[INFO] Generating out-of-fold predictions from base models...")
 
-        oof_features = np.zeros((len(texts), len(self.base_models) * 3))  # 3 probs per model
+        per_model = 3 if self.feature_type == "probs" else 4
+        oof_features = np.zeros((len(texts), len(self.base_models) * per_model))  # probs (+ optional max prob)
 
         skf = StratifiedKFold(n_splits=self.n_folds, shuffle=True, random_state=self.random_state)
 
@@ -279,12 +482,21 @@ class MetaLearnerEnsemble:
             if verbose:
                 print(f"   Fold {fold+1}/{self.n_folds}: {len(val_idx)} validation samples")
 
-            # Get predictions for validation fold
             val_texts = [texts[i] for i in val_idx]
-            base_preds = self._get_base_predictions(val_texts)
 
-            # Extract features
-            fold_features = self._extract_features(base_preds)
+            if self.base_training_mode == "pretrained":
+                if verbose and fold == 0:
+                    print(
+                        "   ⚠️  Using pretrained base engines. If they were trained on this same dataset, "
+                        "the resulting meta-learner will be optimistically biased."
+                    )
+                base_preds = self._get_base_predictions(val_texts)
+                fold_features = self._extract_features(base_preds)
+            else:
+                fold_train_texts = [texts[i] for i in train_idx]
+                fold_train_labels = [labels[i] for i in train_idx]
+                vectorizer, models = self._fit_base_models(fold_train_texts, fold_train_labels)
+                fold_features = self._base_feature_matrix(vectorizer, models, val_texts)
 
             # Store in out-of-fold matrix
             oof_features[val_idx] = fold_features
@@ -296,6 +508,13 @@ class MetaLearnerEnsemble:
         self.meta_learner.fit(oof_features, label_indices)
 
         self.is_fitted = True
+
+        # In thesis-grade mode, fit base models on full training data for
+        # downstream prediction/evaluation without requiring pre-trained artifacts.
+        if self.base_training_mode == "per_fold":
+            self._fitted_vectorizer, self._fitted_base_models = self._fit_base_models(
+                texts, labels
+            )
 
         if verbose:
             # Evaluate on training data (out-of-fold predictions)
@@ -322,11 +541,17 @@ class MetaLearnerEnsemble:
         if not self.is_fitted:
             raise RuntimeError("Meta-learner not fitted. Call fit() first.")
 
-        # Get base model predictions
-        base_preds = self._get_base_predictions(texts)
-
-        # Extract features
-        features = self._extract_features(base_preds)
+        # Prefer in-memory fitted base models (available after `fit()` in per_fold mode).
+        if self._fitted_vectorizer is not None and self._fitted_base_models is not None:
+            features = self._base_feature_matrix(
+                self._fitted_vectorizer,
+                self._fitted_base_models,
+                texts,
+            )
+        else:
+            # Get base model predictions from pre-trained engines
+            base_preds = self._get_base_predictions(texts)
+            features = self._extract_features(base_preds)
 
         # Meta-learner prediction
         pred_indices = self.meta_learner.predict(features)
@@ -347,11 +572,15 @@ class MetaLearnerEnsemble:
         if not self.is_fitted:
             raise RuntimeError("Meta-learner not fitted. Call fit() first.")
 
-        # Get base model predictions
-        base_preds = self._get_base_predictions(texts)
-
-        # Extract features
-        features = self._extract_features(base_preds)
+        if self._fitted_vectorizer is not None and self._fitted_base_models is not None:
+            features = self._base_feature_matrix(
+                self._fitted_vectorizer,
+                self._fitted_base_models,
+                texts,
+            )
+        else:
+            base_preds = self._get_base_predictions(texts)
+            features = self._extract_features(base_preds)
 
         # Meta-learner probability prediction
         probs = self.meta_learner.predict_proba(features)
@@ -414,11 +643,22 @@ class MetaLearnerEnsemble:
         """Save meta-learner to disk"""
         save_data = {
             'base_models': self.base_models,
+            'base_training_mode': self.base_training_mode,
             'meta_learner_type': self.meta_learner_type,
             'meta_learner': self.meta_learner,
             'n_folds': self.n_folds,
             'random_state': self.random_state,
             'feature_type': self.feature_type,
+            'vectorizer_params': self.vectorizer_params,
+            'preprocessing': {
+                "enabled": bool(self.enable_preprocessing),
+                "type": "classical_v1",
+                "config": {
+                    "expand_negation_contractions": self.preprocess_config.expand_negation_contractions,
+                    "negation_tag": self.preprocess_config.negation_tag,
+                    "remove_stopwords": self.preprocess_config.remove_stopwords,
+                },
+            },
             'label2idx': self.label2idx,
             'idx2label': self.idx2label,
             'is_fitted': self.is_fitted
@@ -440,10 +680,13 @@ class MetaLearnerEnsemble:
             meta_learner_type=save_data['meta_learner_type'],
             n_folds=save_data['n_folds'],
             random_state=save_data['random_state'],
-            feature_type=save_data['feature_type']
+            feature_type=save_data.get('feature_type', 'probs'),
+            base_training_mode=save_data.get('base_training_mode', 'pretrained'),
+            preprocess=bool((save_data.get("preprocessing") or {}).get("enabled", False)),
         )
 
         instance.meta_learner = save_data['meta_learner']
+        instance.vectorizer_params = save_data.get('vectorizer_params', instance.vectorizer_params)
         instance.label2idx = save_data['label2idx']
         instance.idx2label = save_data['idx2label']
         instance.is_fitted = save_data['is_fitted']
@@ -473,6 +716,25 @@ def main():
         default='logistic_regression',
         choices=['logistic_regression', 'xgboost', 'lightgbm'],
         help='Meta-learner type'
+    )
+    parser.add_argument(
+        '--base_training_mode',
+        default='per_fold',
+        choices=['per_fold', 'pretrained'],
+        help=(
+            "How to generate Level-0 features for stacking. "
+            "'per_fold' retrains base models inside each fold (recommended, avoids leakage). "
+            "'pretrained' uses existing saved engines (legacy; can leak if trained on same data)."
+        ),
+    )
+    parser.add_argument(
+        "--preprocess",
+        action="store_true",
+        help=(
+            "Enable the shared classical preprocessing for training/evaluating the base models "
+            "inside the stacking pipeline. Keep this OFF unless your baseline models are trained "
+            "with preprocessing enabled."
+        ),
     )
     parser.add_argument('--n_folds', type=int, default=5, help='CV folds for training')
     parser.add_argument('--output', help='Path to save trained meta-learner')
@@ -505,7 +767,9 @@ def main():
         base_models=base_models,
         meta_learner_type=args.meta_learner,
         n_folds=args.n_folds,
-        random_state=args.random_seed
+        random_state=args.random_seed,
+        base_training_mode=args.base_training_mode,
+        preprocess=args.preprocess,
     )
 
     meta.fit(train_texts, train_labels)

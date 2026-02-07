@@ -4,9 +4,10 @@ django-cors-headers
 djangorestframework-simplejwt
 psycopg2-binary
 nltk
+numpy
 pandas
 python-dotenv
-scikit-learn==1.7.2
+scikit-learn==1.8.0
 google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
@@ -14,6 +15,9 @@ youtube-comment-downloader
 yt-dlp
 emoji
 langdetect
-torch
 wordcloud
 matplotlib
+
+# Deep-learning extras (Hybrid-DL / Transformers) are intentionally not included
+# here, because PyTorch wheels are sensitive to the NumPy ABI. Use the separate:
+#   backend/requirements-dl.txt
