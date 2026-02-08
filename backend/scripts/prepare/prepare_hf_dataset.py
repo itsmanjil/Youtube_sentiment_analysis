@@ -31,7 +31,7 @@ from typing import Dict, Optional, Tuple
 try:
     import pandas as pd
     from sklearn.model_selection import GroupShuffleSplit, train_test_split
-except ImportError as exc:  # pragma: no cover - depends on user's environment
+except ImportError:  # pragma: no cover - depends on user's environment
     raise SystemExit(
         "Missing Python dependencies for dataset preparation.\n\n"
         "Recommended (use the repo's backend venv):\n"
@@ -40,7 +40,7 @@ except ImportError as exc:  # pragma: no cover - depends on user's environment
         "  python -m venv backend/venv\n"
         "  source backend/venv/bin/activate\n"
         "  python -m pip install -r backend/requirements.txt\n"
-    ) from exc
+    )
 
 
 DEFAULT_SOURCE_URI = (

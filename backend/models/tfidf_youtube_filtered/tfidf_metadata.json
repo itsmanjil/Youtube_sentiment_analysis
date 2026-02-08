@@ -1,0 +1,73 @@
+{
+  "train_dataset": "backend/data/train.csv",
+  "test_dataset": "backend/data/test.csv",
+  "train_samples": 516886,
+  "test_samples": 165110,
+  "label_distribution": {
+    "Negative": 184266,
+    "Positive": 171876,
+    "Neutral": 160744
+  },
+  "max_per_class": null,
+  "text_column": "text",
+  "label_column": "label",
+  "vectorizer": {
+    "max_features": 75000,
+    "min_df": 2,
+    "max_df": 0.95,
+    "ngram_range": "1,2",
+    "lowercase": true,
+    "strip_accents": false
+  },
+  "preprocessing": {
+    "enabled": false,
+    "type": "classical_v1",
+    "config": {
+      "expand_negation_contractions": true,
+      "negation_tag": true,
+      "remove_stopwords": true
+    }
+  },
+  "model": {
+    "type": "MultinomialNB",
+    "alpha": 0.5
+  },
+  "random_seed": 42,
+  "sklearn_version": "1.8.0",
+  "pandas_version": "3.0.0",
+  "accuracy": 0.6622191266428442,
+  "f1_macro": 0.6566992088504683,
+  "report": {
+    "Negative": {
+      "precision": 0.6216632163870124,
+      "recall": 0.7656758479551783,
+      "f1-score": 0.68619492175168,
+      "support": 59614.0
+    },
+    "Neutral": {
+      "precision": 0.6113720930232558,
+      "recall": 0.5201622477245746,
+      "f1-score": 0.5620910840282232,
+      "support": 50540.0
+    },
+    "Positive": {
+      "precision": 0.7682906790453108,
+      "recall": 0.680635417424849,
+      "f1-score": 0.7218116207715018,
+      "support": 54956.0
+    },
+    "accuracy": 0.6622191266428442,
+    "macro avg": {
+      "precision": 0.6671086628185264,
+      "recall": 0.6554911710348673,
+      "f1-score": 0.6566992088504683,
+      "support": 165110.0
+    },
+    "weighted avg": {
+      "precision": 0.6673172982902598,
+      "recall": 0.6622191266428442,
+      "f1-score": 0.6600616975544166,
+      "support": 165110.0
+    }
+  }
+}

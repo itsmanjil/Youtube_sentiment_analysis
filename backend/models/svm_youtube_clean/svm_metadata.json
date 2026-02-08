@@ -1,0 +1,82 @@
+{
+  "train_dataset": "backend/data/train.csv",
+  "test_dataset": "backend/data/test.csv",
+  "train_samples": 594640,
+  "test_samples": 185845,
+  "label_distribution": {
+    "Negative": 208660,
+    "Positive": 196341,
+    "Neutral": 189639
+  },
+  "max_per_class": null,
+  "text_column": "text",
+  "label_column": "label",
+  "vectorizer": {
+    "max_features": 75000,
+    "min_df": 2,
+    "max_df": 0.95,
+    "ngram_range": "1,2",
+    "lowercase": true,
+    "strip_accents": false
+  },
+  "preprocessing": {
+    "enabled": false,
+    "type": "classical_v1",
+    "config": {
+      "expand_negation_contractions": true,
+      "negation_tag": true,
+      "remove_stopwords": true
+    }
+  },
+  "model": {
+    "type": "LinearSVC",
+    "C": 1.0,
+    "max_iter": 2000,
+    "class_weight": "none"
+  },
+  "calibration": {
+    "method": "sigmoid",
+    "calibration_size": 0.1,
+    "calibration_folds": 3,
+    "calibrated": true,
+    "strategy": "prefit_split"
+  },
+  "random_seed": 42,
+  "sklearn_version": "1.8.0",
+  "pandas_version": "3.0.0",
+  "accuracy": 0.6793941187548764,
+  "f1_macro": 0.6785995319717847,
+  "report": {
+    "Negative": {
+      "precision": 0.682029546736595,
+      "recall": 0.688389628375779,
+      "f1-score": 0.6851948290650656,
+      "support": 64985.0
+    },
+    "Neutral": {
+      "precision": 0.5983549697750471,
+      "recall": 0.6218438352872517,
+      "f1-score": 0.6098733218298893,
+      "support": 58259.0
+    },
+    "Positive": {
+      "precision": 0.7586755543645742,
+      "recall": 0.7236146387437901,
+      "f1-score": 0.7407304450203992,
+      "support": 62601.0
+    },
+    "accuracy": 0.6793941187548764,
+    "macro avg": {
+      "precision": 0.6796866902920721,
+      "recall": 0.6779493674689402,
+      "f1-score": 0.6785995319717847,
+      "support": 185845.0
+    },
+    "weighted avg": {
+      "precision": 0.6816169423852071,
+      "recall": 0.6793941187548764,
+      "f1-score": 0.6802898243805473,
+      "support": 185845.0
+    }
+  }
+}

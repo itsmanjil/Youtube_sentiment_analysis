@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-02-07T05:49:59Z",
+  "created_at": "2026-02-07T07:59:59Z",
   "source": {
     "uri": "hf://datasets/AmaanP314/youtube-comment-sentiment/youtube-comments-sentiment.csv",
     "raw_rows": 1032225,
@@ -37,16 +37,18 @@
     "enabled": true,
     "emoji_mode": "convert",
     "min_words": 3,
-    "filter_spam": false,
-    "filter_language": false,
+    "filter_spam": true,
+    "filter_language": true,
     "chunk_size": 5000,
     "filter_stats": {
-      "too_short": 74350
+      "spam": 34266,
+      "language": 138590,
+      "too_short": 25221
     }
   },
   "dedupe": {
-    "conflicting_texts_dropped": 1766,
-    "duplicate_text_rows_removed": 17916
+    "conflicting_texts_dropped": 1228,
+    "duplicate_text_rows_removed": 12679
   },
   "split": {
     "strategy": "group",
@@ -59,25 +61,25 @@
       "test": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv"
     },
     "rows": {
-      "train": 594640,
-      "val": 143646,
-      "test": 185845
+      "train": 516886,
+      "val": 128854,
+      "test": 165110
     },
     "label_distribution": {
       "train": {
-        "Negative": 208660,
-        "Positive": 196341,
-        "Neutral": 189639
+        "Negative": 184266,
+        "Positive": 171876,
+        "Neutral": 160744
       },
       "val": {
-        "Negative": 50896,
-        "Positive": 47179,
-        "Neutral": 45571
+        "Negative": 47023,
+        "Positive": 42794,
+        "Neutral": 39037
       },
       "test": {
-        "Negative": 64985,
-        "Positive": 62601,
-        "Neutral": 58259
+        "Negative": 59614,
+        "Positive": 54956,
+        "Neutral": 50540
       }
     }
   }

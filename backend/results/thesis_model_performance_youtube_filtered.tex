@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\caption{Model performance on the YouTube filtered test set.}
+\label{tab:youtube_filtered_model_performance}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \textbf{Accuracy} & \textbf{Macro-F1} & \textbf{ECE} & \textbf{Brier} \\
+\midrule
+tfidf & 0.6622 & 0.6567 & 0.010556 & 0.448593 \\
+logreg & 0.6946 & 0.6928 & 0.004468 & 0.410001 \\
+svm & 0.6801 & 0.6780 & 0.015690 & 0.429094 \\
+ensemble & 0.6932 & 0.6909 & 0.019060 & 0.413011 \\
+meta_learner & 0.6955 & 0.6946 & 0.018303 & 0.411778 \\
+\bottomrule
+\end{tabular}
+\end{table}

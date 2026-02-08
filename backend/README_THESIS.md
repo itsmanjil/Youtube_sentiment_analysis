@@ -77,6 +77,9 @@ python scripts/prepare/check_split_leakage.py \
   --train data/train.csv --val data/val.csv --test data/test.csv
 ```
 
+For a prioritized thesis "risks/gaps" checklist (threats to validity + what to report), see:
+`backend/docs/THESIS_RISKS_GAPS.md`.
+
 When generating splits with `scripts/prepare/prepare_hf_dataset.py`, the pipeline:
 - Drops texts with conflicting labels
 - Optionally applies the same YouTube preprocessing used by the API (`--youtube_preprocess`)
@@ -92,6 +95,24 @@ python scripts/prepare/prepare_hf_dataset.py --youtube_preprocess
 ```
 
 For production-aligned filtering (slower), add `--filter_spam` and/or `--filter_language`.
+
+### Significance Testing (Thesis-Grade)
+
+After you have a fixed held-out `test.csv`, you can run paired significance tests and
+bootstrap confidence intervals:
+
+```bash
+backend/venv/bin/python research/testset_significance.py \
+  --data data/test.csv \
+  --models tfidf,logreg,svm,ensemble,meta_learner \
+  --ensemble-models logreg,svm,tfidf \
+  --bootstrap 2000 --p_adjust holm --write_tables \
+  --output results/testset_significance.json
+```
+
+This writes:
+- `results/testset_significance.json` (McNemar + bootstrap CIs)
+- `results/thesis_mcnemar.md` and `results/thesis_bootstrap_ci.md` (copy/paste tables)
 
 ### Gold Set (Human-Labeled Test)
 
