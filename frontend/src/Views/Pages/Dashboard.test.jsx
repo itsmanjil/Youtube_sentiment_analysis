@@ -3,12 +3,14 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import AuthContext from '../../context/AuthContext';
-import axios from 'axios';
+import axiosInstance from '../../axios';
 import { jwtDecode } from 'jwt-decode';
 import { vi } from 'vitest';
 
 // Mock dependencies
-vi.mock('axios');
+vi.mock('../../axios', () => ({
+  default: vi.fn(),
+}));
 vi.mock('jwt-decode', () => ({
   jwtDecode: vi.fn(),
 }));
@@ -44,7 +46,7 @@ describe('Dashboard Component', () => {
     });
 
     // Mock default user data response
-    axios.mockResolvedValue({
+    axiosInstance.mockResolvedValue({
       status: 200,
       data: {
         user_name: 'Test User',
@@ -62,7 +64,7 @@ describe('Dashboard Component', () => {
     renderWithContext(<Dashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     });
 
     expect(screen.getByText(/No analysis yet/i)).toBeInTheDocument();
@@ -70,8 +72,8 @@ describe('Dashboard Component', () => {
 
   test('displays user statistics overview', async () => {
     // Mock analyses response
-    axios.mockImplementation((config) => {
-      if (config.url.includes('/analyses/')) {
+    axiosInstance.mockImplementation((config) => {
+      if (config.url.includes('youtube/analyses')) {
         return Promise.resolve({
           status: 200,
           data: {
@@ -125,7 +127,7 @@ describe('Dashboard Component', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Analysis results for:/i)).toBeInTheDocument();
-      expect(screen.getByText('Test Video')).toBeInTheDocument();
+      expect(screen.getByText(/Analysis results for:\s*Test Video/i)).toBeInTheDocument();
     });
 
     expect(screen.getByText('150')).toBeInTheDocument(); // Positive count
@@ -146,7 +148,7 @@ describe('Dashboard Component', () => {
 
     await waitFor(() => {
       // Should render without crashing
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     });
   });
 
@@ -242,7 +244,9 @@ describe('Dashboard Component', () => {
 
     expect(screen.getByText('video quality')).toBeInTheDocument();
     expect(screen.getByText('audio')).toBeInTheDocument();
-    expect(screen.getByText('50')).toBeInTheDocument(); // Aspect count
+    const aspectRow = screen.getByText('video quality').closest('tr');
+    expect(aspectRow).not.toBeNull();
+    expect(within(aspectRow).getByText('50')).toBeInTheDocument(); // Aspect count
   });
 
   test('displays sentiment timeline when available', async () => {
@@ -352,18 +356,23 @@ describe('Dashboard Component', () => {
       expect(screen.getByText('Data Quality & Filtering Statistics')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('20')).toBeInTheDocument(); // Spam removed
-    expect(screen.getByText('15')).toBeInTheDocument(); // Non-English
+    const spamBlock = screen.getByText('Spam Removed').closest('.text-center');
+    expect(spamBlock).not.toBeNull();
+    expect(within(spamBlock).getByText('20')).toBeInTheDocument(); // Spam removed
+
+    const nonEnglishBlock = screen.getByText('Non-English').closest('.text-center');
+    expect(nonEnglishBlock).not.toBeNull();
+    expect(within(nonEnglishBlock).getByText('15')).toBeInTheDocument(); // Non-English
   });
 
   test('handles API errors gracefully', async () => {
-    axios.mockRejectedValue(new Error('API Error'));
+    axiosInstance.mockRejectedValue(new Error('API Error'));
 
     renderWithContext(<Dashboard />);
 
     await waitFor(() => {
       // Should not crash, just show empty state
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     });
   });
 
@@ -386,7 +395,7 @@ describe('Dashboard Component', () => {
 
     await waitFor(() => {
       // Should display 0% for null/undefined/NaN values
-      const confidenceSection = screen.getByText('Confidence & Uncertainty').closest('.card-body');
+      const confidenceSection = screen.getByText('Confidence & Uncertainty').closest('.card');
       const percentTexts = within(confidenceSection).getAllByText('0%');
       expect(percentTexts.length).toBeGreaterThan(0);
     });

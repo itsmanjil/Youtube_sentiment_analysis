@@ -9,17 +9,26 @@ export default AuthContext;
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
-  let [authToken, setAuthToken] = useState(
-    localStorage.getItem("authToken")
-      ? JSON.parse(localStorage.getItem("authToken"))
-      : null
-  );
+  let [authToken, setAuthToken] = useState(() => {
+    const raw = localStorage.getItem("authToken");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (err) {
+      return null;
+    }
+  });
 
-  let [user, setUser] = useState(
-    localStorage.getItem("authToken")
-      ? jwtDecode(localStorage.getItem("authToken"))
-      : null
-  );
+  let [user, setUser] = useState(() => {
+    const raw = localStorage.getItem("authToken");
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed?.access ? jwtDecode(parsed.access) : null;
+    } catch (err) {
+      return null;
+    }
+  });
 
   let [loading, setLoading] = useState(true);
 
@@ -65,6 +74,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   let updateToken = async () => {
+    if (!authToken?.refresh) {
+      if (loading) {
+        setLoading(false);
+      }
+      return;
+    }
     // console.log("update token called", authToken.refresh);
     let response = await axiosInstance.post("token/refresh/", {
       refresh: authToken.refresh,

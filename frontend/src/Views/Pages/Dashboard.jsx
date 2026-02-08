@@ -8,7 +8,6 @@ import { useCurrentPng } from "recharts-to-png";
 import Sidenavbar from "../../Components/Sidenavbar";
 import Fixedplugins from "../../Components/Fixedplugins";
 import { Link, useLocation } from "react-router-dom";
-import axios from "axios";
 import FileSaver from "file-saver";
 import {
   LineChart,
@@ -168,24 +167,18 @@ function Dashboard(props) {
 
   const getData = async () => {
     try {
-      const token = localStorage.getItem("authToken");
-      const { user_id, user_name } = jwtDecode(token);
+      if (!authToken?.access) {
+        setHasSearched(false);
+        return;
+      }
+
+      const { user_id, user_name } = jwtDecode(authToken.access);
       console.log(user_name);
       if (user_id) {
-        const userDatas = await axios({
+        const userDatas = await axiosInstance({
           method: "GET",
-          url: `http://127.0.0.1:8000/api/user/me/${user_id}`,
+          url: `user/me/${user_id}`,
           timeout: 1000 * 10,
-          validateStatus: (status) => {
-            return status < 500;
-          },
-          headers: {
-            Authorization: authToken
-              ? "Bearer " + String(authToken.access)
-              : null,
-            "Content-Type": "application/json",
-            accept: "application/json",
-          },
         });
         setUser({
           user_name: userDatas.data.user_name,
@@ -199,20 +192,10 @@ function Dashboard(props) {
 
         // Fetch all user's analyses for statistics
         try {
-          const analysesResponse = await axios({
+          const analysesResponse = await axiosInstance({
             method: "GET",
-            url: "http://127.0.0.1:8000/api/youtube/analyses/",
+            url: "youtube/analyses/",
             timeout: 1000 * 10,
-            validateStatus: (status) => {
-              return status < 500;
-            },
-            headers: {
-              Authorization: authToken
-                ? "Bearer " + String(authToken.access)
-                : null,
-              "Content-Type": "application/json",
-              accept: "application/json",
-            },
           });
 
           if (analysesResponse.status === 200 && analysesResponse.data.data) {
@@ -368,8 +351,7 @@ function Dashboard(props) {
   }, [getPiePng]);
 
   const navigateToReport = () => {
-    const token = localStorage.getItem("authToken");
-    const { user_id, user_name } = jwtDecode(token);
+    const { user_name } = authToken?.access ? jwtDecode(authToken.access) : {};
     navigate(`/report/${videoTitle}`, {
       state: {
         user_name,

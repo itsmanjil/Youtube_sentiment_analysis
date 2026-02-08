@@ -3,12 +3,14 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Monitoring from './Monitoring';
 import AuthContext from '../../context/AuthContext';
-import axios from 'axios';
+import axiosInstance from '../../axios';
 import { jwtDecode } from 'jwt-decode';
 import { vi } from 'vitest';
 
 // Mock dependencies
-vi.mock('axios');
+vi.mock('../../axios', () => ({
+  default: vi.fn(),
+}));
 vi.mock('jwt-decode', () => ({
   jwtDecode: vi.fn(),
 }));
@@ -85,7 +87,7 @@ describe('Monitoring Component', () => {
     });
 
     // Default mock response
-    axios.mockResolvedValue({
+    axiosInstance.mockResolvedValue({
       status: 200,
       data: {
         data: mockAnalyses,
@@ -130,7 +132,7 @@ describe('Monitoring Component', () => {
   });
 
   test('handles empty analyses list', async () => {
-    axios.mockResolvedValue({
+    axiosInstance.mockResolvedValue({
       status: 200,
       data: {
         data: [],
@@ -147,7 +149,7 @@ describe('Monitoring Component', () => {
 
   test('displays loading state while fetching', async () => {
     // Mock delayed response
-    axios.mockImplementationOnce(
+    axiosInstance.mockImplementationOnce(
       () =>
         new Promise((resolve) =>
           setTimeout(
@@ -174,7 +176,7 @@ describe('Monitoring Component', () => {
   });
 
   test('displays error message on fetch failure', async () => {
-    axios.mockRejectedValue(new Error('Network error'));
+    axiosInstance.mockRejectedValue(new Error('Network error'));
 
     renderWithAuth(<Monitoring />);
 
@@ -190,18 +192,18 @@ describe('Monitoring Component', () => {
       expect(screen.getByText('Test Video 1')).toBeInTheDocument();
     });
 
-    expect(axios).toHaveBeenCalledTimes(1);
+    expect(axiosInstance).toHaveBeenCalledTimes(1);
 
     const refreshButton = screen.getByText('Refresh');
     fireEvent.click(refreshButton);
 
     await waitFor(() => {
-      expect(axios).toHaveBeenCalledTimes(2);
+      expect(axiosInstance).toHaveBeenCalledTimes(2);
     });
   });
 
   test('displays refresh button as disabled during loading', async () => {
-    axios.mockImplementationOnce(
+    axiosInstance.mockImplementationOnce(
       () =>
         new Promise((resolve) =>
           setTimeout(
@@ -216,12 +218,10 @@ describe('Monitoring Component', () => {
     );
 
     renderWithAuth(<Monitoring />);
-
-    const refreshButton = screen.getByText('Refresh');
-    fireEvent.click(refreshButton);
-
     await waitFor(() => {
-      expect(screen.getByText('Refreshing...')).toBeInTheDocument();
+      const refreshButton = screen.getByRole('button', { name: /refresh/i });
+      expect(refreshButton).toBeDisabled();
+      expect(refreshButton).toHaveTextContent('Refreshing...');
     });
   });
 
@@ -229,8 +229,8 @@ describe('Monitoring Component', () => {
     renderWithAuth(<Monitoring />);
 
     await waitFor(() => {
-      // Should show time ago for fetched_date
-      expect(screen.getByText(/ago|Just now/)).toBeInTheDocument();
+      // Old timestamps may render as a locale date string (fallback) instead of "X days ago".
+      expect(screen.getAllByText(/ago|Just now|2024/).length).toBeGreaterThan(0);
     });
   });
 
@@ -248,16 +248,16 @@ describe('Monitoring Component', () => {
 
     await waitFor(() => {
       // Video 1: 100 positive out of 200 = 50%
-      expect(screen.getByText(/100 \(50\.0%\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Positive:\s*100\s*\(50\.0%\)/)).toBeInTheDocument();
       // Video 1: 50 negative out of 200 = 25%
-      expect(screen.getByText(/50 \(25\.0%\)/)).toBeInTheDocument();
+      expect(screen.getByText(/Negative:\s*50\s*\(25\.0%\)/)).toBeInTheDocument();
     });
   });
 
   test('view details button navigates to dashboard with correct data', async () => {
     // Mock the detail endpoint
-    axios.mockImplementation((config) => {
-      if (config.url.includes('/analysis/video1/')) {
+    axiosInstance.mockImplementation((config) => {
+      if (config.url.includes('youtube/analysis/video1/')) {
         return Promise.resolve({
           status: 200,
           data: {
@@ -329,7 +329,7 @@ describe('Monitoring Component', () => {
   });
 
   test('error alert can be dismissed', async () => {
-    axios.mockRejectedValue(new Error('Network error'));
+    axiosInstance.mockRejectedValue(new Error('Network error'));
 
     renderWithAuth(<Monitoring />);
 
@@ -354,8 +354,8 @@ describe('Monitoring Component', () => {
   });
 
   test('handles video detail fetch failure gracefully', async () => {
-    axios.mockImplementation((config) => {
-      if (config.url.includes('/analysis/')) {
+    axiosInstance.mockImplementation((config) => {
+      if (config.url.includes('youtube/analysis/')) {
         return Promise.reject(new Error('Detail fetch failed'));
       }
       return Promise.resolve({

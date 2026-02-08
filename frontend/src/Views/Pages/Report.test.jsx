@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Report from './Report';
 import AuthContext from '../../context/AuthContext';
@@ -110,12 +110,16 @@ describe('Report Component', () => {
   test('displays sentiment breakdown table', () => {
     renderWithContext(mockReportData);
 
-    expect(screen.getByText('Negative')).toBeInTheDocument();
-    expect(screen.getByText('Neutral')).toBeInTheDocument();
-    expect(screen.getByText('Positive')).toBeInTheDocument();
-    expect(screen.getByText('50')).toBeInTheDocument();
-    expect(screen.getByText('100')).toBeInTheDocument();
-    expect(screen.getByText('150')).toBeInTheDocument();
+    const totalHeader = screen.getByText('Total', { selector: 'td' });
+    const breakdownTable = totalHeader.closest('table');
+    expect(breakdownTable).not.toBeNull();
+
+    expect(within(breakdownTable).getByText('Negative')).toBeInTheDocument();
+    expect(within(breakdownTable).getByText('Neutral')).toBeInTheDocument();
+    expect(within(breakdownTable).getByText('Positive')).toBeInTheDocument();
+    expect(within(breakdownTable).getByText('50')).toBeInTheDocument();
+    expect(within(breakdownTable).getByText('100')).toBeInTheDocument();
+    expect(within(breakdownTable).getByText('150')).toBeInTheDocument();
   });
 
   test('displays model and experiment settings', () => {
@@ -139,10 +143,11 @@ describe('Report Component', () => {
   test('displays confidence summary', () => {
     renderWithContext(mockReportData);
 
-    expect(screen.getByText('Confidence Summary')).toBeInTheDocument();
-    expect(screen.getByText('85.0%')).toBeInTheDocument(); // Mean
-    expect(screen.getByText('90.0%')).toBeInTheDocument(); // Median
-    expect(screen.getByText('15.0%')).toBeInTheDocument(); // Low confidence ratio
+    const section = screen.getByText('Confidence Summary').closest('section');
+    expect(section).not.toBeNull();
+    expect(within(section).getByText('85.0%')).toBeInTheDocument(); // Mean
+    expect(within(section).getByText('90.0%')).toBeInTheDocument(); // Median
+    expect(within(section).getByText('15.0%')).toBeInTheDocument(); // Low confidence ratio
   });
 
   test('displays confidence intervals table', () => {

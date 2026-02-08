@@ -16,12 +16,47 @@ from src.utils import SENTIMENT_LABELS
 
 
 def load_dataset(csv_path):
-    df = pd.read_csv(csv_path)
+    # `gold_set_template.csv` intentionally has empty labels. Pandas parses empty
+    # CSV cells as NaN by default, which would otherwise drop every row and later
+    # crash downstream models with a confusing "0 samples" error. We read with
+    # keep_default_na=False and explicitly validate labels.
+    df = pd.read_csv(
+        csv_path,
+        dtype={"text": "string", "label": "string"},
+        keep_default_na=False,
+    )
     if "text" not in df.columns or "label" not in df.columns:
         raise ValueError("Dataset must contain 'text' and 'label' columns.")
-    df = df.dropna(subset=["text", "label"])
+
+    df = df.copy()
+    df["text"] = df["text"].astype(str)
+    df["label"] = df["label"].astype(str)
+
+    # Drop empty texts.
+    df["text"] = df["text"].fillna("").astype(str)
+    df = df[df["text"].str.strip().astype(bool)]
+
+    # Treat blank/whitespace labels as missing (unlabeled) and drop them.
+    df["label"] = df["label"].fillna("").astype(str)
+    unlabeled_mask = df["label"].str.strip().eq("")
+    unlabeled_count = int(unlabeled_mask.sum())
+    if unlabeled_count:
+        df = df[~unlabeled_mask]
+
+    # Normalize labels to the repo's standard set.
     df["label"] = df["label"].apply(normalize_label)
-    return df
+
+    if df.empty:
+        hint = (
+            "No labeled rows found after filtering.\n\n"
+            "If you're evaluating a gold set template, fill the 'label' column first "
+            "with: Positive / Neutral / Negative.\n"
+        )
+        if unlabeled_count:
+            hint += f"\nUnlabeled rows detected: {unlabeled_count}"
+        raise ValueError(hint)
+
+    return df.reset_index(drop=True)
 
 
 def _load_ensemble_weights(value):

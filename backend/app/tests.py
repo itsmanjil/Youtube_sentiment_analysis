@@ -104,8 +104,9 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(analysis.total_comments_analyzed, 3)
         self.assertEqual(analysis.filtered_spam_count, 1)
         self.assertEqual(analysis.sentiment_data['Positive'], 1)
-        self.assertEqual(analysis.sentiment_data['Negative'], 0)
-        self.assertEqual(analysis.sentiment_data['Neutral'], 2)
+        # MockSentimentEngine marks "I did not like this." as Negative.
+        self.assertEqual(analysis.sentiment_data['Negative'], 1)
+        self.assertEqual(analysis.sentiment_data['Neutral'], 1)
 
     def test_analyze_video_missing_url(self):
         data = {"max_comments": 100}

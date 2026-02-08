@@ -2,7 +2,6 @@ import React, { useContext, useState } from "react";
 import { useNavigate, Link, NavLink } from "react-router-dom";
 import axiosInstance from "../../axios";
 import { HashLink } from "react-router-hash-link";
-import axios from "axios";
 import AuthContext from "../../context/AuthContext";
 // import Navbar from "../../Components/Navbar";
 
@@ -19,6 +18,7 @@ function Search() {
   const { logoutUser, authToken } = useContext(AuthContext);
   const [video_url, setVideoUrl] = useState("");
   const [max_comments, setMaxComments] = useState(200);
+  const [useApi, setUseApi] = useState(true);
   const [sentimentModel, setSentimentModel] = useState("logreg");
   const [showResearchOptions, setShowResearchOptions] = useState(false);
   const [ensembleModels, setEnsembleModels] = useState(["logreg", "svm", "tfidf"]);
@@ -184,17 +184,14 @@ function Search() {
 
     try {
       setIsLoading(true);
-      const resp = await axios({
+      const resp = await axiosInstance({
         method: "POST",
-        url: `http://127.0.0.1:8000/api/youtube/analyze/`,
+        url: "youtube/analyze/",
         timeout: 1000 * 180,
-        validateStatus: (status) => {
-          return status < 500;
-        },
         data: {
           video_url: video_url,
           max_comments: max_comments,
-          use_api: true,
+          use_api: useApi,
           sentiment_model: sentimentModel,
           ensemble_models: ensembleModels,
           ensemble_weights: ensembleWeights || null,
@@ -213,13 +210,6 @@ function Search() {
           fuzzy_alpha_cut: fuzzyAlphaCut,
           fuzzy_resolution: fuzzyResolution,
           model_comparison: parseModelComparison(),
-        },
-        headers: {
-          Authorization: authToken
-            ? "Bearer " + String(authToken.access)
-            : null,
-          "Content-Type": "application/json",
-          accept: "application/json",
         },
       });
       console.log("YouTube analysis response:", resp.data);
@@ -378,6 +368,20 @@ function Search() {
                         setMaxComments(Number.isNaN(parsed) ? 200 : parsed);
                       }}
                     />
+                  </div>
+                  <div className="col-md-12 mt-3">
+                    <label className="labels">
+                      <input
+                        type="checkbox"
+                        checked={useApi}
+                        onChange={(e) => setUseApi(e.target.checked)}
+                        style={{ marginRight: "8px" }}
+                      />
+                      Use YouTube API
+                    </label>
+                    <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                      Uses the official YouTube Data API (requires `YOUTUBE_API_KEY`). Turn off to use scraper mode.
+                    </p>
                   </div>
                   <div className="col-md-12 mt-3">
                     <label className="labels" htmlFor="sentiment-model">Sentiment Model</label>

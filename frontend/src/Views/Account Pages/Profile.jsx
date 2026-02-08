@@ -3,8 +3,8 @@ import Sidenavbar from "../../Components/Sidenavbar";
 import Fixedplugins from "../../Components/Fixedplugins";
 import { Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import axios from "axios";
 import AuthContext from "../../context/AuthContext";
+import axiosInstance from "../../axios";
 
 function Profile(props) {
   const { authToken } = useContext(AuthContext);
@@ -12,25 +12,18 @@ function Profile(props) {
   const [searchedList, setSearchedList] = useState([]);
   const getData = useCallback(async () => {
     try {
-      const token = localStorage.getItem("authToken");
-      const { user_id } = jwtDecode(token);
+      if (!authToken?.access) {
+        return;
+      }
+
+      const { user_id } = jwtDecode(authToken.access);
       console.log(user_id);
       if (user_id) {
         try {
-          const userData = await axios({
+          const userData = await axiosInstance({
             method: "GET",
-            url: `http://127.0.0.1:8000/api/user/me/${user_id}`,
+            url: `user/me/${user_id}`,
             timeout: 1000 * 10,
-            validateStatus: (status) => {
-              return status < 500;
-            },
-            headers: {
-              Authorization: authToken
-                ? "Bearer " + String(authToken.access)
-                : null,
-              "Content-Type": "application/json",
-              accept: "application/json",
-            },
           });
           setUser({
             user_name: userData.data.user_name,

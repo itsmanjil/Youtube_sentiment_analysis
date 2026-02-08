@@ -2,9 +2,9 @@ import React, { useContext, useEffect, useState } from "react";
 import Sidenavbar from "../../Components/Sidenavbar";
 import Fixedplugins from "../../Components/Fixedplugins";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
+import axiosInstance from "../../axios";
 
 function Monitoring() {
   const navigate = useNavigate();
@@ -22,20 +22,10 @@ function Monitoring() {
       setIsLoading(true);
       setError(null);
 
-      const response = await axios({
+      const response = await axiosInstance({
         method: "GET",
-        url: "http://127.0.0.1:8000/api/youtube/analyses/",
+        url: "youtube/analyses/",
         timeout: 1000 * 10,
-        validateStatus: (status) => {
-          return status < 500;
-        },
-        headers: {
-          Authorization: authToken
-            ? "Bearer " + String(authToken.access)
-            : null,
-          "Content-Type": "application/json",
-          accept: "application/json",
-        },
       });
 
       if (response.status === 200 && response.data.data) {
@@ -55,8 +45,10 @@ function Monitoring() {
   // Get user data
   const getUserData = async () => {
     try {
-      const token = localStorage.getItem("authToken");
-      const { user_id, user_name } = jwtDecode(token);
+      if (!authToken?.access) {
+        return;
+      }
+      const { user_id, user_name } = jwtDecode(authToken.access);
       setUser({ user_id, user_name });
     } catch (err) {
       console.error("Error getting user data:", err);
@@ -143,20 +135,10 @@ function Monitoring() {
     }
 
     try {
-      const response = await axios({
+      const response = await axiosInstance({
         method: "GET",
-        url: `http://127.0.0.1:8000/api/youtube/analysis/${videoId}/`,
+        url: `youtube/analysis/${videoId}/`,
         timeout: 1000 * 10,
-        validateStatus: (status) => {
-          return status < 500;
-        },
-        headers: {
-          Authorization: authToken
-            ? "Bearer " + String(authToken.access)
-            : null,
-          "Content-Type": "application/json",
-          accept: "application/json",
-        },
       });
 
       if (response.status === 200 && response.data?.data) {

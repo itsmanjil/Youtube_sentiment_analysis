@@ -3,11 +3,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Search from './Search';
 import AuthContext from '../../context/AuthContext';
-import axios from 'axios';
+import axiosInstance from '../../axios';
 import { vi } from 'vitest';
 
-// Mock axios
-vi.mock('axios');
+// Mock axios instance
+vi.mock('../../axios', () => ({
+  default: vi.fn(),
+}));
 
 // Mock navigate
 const mockNavigate = vi.fn();
@@ -96,7 +98,7 @@ describe('Search Component', () => {
       const analyzeButton = screen.getByDisplayValue('Analyze Video');
 
       // Mock successful response
-      axios.mockResolvedValueOnce({
+      axiosInstance.mockResolvedValueOnce({
         data: {
           sentiment_data: { Positive: 10, Negative: 5, Neutral: 3 },
           video: { title: 'Test Video' },
@@ -145,7 +147,7 @@ describe('Search Component', () => {
     fireEvent.change(urlInput, { target: { value: 'https://www.youtube.com/watch?v=test' } });
 
     // Mock delayed response
-    axios.mockImplementationOnce(() =>
+    axiosInstance.mockImplementationOnce(() =>
       new Promise(resolve => setTimeout(() => resolve({
         data: {
           sentiment_data: { Positive: 10, Negative: 5, Neutral: 3 },
@@ -170,7 +172,7 @@ describe('Search Component', () => {
     fireEvent.change(urlInput, { target: { value: 'https://www.youtube.com/watch?v=test' } });
 
     // Mock server error
-    axios.mockRejectedValueOnce({
+    axiosInstance.mockRejectedValueOnce({
       response: { status: 500, data: { message: 'Server error' } },
     });
 
@@ -188,7 +190,7 @@ describe('Search Component', () => {
     fireEvent.change(urlInput, { target: { value: 'https://www.youtube.com/watch?v=test' } });
 
     // Mock network error
-    axios.mockRejectedValueOnce({
+    axiosInstance.mockRejectedValueOnce({
       request: {},
     });
 
@@ -206,7 +208,7 @@ describe('Search Component', () => {
     fireEvent.change(urlInput, { target: { value: 'https://www.youtube.com/watch?v=test' } });
 
     // Mock timeout error
-    axios.mockRejectedValueOnce({
+    axiosInstance.mockRejectedValueOnce({
       code: 'ECONNABORTED',
     });
 
@@ -234,13 +236,13 @@ describe('Search Component', () => {
 
     const apiCheckbox = screen.getByLabelText(/Use YouTube API/i);
 
-    expect(apiCheckbox).not.toBeChecked();
-
-    fireEvent.click(apiCheckbox);
     expect(apiCheckbox).toBeChecked();
 
     fireEvent.click(apiCheckbox);
     expect(apiCheckbox).not.toBeChecked();
+
+    fireEvent.click(apiCheckbox);
+    expect(apiCheckbox).toBeChecked();
   });
 
   test('submits with correct data format', async () => {
@@ -249,14 +251,12 @@ describe('Search Component', () => {
     const urlInput = screen.getByPlaceholderText('https://www.youtube.com/watch?v=...');
     const maxCommentsInput = screen.getByLabelText(/Max Comments/i);
     const modelSelect = screen.getByLabelText(/Sentiment Model/i);
-    const apiCheckbox = screen.getByLabelText(/Use YouTube API/i);
 
     fireEvent.change(urlInput, { target: { value: 'https://www.youtube.com/watch?v=test123' } });
     fireEvent.change(maxCommentsInput, { target: { value: '500' } });
     fireEvent.change(modelSelect, { target: { value: 'ensemble' } });
-    fireEvent.click(apiCheckbox);
 
-    axios.mockResolvedValueOnce({
+    axiosInstance.mockResolvedValueOnce({
       data: {
         sentiment_data: { Positive: 10, Negative: 5, Neutral: 3 },
         video: { title: 'Test Video' },
@@ -266,10 +266,10 @@ describe('Search Component', () => {
     fireEvent.click(screen.getByDisplayValue('Analyze Video'));
 
     await waitFor(() => {
-      expect(axios).toHaveBeenCalledWith(
+      expect(axiosInstance).toHaveBeenCalledWith(
         expect.objectContaining({
           method: 'POST',
-          url: 'http://127.0.0.1:8000/api/youtube/analyze/',
+          url: 'youtube/analyze/',
           data: expect.objectContaining({
             video_url: 'https://www.youtube.com/watch?v=test123',
             max_comments: 500,
@@ -294,7 +294,7 @@ describe('Search Component', () => {
       },
     };
 
-    axios.mockResolvedValueOnce(mockResponse);
+    axiosInstance.mockResolvedValueOnce(mockResponse);
 
     fireEvent.click(screen.getByDisplayValue('Analyze Video'));
 
