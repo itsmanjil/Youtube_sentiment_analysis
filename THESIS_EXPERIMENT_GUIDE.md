@@ -16,6 +16,7 @@
 7. [Experiment 4: Meta-Learner](#experiment-4-meta-learner)
 8. [Evaluation & Analysis](#evaluation--analysis)
 9. [Results Reporting](#results-reporting)
+10. [Reproducibility Bundle](#reproducibility-bundle)
 
 ---
 
@@ -29,6 +30,8 @@ This guide supports thesis research on:
 - **Ensemble methods** (soft voting, stacking)
 - **Optimization techniques** (PSO for weight tuning)
 - **Statistical validation** (10-fold CV, bootstrap CI, McNemar's test)
+
+> Note: Any numeric values shown as examples below are illustrative. For thesis claims, use values from generated files in `backend/results/`.
 
 ### Available Models
 
@@ -221,6 +224,24 @@ python prepare_youtube_training_data.py \
 ```
 
 This ensures the test set is human‑labeled and prevents video leakage.
+
+### 4) Evaluate and report agreement on the gold set
+
+```bash
+cd backend
+python research/evaluate_gold_set.py \
+    --data data/gold_set_labeled.csv \
+    --models tfidf,logreg,svm,ensemble,meta_learner \
+    --output results/gold_set_evaluation.json
+```
+
+Generated files:
+- `results/gold_set_evaluation.json`
+- `results/gold_set_evaluation.md`
+
+If your CSV includes `source_label` (e.g., weak label), the report also includes:
+- exact agreement rate (`label` vs `source_label`)
+- Cohen's kappa (`label` vs `source_label`)
 
 ---
 
@@ -543,39 +564,78 @@ for label, bounds in ci.items():
 
 ## Results Reporting
 
-### Generate Thesis Tables
+### Generate Thesis Tables (Reproducible)
 
-#### Table 1: Baseline Model Comparison
+#### 1) Generate held-out significance + CI tables
 
-```python
-import pandas as pd
-
-results = {
-    'Model': ['LogReg', 'SVM', 'TF-IDF'],
-    'Accuracy': [0.6829, 0.7234, 0.6829],
-    'Precision': [0.6877, 0.7301, 0.6877],
-    'Recall': [0.6828, 0.7198, 0.6828],
-    'F1 (macro)': [0.6822, 0.7189, 0.6822]
-}
-
-df = pd.DataFrame(results)
-print(df.to_latex(index=False))  # For LaTeX thesis
+```bash
+cd backend
+python research/testset_significance.py \
+    --data data/test.csv \
+    --models tfidf,logreg,svm,ensemble,meta_learner \
+    --ensemble-models logreg,svm,tfidf \
+    --bootstrap 2000 \
+    --p_adjust holm \
+    --write_tables \
+    --output results/testset_significance_youtube_filtered.json
 ```
 
-#### Table 2: Ensemble Comparison
+Generated files:
+- `results/testset_significance_youtube_filtered.json`
+- `results/thesis_mcnemar.md`
+- `results/thesis_bootstrap_ci.md`
 
-```python
-results = {
-    'Ensemble Type': ['Equal Weights', 'PSO-Optimized', 'Meta-Learner (LR)', 'Meta-Learner (XGB)'],
-    'Base Models': ['LR+SVM+TF'] * 4,
-    'Accuracy': [0.7120, 0.7456, 0.8012, 0.8134],
-    'F1 (macro)': [0.7089, 0.7423, 0.7978, 0.8101],
-    'Training Time (s)': ['-', 145, 234, 198]
-}
+#### 2) Generate thesis performance tables from saved metrics
 
-df = pd.DataFrame(results)
-print(df.to_markdown(index=False))
+```bash
+cd backend
+python research/make_thesis_tables.py --out_dir results
 ```
+
+Generated files:
+- `results/thesis_model_performance_youtube_filtered.md`
+- `results/thesis_model_performance_youtube_filtered.tex`
+- `results/thesis_per_class_f1_youtube_filtered.md`
+- `results/thesis_per_class_f1_youtube_filtered.tex`
+- `results/thesis_preprocess_ablation.md` (if variant metrics files exist)
+
+---
+
+## Reproducibility Bundle
+
+Create a thesis-ready bundle that records exact commands, environment locks, git revision, and artifact checksums.
+
+### 1) Run experiments with command logging
+
+```bash
+cd backend
+python research/run_thesis_pipeline.py \
+    --steps classic,prepare,ensemble,meta \
+    --video_list videos.txt \
+    --group_by video_id \
+    --command_log results/experiment_command_log.txt
+```
+
+### 2) Build reproducibility package
+
+```bash
+cd backend
+python research/create_repro_bundle.py \
+    --command_file results/experiment_command_log.txt \
+    --artifact data/split_metadata.json \
+    --artifact results/testset_significance_youtube_filtered.json \
+    --artifact results/thesis_model_performance_youtube_filtered.md \
+    --artifact results/thesis_per_class_f1_youtube_filtered.md \
+    --artifact results/thesis_bootstrap_ci.md \
+    --artifact results/thesis_mcnemar.md \
+    --notes "Main thesis benchmark run"
+```
+
+Generated bundle (timestamped under `results/repro_bundles/`) includes:
+- `manifest.json` (git commit/dirty state, runtime, artifacts, metadata)
+- `commands.txt` and `commands.sh` (exact runnable command list)
+- `pip_freeze.txt` and `python_environment.txt` (environment lock snapshot)
+- `artifacts.sha256` (integrity checksums)
 
 ### Create Visualizations
 

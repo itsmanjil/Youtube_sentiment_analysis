@@ -42,6 +42,7 @@ Below is a prioritized checklist you can reuse in a "Threats to Validity" / "Lim
 **Gap to address for thesis-grade credibility:**
 - Build a small, human-labeled **gold set** (e.g., 300-1000 comments), compute agreement (Cohen's kappa or Krippendorff's alpha), and report performance on it.
 - Script exists to start annotation: `backend/scripts/prepare/create_gold_set.py`
+- Script to evaluate the gold set + agreement: `backend/research/evaluate_gold_set.py`
 
 ## 4) Evaluation Methodology / Conclusion Validity
 
@@ -90,9 +91,14 @@ Below is a prioritized checklist you can reuse in a "Threats to Validity" / "Lim
 - Split provenance is written to `backend/data/split_metadata.json`.
 - Language detection made deterministic via `DetectorFactory.seed` in `backend/app/youtube_preprocessor.py`.
 
-**Gaps to close:**
-- Pin package versions more tightly for the thesis environment (not only `scikit-learn==1.8.0`).
-- Record exact commands used to generate each dataset/model/result JSON (append to an experiment log).
+**Implemented mitigation:**
+- `backend/research/run_thesis_pipeline.py` now supports `--command_log` (default: `results/experiment_command_log.txt`) to append exact executed commands.
+- `backend/research/create_repro_bundle.py` creates a timestamped reproducibility bundle with:
+  - `manifest.json` (git commit/dirty state, runtime, artifact metadata),
+  - `commands.txt` / `commands.sh`,
+  - `pip_freeze.txt` / `python_environment.txt`,
+  - `artifacts.sha256` checksums.
+- Bundle defaults also snapshot environment lock files (`requirements.txt`, `requirements-dl.txt`, `Pipfile`, `Pipfile.lock`) and split provenance (`data/split_metadata.json`) when present.
 
 ## 8) “Claims vs Code” Gap (Avoid Overclaiming)
 
@@ -102,4 +108,3 @@ Below is a prioritized checklist you can reuse in a "Threats to Validity" / "Lim
 - and a documented config.
 
 If a model (e.g., BERT fine-tuning) is not implemented end-to-end, either implement it or explicitly scope it out.
-

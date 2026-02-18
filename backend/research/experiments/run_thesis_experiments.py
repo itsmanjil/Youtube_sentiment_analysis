@@ -60,14 +60,25 @@ def print_banner():
     """)
 
 
-def run_quick_test():
+def print_smoke_test_warning():
+    """Print warning for non-thesis smoke-test modes."""
+    print(
+        "\n[NOTICE] quick/demo modes may use synthetic data and mock models. "
+        "Do NOT report these numbers as thesis results."
+    )
+
+
+def run_quick_test(output_dir: str = None):
     """Run quick test experiment."""
     print("\n" + "=" * 60)
     print("QUICK TEST MODE")
     print("=" * 60)
+    print_smoke_test_warning()
 
     config = get_quick_test_config()
     config.name = f"quick_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if output_dir:
+        config.output_dir = output_dir
 
     experiment = ThesisExperiment(config)
     result = experiment.run()
@@ -77,7 +88,7 @@ def run_quick_test():
     return result
 
 
-def run_full_benchmark():
+def run_full_benchmark(output_dir: str = None):
     """Run full benchmark experiment."""
     print("\n" + "=" * 60)
     print("FULL BENCHMARK MODE")
@@ -85,6 +96,8 @@ def run_full_benchmark():
 
     config = get_full_benchmark_config()
     config.name = f"full_benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if output_dir:
+        config.output_dir = output_dir
 
     experiment = ThesisExperiment(config)
     result = experiment.run()
@@ -99,7 +112,7 @@ def run_full_benchmark():
     return result
 
 
-def run_cross_domain():
+def run_cross_domain(output_dir: str = None):
     """Run cross-domain evaluation."""
     print("\n" + "=" * 60)
     print("CROSS-DOMAIN EVALUATION MODE")
@@ -107,6 +120,8 @@ def run_cross_domain():
 
     config = get_cross_domain_config()
     config.name = f"cross_domain_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if output_dir:
+        config.output_dir = output_dir
 
     experiment = ThesisExperiment(config)
     result = experiment.run()
@@ -124,7 +139,7 @@ def run_cross_domain():
     return result
 
 
-def run_ablation():
+def run_ablation(output_dir: str = None):
     """Run ablation study."""
     print("\n" + "=" * 60)
     print("ABLATION STUDY MODE")
@@ -132,6 +147,8 @@ def run_ablation():
 
     config = get_ablation_config()
     config.name = f"ablation_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if output_dir:
+        config.output_dir = output_dir
 
     experiment = ThesisExperiment(config)
     result = experiment.run()
@@ -141,13 +158,15 @@ def run_ablation():
     return result
 
 
-def run_custom(config_path: str):
+def run_custom(config_path: str, output_dir: str = None):
     """Run experiment with custom config."""
     print("\n" + "=" * 60)
     print(f"CUSTOM CONFIG: {config_path}")
     print("=" * 60)
 
     config = ExperimentConfig.load(config_path)
+    if output_dir:
+        config.output_dir = output_dir
 
     experiment = ThesisExperiment(config)
     result = experiment.run()
@@ -162,11 +181,12 @@ def run_custom(config_path: str):
     return result
 
 
-def demo_pipeline():
+def demo_pipeline(output_dir: str = None):
     """Demo the complete thesis pipeline."""
     print("\n" + "=" * 60)
     print("THESIS PIPELINE DEMONSTRATION")
     print("=" * 60)
+    print_smoke_test_warning()
 
     # Step 1: Configuration
     print("\n[Step 1] Creating experiment configuration...")
@@ -175,6 +195,11 @@ def demo_pipeline():
         description="Complete thesis experiment demonstration",
         experiment_type=ExperimentType.FULL_BENCHMARK,
     )
+    config.evaluation.datasets = ['synthetic']
+    config.evaluation.allow_synthetic_data = True
+    config.model.allow_mock_fallbacks = True
+    if output_dir:
+        config.output_dir = output_dir
 
     # Use smaller dataset for demo
     config.evaluation.max_samples_per_dataset = 200
@@ -241,7 +266,8 @@ def demo_pipeline():
     print("DEMO COMPLETE!")
     print("=" * 60)
     print(f"""
-    Your thesis experiment has been completed!
+    Your smoke-test experiment has been completed.
+    Do NOT include these metrics in your thesis results chapter.
 
     Generated files in {output_dir}/:
     ─────────────────────────────────────
@@ -261,7 +287,7 @@ def demo_pipeline():
 
     Next steps:
     ─────────────────────────────────────
-    1. Run with real benchmark datasets (--mode full)
+    1. Run thesis-grade datasets (--mode full)
     2. Add more optimization runs for statistical significance
     3. Include in your Results chapter
     """)
@@ -286,8 +312,8 @@ Examples:
     parser.add_argument(
         '--mode',
         choices=['demo', 'quick', 'full', 'cross_domain', 'ablation'],
-        default='demo',
-        help='Experiment mode (default: demo)'
+        default='full',
+        help='Experiment mode (default: full)'
     )
 
     parser.add_argument(
@@ -308,17 +334,17 @@ Examples:
     print_banner()
 
     if args.config:
-        result = run_custom(args.config)
+        result = run_custom(args.config, output_dir=args.output)
     elif args.mode == 'demo':
-        result = demo_pipeline()
+        result = demo_pipeline(output_dir=args.output)
     elif args.mode == 'quick':
-        result = run_quick_test()
+        result = run_quick_test(output_dir=args.output)
     elif args.mode == 'full':
-        result = run_full_benchmark()
+        result = run_full_benchmark(output_dir=args.output)
     elif args.mode == 'cross_domain':
-        result = run_cross_domain()
+        result = run_cross_domain(output_dir=args.output)
     elif args.mode == 'ablation':
-        result = run_ablation()
+        result = run_ablation(output_dir=args.output)
 
     return result
 

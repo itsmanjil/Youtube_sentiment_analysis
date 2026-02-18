@@ -11,6 +11,9 @@ Features:
 - LaTeX report generation for thesis
 - JSON export for reproducibility
 
+Note:
+- Synthetic/mock execution is smoke-test only and should not be used in thesis claims.
+
 Author: [Your Name]
 Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis
 """

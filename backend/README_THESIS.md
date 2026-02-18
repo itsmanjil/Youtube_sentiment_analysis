@@ -9,7 +9,7 @@ This is a thesis-grade sentiment analysis system for YouTube comments, implement
 ### 🎯 Multiple Model Architectures
 - **Classical ML**: TF-IDF + Naive Bayes, Logistic Regression, SVM
 - **Deep Learning**: Hybrid CNN-BiLSTM-Attention (2.5M parameters)
-- **Transformers**: BERT-based classifier (SOTA performance)
+- **Transformers**: BERT-based classifier (optional; requires separate fine-tuning artifacts)
 - **Ensemble Methods**: Weighted voting, Meta-learner stacking
 
 ### 🔬 Research-Grade Evaluation
@@ -107,11 +107,11 @@ backend/venv/bin/python research/testset_significance.py \
   --models tfidf,logreg,svm,ensemble,meta_learner \
   --ensemble-models logreg,svm,tfidf \
   --bootstrap 2000 --p_adjust holm --write_tables \
-  --output results/testset_significance.json
+  --output results/testset_significance_youtube_filtered.json
 ```
 
 This writes:
-- `results/testset_significance.json` (McNemar + bootstrap CIs)
+- `results/testset_significance_youtube_filtered.json` (McNemar + bootstrap CIs)
 - `results/thesis_mcnemar.md` and `results/thesis_bootstrap_ci.md` (copy/paste tables)
 
 ### Gold Set (Human-Labeled Test)
@@ -125,7 +125,19 @@ python prepare_youtube_training_data.py \
   --video_list videos.txt \
   --label_method auto \
   --heldout_labeled_csv gold_set_labeled.csv
+
+# Evaluate models on the human-labeled gold set and report agreement
+python research/evaluate_gold_set.py \
+  --data data/gold_set_labeled.csv \
+  --models tfidf,logreg,svm,ensemble,meta_learner \
+  --output results/gold_set_evaluation.json
 ```
+
+This writes:
+- `results/gold_set_evaluation.json` (model metrics + human-vs-source agreement when `source_label` exists)
+- `results/gold_set_evaluation.md` (thesis-friendly summary table)
+
+If you used `scripts/prepare/fill_gold_set_labels.py`, treat that output as a pipeline sanity check only, not as a thesis-grade human gold set.
 
 ### Using the API
 
@@ -137,7 +149,7 @@ engine = get_sentiment_engine('svm')
 result = engine.analyze("This video is amazing!")
 print(f"{result.label}: {result.score:.2f}")
 
-# Use BERT transformer (best accuracy)
+# Use BERT transformer (if fine-tuned artifact is available)
 engine = get_sentiment_engine('bert')
 result = engine.analyze("This video is terrible")
 print(f"{result.label}: {result.score:.2f}")
@@ -205,23 +217,51 @@ ablation.generate_report('ablation_results/')
 
 ## Model Performance
 
-### Baseline Comparison (YouTube Comments Dataset)
+### Reproducible Benchmark (Current Repository Snapshot)
 
 | Model | Accuracy | F1-Macro | F1-Pos | F1-Neu | F1-Neg |
 |-------|----------|----------|--------|--------|--------|
-| TF-IDF + NB | 67.71% | 67.70% | 70.2% | 65.3% | 67.6% |
-| TF-IDF + LogReg | 74.27% | 74.34% | 76.8% | 71.2% | 75.0% |
-| TF-IDF + SVM | **75.08%** | 75.14% | 78.4% | 70.9% | 76.1% |
-| CNN-BiLSTM-Attn | ~78% | ~77% | 80.1% | 73.5% | 77.8% |
-| BERT-base | **~87%** | ~86% | 89.2% | 82.5% | 87.3% |
+| TF-IDF + NB | 66.22% | 65.67% | 72.18% | 56.21% | 68.62% |
+| TF-IDF + LogReg | 69.46% | 69.28% | 75.10% | 62.02% | 70.74% |
+| TF-IDF + SVM | 68.01% | 67.80% | 73.85% | 60.12% | 69.43% |
+| Ensemble | 69.32% | 69.09% | 74.98% | 61.51% | 70.79% |
+| Meta-learner | **69.55%** | **69.46%** | **75.25%** | **62.68%** | 70.45% |
 
-*Results from 10-fold cross-validation with stratified sampling*
+Source artifacts:
+- `results/thesis_model_performance_youtube_filtered.md`
+- `results/thesis_per_class_f1_youtube_filtered.md`
+
+These numbers are from a fixed held-out test set (`data/test.csv` in this snapshot), not 10-fold CV.
 
 ### Statistical Significance
 
-- SVM vs LogReg: p < 0.05 (McNemar's test)
-- BERT vs SVM: p < 0.001 (McNemar's test)
-- All models: p < 0.001 (Friedman test)
+From `results/thesis_mcnemar.md` (Holm-adjusted McNemar):
+
+- LogReg vs SVM: `p_adj = 1.81e-92` (significant)
+- LogReg vs Meta-learner: `p_adj = 0.045` (significant at α = 0.05)
+- Ensemble vs Meta-learner: `p_adj = 4.15e-05` (significant)
+
+Bootstrap confidence intervals are in `results/thesis_bootstrap_ci.md`.
+
+### Reproducibility Notes
+
+- Treat `results/thesis_*` files as the thesis-ready, source-of-truth tables.
+- If you retrain or change preprocessing, regenerate tables before updating thesis text.
+- Avoid reporting BERT/Hybrid-DL headline metrics unless their held-out test artifacts are saved alongside the classical/ensemble results.
+- Use `research/run_thesis_pipeline.py --command_log results/experiment_command_log.txt` to append exact run commands.
+- Package each finalized run with:
+
+```bash
+python research/create_repro_bundle.py \
+  --command_file results/experiment_command_log.txt \
+  --artifact data/split_metadata.json \
+  --artifact results/testset_significance_youtube_filtered.json \
+  --artifact results/thesis_model_performance_youtube_filtered.md \
+  --artifact results/thesis_per_class_f1_youtube_filtered.md
+```
+
+This writes a timestamped bundle in `results/repro_bundles/` with `manifest.json`,
+`commands.sh`, `pip_freeze.txt`, and `artifacts.sha256`.
 
 ## Architecture
 

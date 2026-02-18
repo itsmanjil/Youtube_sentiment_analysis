@@ -8,6 +8,7 @@ Author: [Your Name]
 """
 
 import sys
+import csv
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
@@ -26,6 +27,24 @@ from .config import (
     ExperimentType,
     OptimizerType,
 )
+
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
+
+DATASET_SPLIT_FILES = {
+    'default': ('train.csv', 'val.csv', 'test.csv'),
+    'youtube_filtered': (
+        'train_youtube_filtered.csv',
+        'val_youtube_filtered.csv',
+        'test_youtube_filtered.csv',
+    ),
+    'youtube_clean': (
+        'train_youtube_clean.csv',
+        'val_youtube_clean.csv',
+        'test_youtube_clean.csv',
+    ),
+    'raw': ('train_raw.csv', 'val_raw.csv', 'test_raw.csv'),
+    'leaky': ('train_leaky.csv', 'val_leaky.csv', 'test_leaky.csv'),
+}
 
 
 @dataclass
@@ -241,16 +260,140 @@ class ThesisExperiment:
         """Load benchmark datasets."""
         self.logger.info("Loading datasets...")
 
-        from research.benchmarks.base import DatasetSplit, SentimentLabel
-
-        # Create synthetic datasets for testing
+        # Create datasets based on configured names
         for ds_name in self.config.evaluation.datasets:
-            if ds_name == "synthetic":
+            ds_key = str(ds_name).strip().lower()
+            if ds_key == "synthetic":
+                if not self.config.evaluation.allow_synthetic_data:
+                    raise ValueError(
+                        "Synthetic dataset is disabled for thesis-grade runs. "
+                        "Use real datasets (e.g., youtube_filtered/youtube_clean/raw) "
+                        "or explicitly set `evaluation.allow_synthetic_data=true` only "
+                        "for smoke tests."
+                    )
+                self.logger.warning(
+                    "Using synthetic dataset '%s'. Results are NOT thesis-grade.",
+                    ds_name,
+                )
                 self._datasets[ds_name] = self._create_synthetic_dataset(
                     n_samples=self.config.evaluation.max_samples_per_dataset
                 )
+            else:
+                self._datasets[ds_name] = self._load_real_dataset(ds_name)
+
+        if not self._datasets:
+            raise ValueError("No datasets were loaded. Check evaluation.datasets configuration.")
+
+        for ds_name, dataset in self._datasets.items():
+            train_n = len(dataset.train) if hasattr(dataset, 'train') and dataset.train else 0
+            val_n = len(dataset.val) if hasattr(dataset, 'val') and dataset.val else 0
+            test_n = len(dataset.test) if hasattr(dataset, 'test') and dataset.test else 0
+            self.logger.info(
+                "  Dataset %s loaded (train=%d, val=%d, test=%d)",
+                ds_name,
+                train_n,
+                val_n,
+                test_n,
+            )
 
         self.logger.info(f"Loaded {len(self._datasets)} datasets")
+
+    def _resolve_data_dir(self) -> Path:
+        """Resolve evaluation data directory."""
+        data_dir = Path(self.config.evaluation.data_dir)
+        if not data_dir.is_absolute():
+            data_dir = BACKEND_ROOT / data_dir
+        return data_dir.resolve()
+
+    def _resolve_dataset_split_paths(self, dataset_name: str) -> Tuple[Path, Path, Path]:
+        """Resolve train/val/test CSV paths for a dataset key."""
+        data_dir = self._resolve_data_dir()
+        dataset_key = str(dataset_name).strip().lower()
+
+        if dataset_key in DATASET_SPLIT_FILES:
+            train_file, val_file, test_file = DATASET_SPLIT_FILES[dataset_key]
+            return data_dir / train_file, data_dir / val_file, data_dir / test_file
+
+        prefixed_paths = (
+            data_dir / f"train_{dataset_name}.csv",
+            data_dir / f"val_{dataset_name}.csv",
+            data_dir / f"test_{dataset_name}.csv",
+        )
+        if all(path.exists() for path in prefixed_paths):
+            return prefixed_paths
+
+        nested_paths = (
+            data_dir / dataset_name / "train.csv",
+            data_dir / dataset_name / "val.csv",
+            data_dir / dataset_name / "test.csv",
+        )
+        if all(path.exists() for path in nested_paths):
+            return nested_paths
+
+        known = ", ".join(sorted(DATASET_SPLIT_FILES.keys()))
+        raise FileNotFoundError(
+            f"Could not resolve dataset '{dataset_name}' in {data_dir}. "
+            f"Use a known key ({known}), a train_/val_/test_ prefix, or "
+            "a nested directory with train.csv/val.csv/test.csv."
+        )
+
+    def _load_split_from_csv(self, csv_path: Path, split_name: str) -> Any:
+        """Load one dataset split from CSV."""
+        from research.benchmarks.base import DatasetSplit, SentimentLabel
+
+        if not csv_path.exists():
+            raise FileNotFoundError(f"Missing {split_name} split: {csv_path}")
+
+        texts: List[str] = []
+        labels: List[SentimentLabel] = []
+
+        with open(csv_path, 'r', encoding='utf-8', newline='') as handle:
+            reader = csv.DictReader(handle)
+            fieldnames = {name.strip().lower() for name in (reader.fieldnames or [])}
+            if 'text' not in fieldnames or 'label' not in fieldnames:
+                raise ValueError(
+                    f"{csv_path} must include 'text' and 'label' columns."
+                )
+
+            for row_idx, row in enumerate(reader, start=2):
+                text = str(row.get('text', '')).strip()
+                label_raw = str(row.get('label', '')).strip()
+                if not text or not label_raw:
+                    continue
+
+                try:
+                    label = SentimentLabel.from_string(label_raw)
+                except ValueError as exc:
+                    raise ValueError(
+                        f"Invalid sentiment label '{label_raw}' at {csv_path}:{row_idx}"
+                    ) from exc
+
+                texts.append(text)
+                labels.append(label)
+
+        if not texts:
+            raise ValueError(f"No labeled rows found in {csv_path}")
+
+        return DatasetSplit(texts=texts, labels=labels, name=split_name)
+
+    def _load_real_dataset(self, dataset_name: str) -> Any:
+        """Load dataset from real CSV split files."""
+        train_path, val_path, test_path = self._resolve_dataset_split_paths(dataset_name)
+        train_split = self._load_split_from_csv(train_path, 'train')
+        val_split = self._load_split_from_csv(val_path, 'val')
+        test_split = self._load_split_from_csv(test_path, 'test')
+
+        class CSVDataset:
+            def __init__(self, name, train, val, test):
+                self.name = str(name)
+                self.train = train
+                self.val = val
+                self.test = test
+
+            def load(self):
+                pass
+
+        return CSVDataset(dataset_name, train_split, val_split, test_split)
 
     def _create_synthetic_dataset(self, n_samples: int = 1000) -> Any:
         """Create synthetic dataset for testing."""
@@ -314,43 +457,55 @@ class ThesisExperiment:
     def _initialize_models(self) -> None:
         """Initialize sentiment models."""
         self.logger.info("Initializing models...")
+        from src.sentiment import get_sentiment_engine
 
-        # Try to load actual engines
-        try:
-            if self.config.model.use_logreg:
-                from sentiment_engines.logreg_sentiment import LogRegSentiment
-                self._models['logreg'] = LogRegSentiment()
-                self.logger.info("  Loaded LogReg")
-        except ImportError:
-            self._models['logreg'] = self._create_mock_model('logreg')
+        engine_aliases = {
+            'hybrid_nn': 'hybrid_dl',
+        }
 
-        try:
-            if self.config.model.use_svm:
-                from sentiment_engines.svm_sentiment import SVMSentiment
-                self._models['svm'] = SVMSentiment()
-                self.logger.info("  Loaded SVM")
-        except ImportError:
-            self._models['svm'] = self._create_mock_model('svm')
+        # Load configured base models
+        for model_name in self.config.model.get_active_models():
+            engine_type = engine_aliases.get(model_name, model_name)
+            try:
+                self._models[model_name] = get_sentiment_engine(engine_type)
+                self.logger.info("  Loaded %s", model_name)
+            except Exception as exc:
+                if not self.config.model.allow_mock_fallbacks:
+                    raise RuntimeError(
+                        f"Could not initialize model '{model_name}'. "
+                        "Use trained artifacts under backend/models or run "
+                        "`python research/run_thesis_pipeline.py --steps classic`."
+                    ) from exc
+                self.logger.warning(
+                    "  Falling back to mock model for %s (smoke-test only): %s",
+                    model_name,
+                    exc,
+                )
+                self._models[model_name] = self._create_mock_model(model_name)
 
-        try:
-            if self.config.model.use_tfidf:
-                from sentiment_engines.tfidf_sentiment import TFIDFSentiment
-                self._models['tfidf'] = TFIDFSentiment()
-                self.logger.info("  Loaded TF-IDF")
-        except ImportError:
-            self._models['tfidf'] = self._create_mock_model('tfidf')
-
-        # Initialize fuzzy classifier
+        # Initialize fuzzy engine
         if self.config.model.use_fuzzy:
             try:
-                from research.computational_intelligence.fuzzy import FuzzySentimentClassifier
-                self._fuzzy_classifier = FuzzySentimentClassifier(
-                    defuzz_method=self.config.model.fuzzy_defuzz_method,
-                )
+                base_models = [
+                    name for name in self.config.model.get_active_models()
+                    if name in {'logreg', 'svm', 'tfidf'}
+                ]
+                fuzzy_kwargs = {
+                    'defuzz_method': self.config.model.fuzzy_defuzz_method,
+                    'mf_type': self.config.model.fuzzy_mf_type,
+                }
+                if base_models:
+                    fuzzy_kwargs['base_models'] = base_models
+                self._fuzzy_classifier = get_sentiment_engine('fuzzy_ensemble', **fuzzy_kwargs)
                 self._models['fuzzy'] = self._fuzzy_classifier
-                self.logger.info("  Loaded FuzzySentiment")
-            except ImportError as e:
-                self.logger.warning(f"Could not load fuzzy classifier: {e}")
+                self.logger.info("  Loaded fuzzy")
+            except Exception as exc:
+                if not self.config.model.allow_mock_fallbacks:
+                    raise RuntimeError(
+                        "Could not initialize fuzzy ensemble. "
+                        "Verify fuzzy dependencies and base model artifacts."
+                    ) from exc
+                self.logger.warning("  Skipping fuzzy model in smoke-test mode: %s", exc)
 
         self.logger.info(f"Initialized {len(self._models)} models")
 
@@ -376,6 +531,7 @@ class ThesisExperiment:
 
                 return {
                     'label': label,
+                    'score': conf,
                     'confidence': conf,
                     'probs': {
                         'Positive': conf if label == 'Positive' else 0.1,
@@ -393,7 +549,7 @@ class ThesisExperiment:
         model_name: str
     ) -> ModelResult:
         """Evaluate a single model on a dataset."""
-        from research.benchmarks.base import SentimentLabel
+        from src.sentiment import coerce_sentiment_result
 
         test_split = dataset.test
         if hasattr(test_split, 'sample'):
@@ -409,18 +565,35 @@ class ThesisExperiment:
 
         for text, label in test_split:
             try:
-                result = model.analyze(text)
-                pred_label = result.get('label', 'Neutral') if isinstance(result, dict) else getattr(result, 'label', 'Neutral')
-                predictions.append(label_map.get(pred_label, 1))
+                raw_result = model.analyze(text)
+                result = coerce_sentiment_result(raw_result, model_name)
+                predictions.append(label_map.get(result.label, 1))
                 true_labels.append(label.value)
-            except Exception:
+            except Exception as exc:
+                self.logger.debug("Inference failed for %s: %s", model_name, exc)
                 predictions.append(1)
                 true_labels.append(label.value)
 
-        inference_time = (time.time() - start_time) / len(test_split) * 1000
+        n_samples = len(test_split)
+        inference_time = (time.time() - start_time) / n_samples * 1000 if n_samples else 0.0
 
         predictions = np.array(predictions)
         true_labels = np.array(true_labels)
+
+        if len(predictions) == 0:
+            empty_cm = np.zeros((3, 3), dtype=int)
+            return ModelResult(
+                model_name=model_name,
+                accuracy=0.0,
+                f1_macro=0.0,
+                f1_weighted=0.0,
+                precision_macro=0.0,
+                recall_macro=0.0,
+                per_class_f1={'Negative': 0.0, 'Neutral': 0.0, 'Positive': 0.0},
+                confusion_matrix=empty_cm,
+                inference_time_ms=float(inference_time),
+                n_samples=0,
+            )
 
         # Compute metrics
         accuracy = np.mean(predictions == true_labels)
@@ -598,13 +771,14 @@ class ThesisExperiment:
             # Pre-compute model predictions
             model_probs = {}
             models_list = list(self._models.items())
+            from src.sentiment import coerce_sentiment_result
 
             for model_name, model in models_list:
                 probs = []
                 for text in val_texts:
                     try:
-                        result = model.analyze(text)
-                        p = result.get('probs', {}) if isinstance(result, dict) else {}
+                        parsed = coerce_sentiment_result(model.analyze(text), model_name)
+                        p = parsed.probs or {}
                         probs.append([
                             p.get('Negative', 0.33),
                             p.get('Neutral', 0.34),

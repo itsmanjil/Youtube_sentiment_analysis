@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -35,10 +36,28 @@ CLASSIC_SCRIPT_MAP = {
 }
 
 
-def run_command(args, cwd=BASE_DIR):
+def append_command_log(command_log: Path, command: str, cwd: Path) -> None:
+    command_log.parent.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    with command_log.open("a", encoding="utf-8") as handle:
+        handle.write(f"{timestamp}\t{cwd}\t{command}\n")
+
+
+def run_command(args, cwd=BASE_DIR, command_log: Path | None = None):
     printable = " ".join(str(item) for item in args)
     print(f"\n==> {printable}")
+    if command_log is not None:
+        append_command_log(command_log, printable, Path(cwd))
     subprocess.run(args, check=True, cwd=str(cwd))
+
+
+def resolve_command_log_path(raw: str | None) -> Path | None:
+    if not raw:
+        return None
+    path = Path(raw)
+    if not path.is_absolute():
+        path = BASE_DIR / path
+    return path
 
 
 def parse_steps(value: str | None) -> list[str]:
@@ -175,11 +194,21 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--meta_folds", type=int, default=5)
     parser.add_argument("--meta_output", default=None)
+    parser.add_argument(
+        "--command_log",
+        default="results/experiment_command_log.txt",
+        help="Append executed commands to this log path (relative to backend root).",
+    )
+    parser.add_argument(
+        "--no_command_log",
+        action="store_true",
+        help="Disable appending commands to the experiment log.",
+    )
 
     return parser
 
 
-def run_classic(args):
+def run_classic(args, command_log: Path | None):
     raw_csv = Path(args.raw_csv) if args.raw_csv else (
         BASE_DIR / "data" / "raw" / "youtube_comments_cleaned.csv"
     )
@@ -199,10 +228,10 @@ def run_classic(args):
         cmd += ["--label_column", args.classic_label_column]
         if output_dir:
             cmd += ["--output_dir", str(output_dir)]
-        run_command(cmd)
+        run_command(cmd, command_log=command_log)
 
 
-def run_prepare(args) -> Path:
+def run_prepare(args, command_log: Path | None) -> Path:
     if not (args.video or args.video_list or args.labeled_csv):
         raise ValueError(
             "Prepare step requires --video, --video_list, or --labeled_csv."
@@ -230,12 +259,12 @@ def run_prepare(args) -> Path:
     if args.group_by:
         cmd += ["--group_by", args.group_by]
     cmd += ["--output_dir", str(output_dir)]
-    run_command(cmd)
+    run_command(cmd, command_log=command_log)
 
     return output_dir
 
 
-def run_hybrid(args, prepared_dir: Path | None):
+def run_hybrid(args, prepared_dir: Path | None, command_log: Path | None):
     train_csv, val_csv, test_csv = resolve_split_paths(args, prepared_dir)
     ensure_exists(train_csv, "Train CSV")
     ensure_exists(val_csv, "Validation CSV")
@@ -254,10 +283,10 @@ def run_hybrid(args, prepared_dir: Path | None):
         cmd += ["--experiment_name", args.hybrid_experiment_name]
     if args.hybrid_device:
         cmd += ["--device", args.hybrid_device]
-    run_command(cmd)
+    run_command(cmd, command_log=command_log)
 
 
-def run_ensemble(args):
+def run_ensemble(args, command_log: Path | None):
     data_path = Path(args.ensemble_data) if args.ensemble_data else default_ensemble_data()
     ensure_exists(data_path, "Ensemble dataset")
 
@@ -283,10 +312,10 @@ def run_ensemble(args):
         "--output",
         str(output_path),
     ]
-    run_command(cmd)
+    run_command(cmd, command_log=command_log)
 
 
-def run_meta(args):
+def run_meta(args, command_log: Path | None):
     data_path = Path(args.meta_data) if args.meta_data else default_meta_data()
     ensure_exists(data_path, "Meta-learner dataset")
 
@@ -312,7 +341,7 @@ def run_meta(args):
         "--output",
         str(output_path),
     ]
-    run_command(cmd)
+    run_command(cmd, command_log=command_log)
 
 
 def main():
@@ -321,22 +350,25 @@ def main():
 
     steps = parse_steps(args.steps)
     prepared_dir = None
+    command_log = None if args.no_command_log else resolve_command_log_path(args.command_log)
 
     for step in steps:
         if step == "classic":
-            run_classic(args)
+            run_classic(args, command_log)
         elif step == "prepare":
-            prepared_dir = run_prepare(args)
+            prepared_dir = run_prepare(args, command_log)
         elif step == "hybrid":
-            run_hybrid(args, prepared_dir)
+            run_hybrid(args, prepared_dir, command_log)
         elif step == "ensemble":
-            run_ensemble(args)
+            run_ensemble(args, command_log)
         elif step == "meta":
-            run_meta(args)
+            run_meta(args, command_log)
         else:
             raise ValueError(f"Unsupported step: {step}")
 
     print("\nAll requested steps completed.")
+    if command_log is not None:
+        print(f"Command log updated: {command_log}")
 
 
 if __name__ == "__main__":

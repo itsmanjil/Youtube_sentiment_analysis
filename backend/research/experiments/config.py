@@ -60,6 +60,9 @@ class ModelConfig:
     ensemble_method: str = "weighted_average"  # or "voting", "stacking"
     optimize_weights: bool = True
 
+    # Safety guard: mock models should only be used for smoke tests
+    allow_mock_fallbacks: bool = False
+
     def get_active_models(self) -> List[str]:
         """Get list of active model names."""
         models = []
@@ -111,8 +114,10 @@ class EvaluationConfig:
 
     # Datasets to use
     datasets: List[str] = field(default_factory=lambda: [
-        "synthetic"  # Start with synthetic for testing
+        "youtube_filtered"
     ])
+    data_dir: str = "./data"
+    allow_synthetic_data: bool = False
 
     # Evaluation settings
     max_samples_per_dataset: int = 1000  # Limit for faster testing
@@ -197,6 +202,7 @@ class ExperimentConfig:
                 'fuzzy_mf_type': self.model.fuzzy_mf_type,
                 'ensemble_method': self.model.ensemble_method,
                 'optimize_weights': self.model.optimize_weights,
+                'allow_mock_fallbacks': self.model.allow_mock_fallbacks,
             },
             'optimization': {
                 'optimizer_type': self.optimization.optimizer_type.value,
@@ -212,6 +218,8 @@ class ExperimentConfig:
             },
             'evaluation': {
                 'datasets': self.evaluation.datasets,
+                'data_dir': self.evaluation.data_dir,
+                'allow_synthetic_data': self.evaluation.allow_synthetic_data,
                 'max_samples_per_dataset': self.evaluation.max_samples_per_dataset,
                 'run_cross_domain': self.evaluation.run_cross_domain,
                 'primary_metric': self.evaluation.primary_metric,
@@ -261,10 +269,13 @@ class ExperimentConfig:
                 use_svm=m.get('use_svm', True),
                 use_tfidf=m.get('use_tfidf', True),
                 use_bert=m.get('use_bert', False),
+                use_hybrid_nn=m.get('use_hybrid_nn', False),
                 use_fuzzy=m.get('use_fuzzy', True),
                 fuzzy_defuzz_method=m.get('fuzzy_defuzz_method', 'centroid'),
+                fuzzy_mf_type=m.get('fuzzy_mf_type', 'gaussian'),
                 ensemble_method=m.get('ensemble_method', 'weighted_average'),
                 optimize_weights=m.get('optimize_weights', True),
+                allow_mock_fallbacks=m.get('allow_mock_fallbacks', False),
             )
 
         # Load optimization config
@@ -284,7 +295,9 @@ class ExperimentConfig:
         if 'evaluation' in data:
             e = data['evaluation']
             config.evaluation = EvaluationConfig(
-                datasets=e.get('datasets', ['synthetic']),
+                datasets=e.get('datasets', ['youtube_filtered']),
+                data_dir=e.get('data_dir', './data'),
+                allow_synthetic_data=e.get('allow_synthetic_data', False),
                 max_samples_per_dataset=e.get('max_samples_per_dataset', 1000),
                 run_cross_domain=e.get('run_cross_domain', True),
                 primary_metric=e.get('primary_metric', 'f1_macro'),
@@ -306,9 +319,12 @@ def get_quick_test_config() -> ExperimentConfig:
     )
     config.model.use_bert = False
     config.model.use_hybrid_nn = False
+    config.model.allow_mock_fallbacks = True
     config.optimization.max_iterations = 10
     config.optimization.population_size = 10
     config.optimization.n_runs = 1
+    config.evaluation.datasets = ['synthetic']
+    config.evaluation.allow_synthetic_data = True
     config.evaluation.max_samples_per_dataset = 100
     config.evaluation.run_cross_domain = False
     return config
@@ -321,6 +337,7 @@ def get_full_benchmark_config() -> ExperimentConfig:
         description="Complete thesis benchmark on all datasets",
         experiment_type=ExperimentType.FULL_BENCHMARK,
     )
+    config.evaluation.datasets = ['youtube_filtered', 'youtube_clean', 'raw']
     config.evaluation.max_samples_per_dataset = 5000
     config.optimization.n_runs = 10
     config.optimization.max_iterations = 100
@@ -334,6 +351,7 @@ def get_cross_domain_config() -> ExperimentConfig:
         description="Cross-domain generalization study",
         experiment_type=ExperimentType.CROSS_DOMAIN,
     )
+    config.evaluation.datasets = ['youtube_filtered', 'youtube_clean', 'raw']
     config.evaluation.run_cross_domain = True
     config.evaluation.max_samples_per_dataset = 2000
     return config
@@ -346,6 +364,8 @@ def get_ablation_config() -> ExperimentConfig:
         description="Ablation study on model components",
         experiment_type=ExperimentType.ABLATION_STUDY,
     )
+    config.evaluation.datasets = ['youtube_filtered']
+    config.evaluation.run_cross_domain = False
     config.evaluation.max_samples_per_dataset = 1000
     config.optimization.n_runs = 5
     return config

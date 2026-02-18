@@ -22,6 +22,17 @@ Optional arguments:
 - `--ensemble-weights '{"logreg": 0.3, "svm": 0.5, "tfidf": 0.2}'`
 - `--output results.json`
 
+## Evaluate a human gold set
+
+```bash
+python backend/research/evaluate_gold_set.py --data backend/data/gold_set_labeled.csv
+```
+
+Optional arguments:
+- `--models tfidf,logreg,svm,ensemble,meta_learner`
+- `--output backend/results/gold_set_evaluation.json`
+- `--summary_md backend/results/gold_set_evaluation.md`
+
 ## Optimize ensemble weights (PSO)
 
 ```bash
@@ -33,3 +44,19 @@ Optional arguments:
 - `--particles 20`
 - `--iterations 30`
 - `--output optimized_weights.json`
+
+## Create reproducibility bundle
+
+```bash
+cd backend
+python research/create_repro_bundle.py \
+  --command_file results/experiment_command_log.txt \
+  --artifact data/split_metadata.json \
+  --artifact results/testset_significance_youtube_filtered.json
+```
+
+Optional arguments:
+- `--artifact path/or/glob` (repeat to include more artifacts)
+- `--bundle_name thesis_run_v1`
+- `--output_dir results/repro_bundles`
+- `--notes "Any thesis annotation notes"`

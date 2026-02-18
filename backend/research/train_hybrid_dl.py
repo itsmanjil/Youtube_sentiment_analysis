@@ -56,6 +56,25 @@ def load_config(config_path: str) -> dict:
     return config
 
 
+def _extract_explicit_cli_overrides(parser: argparse.ArgumentParser) -> dict:
+    """
+    Parse CLI again with suppressed defaults to capture explicitly provided args only.
+    """
+    original_defaults = {}
+    for action in parser._actions:
+        if not action.option_strings:
+            continue
+        original_defaults[action.dest] = action.default
+        action.default = argparse.SUPPRESS
+
+    try:
+        return vars(parser.parse_args())
+    finally:
+        for action in parser._actions:
+            if action.dest in original_defaults:
+                action.default = original_defaults[action.dest]
+
+
 def parse_args():
     """Parse command-line arguments"""
     parser = argparse.ArgumentParser(
@@ -142,7 +161,9 @@ def parse_args():
     parser.add_argument('--num_workers', type=int, default=0,
                        help='Number of data loading workers')
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    explicit_cli_overrides = _extract_explicit_cli_overrides(parser)
+    return args, explicit_cli_overrides
 
 
 def set_seed(seed: int):
@@ -157,13 +178,13 @@ def set_seed(seed: int):
         torch.cuda.manual_seed_all(seed)
 
 
-def merge_config_and_args(config: dict, args: argparse.Namespace) -> dict:
+def merge_config_and_args(config: dict, cli_overrides: dict) -> dict:
     """
-    Merge YAML config and CLI arguments, with CLI taking precedence
+    Merge YAML config and explicit CLI arguments, with CLI taking precedence.
 
     Args:
         config: Config dict from YAML
-        args: Parsed CLI arguments
+        cli_overrides: Only CLI args explicitly provided by user
 
     Returns:
         Merged configuration dict
@@ -171,35 +192,39 @@ def merge_config_and_args(config: dict, args: argparse.Namespace) -> dict:
     # Start with config file
     merged = config.copy() if config else {}
 
-    # Override with CLI args (only if not None and not default)
-    parser = argparse.ArgumentParser()
-    parse_args()  # Get defaults
+    # Override with explicit CLI args only
+    for key, value in cli_overrides.items():
+        if key == 'config':
+            continue
 
-    for key, value in vars(args).items():
-        if value is not None:
-            # Navigate nested config structure
-            if key == 'batch_size':
-                merged.setdefault('training', {})['batch_size'] = value
-            elif key == 'max_epochs':
-                merged.setdefault('training', {})['max_epochs'] = value
-            elif key == 'learning_rate':
-                merged.setdefault('training', {})['learning_rate'] = value
-            elif key == 'weight_decay':
-                merged.setdefault('training', {})['weight_decay'] = value
-            elif key == 'gradient_clip':
-                merged.setdefault('training', {})['gradient_clip'] = value
-            elif key == 'embedding_dim':
-                merged.setdefault('model', {})['embedding_dim'] = value
-            elif key == 'max_len':
-                merged.setdefault('data', {})['max_len'] = value
-            elif key == 'vocab_max_size':
-                merged.setdefault('data', {})['vocab_max_size'] = value
-            elif key == 'vocab_min_freq':
-                merged.setdefault('data', {})['vocab_min_freq'] = value
-            elif key == 'glove_path':
-                merged.setdefault('embeddings', {})['path'] = value
-            else:
-                merged[key] = value
+        # Navigate nested config structure
+        if key == 'batch_size':
+            merged.setdefault('training', {})['batch_size'] = value
+        elif key == 'max_epochs':
+            merged.setdefault('training', {})['max_epochs'] = value
+        elif key == 'learning_rate':
+            merged.setdefault('training', {})['learning_rate'] = value
+        elif key == 'weight_decay':
+            merged.setdefault('training', {})['weight_decay'] = value
+        elif key == 'gradient_clip':
+            merged.setdefault('training', {})['gradient_clip'] = value
+        elif key == 'early_stopping_patience':
+            merged.setdefault('training', {}).setdefault('early_stopping', {})['patience'] = value
+        elif key == 'early_stopping_monitor':
+            merged.setdefault('training', {}).setdefault('early_stopping', {})['monitor'] = value
+            merged['early_stopping_monitor'] = value
+        elif key == 'embedding_dim':
+            merged.setdefault('model', {})['embedding_dim'] = value
+        elif key == 'max_len':
+            merged.setdefault('data', {})['max_len'] = value
+        elif key == 'vocab_max_size':
+            merged.setdefault('data', {})['vocab_max_size'] = value
+        elif key == 'vocab_min_freq':
+            merged.setdefault('data', {})['vocab_min_freq'] = value
+        elif key == 'glove_path':
+            merged.setdefault('embeddings', {})['path'] = value
+        else:
+            merged[key] = value
 
     return merged
 
@@ -208,7 +233,7 @@ def main():
     """Main training pipeline"""
 
     # Parse arguments
-    args = parse_args()
+    args, cli_overrides = parse_args()
 
     # Load config file if provided
     if args.config:
@@ -218,7 +243,7 @@ def main():
         config = {}
 
     # Merge config and CLI args
-    config = merge_config_and_args(config, args)
+    config = merge_config_and_args(config, cli_overrides)
 
     # Set random seed
     set_seed(config.get('seed', 42))
@@ -396,13 +421,20 @@ def main():
     # Early stopping
     es_config = training_config.get('early_stopping', {})
     if es_config.get('enabled', True):
+        monitor_metric = es_config.get(
+            'monitor',
+            config.get('early_stopping_monitor', 'val_f1_macro')
+        )
         callbacks.append(EarlyStopping(
-            monitor=config.get('early_stopping_monitor', 'val_f1_macro'),
+            monitor=monitor_metric,
             patience=es_config.get('patience', 7),
             mode='max',
             verbose=True
         ))
-        print(f"[OK] Early Stopping (patience={es_config.get('patience', 7)})")
+        print(
+            f"[OK] Early Stopping (monitor={monitor_metric}, "
+            f"patience={es_config.get('patience', 7)})"
+        )
 
     # Model checkpoint
     checkpoint_path = output_dir / 'checkpoints' / 'hybrid_epoch{epoch:02d}_f1{val_f1_macro:.4f}.pt'
