@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
+import AuthContext from "../context/AuthContext";
 // Link for routing to diff pages & Hashlink for smooth transition to different parts of same page
 
 function Navigation() {
-  const token = localStorage.getItem("authToken");
-  console.log("token", token);
+  const { isAuthenticated } = useContext(AuthContext);
   return (
     <>
       {/* Navbar */}
@@ -47,7 +47,7 @@ function Navigation() {
               </li>
               
 
-              {token !== null && (
+              {isAuthenticated && (
                 <>
                   <li className="nav-item">
                     <Link to="/dashboard" className="nav-link" aria-current="page">
@@ -62,7 +62,7 @@ function Navigation() {
                 </>
               )}
             </ul>
-            {token == null && (
+            {!isAuthenticated && (
               <span className="nav-item">
                 <Link to="/signin" className="btn-outline-sm">
                   Log in

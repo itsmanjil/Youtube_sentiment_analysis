@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 import "./Homepage.css";
 import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 import Navbar from "../../Components/Navbar";
+import AuthContext from "../../context/AuthContext";
 // css from StyleSheet.css - bg color change garnu pare change from there
 function Homepage() {
-  const token = localStorage.getItem("authToken");
+  const { isAuthenticated } = useContext(AuthContext);
   return (
     <div data-bs-spy="scroll" data-bs-target="#navbarExample">
       {/* <!-- Navigation --> */}
@@ -23,12 +24,12 @@ function Homepage() {
                 <p className="p-large">
                   Discover what viewers really think about YouTube videos through advanced sentiment analysis.
                 </p>
-                {token == null && (
+                {!isAuthenticated && (
                   <Link to="/register" className="btn-solid-lg">
                     Sign up for free
                   </Link>
                 )}
-                {token !== null && (
+                {isAuthenticated && (
                   <HashLink smooth to="#features" className="btn-solid-lg">
                     Learn More!
                   </HashLink>

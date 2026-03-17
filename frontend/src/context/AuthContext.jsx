@@ -1,108 +1,120 @@
 import axiosInstance from "../axios";
 import { createContext, useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import {
+  clearStoredAuthToken,
+  decodeAccessToken,
+  getInitialAuthState,
+  hasValidAccessToken,
+  persistAuthToken,
+  shouldRefreshAccessToken,
+} from "../utils/auth";
+
 const AuthContext = createContext();
 
 export default AuthContext;
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
+  const initialAuthState = getInitialAuthState();
 
-  let [authToken, setAuthToken] = useState(() => {
-    const raw = localStorage.getItem("authToken");
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch (err) {
-      return null;
-    }
-  });
-
-  let [user, setUser] = useState(() => {
-    const raw = localStorage.getItem("authToken");
-    if (!raw) return null;
-    try {
-      const parsed = JSON.parse(raw);
-      return parsed?.access ? jwtDecode(parsed.access) : null;
-    } catch (err) {
-      return null;
-    }
-  });
-
+  let [authToken, setAuthToken] = useState(initialAuthState.authToken);
+  let [user, setUser] = useState(initialAuthState.user);
   let [loading, setLoading] = useState(true);
 
   const [isError, SetIsError] = useState(false);
 
-  let loginUser = async (email, password) => {
-    // e.preventDefault();
-    console.log("email", email, password);
-
-    let response = await axiosInstance.post("token/", {
-      email: email,
-      password: password,
-    });
-
-    let data = response.data;
-
-    if (response.status === 200) {
-      console.log(data);
-      SetIsError(false);
-      setAuthToken(data);
-      setUser(jwtDecode(data.access));
-
-      localStorage.setItem("authToken", JSON.stringify(data));
-
-      const isFirstLoggedIn = jwtDecode(data.access).is_registered;
-      console.log(isFirstLoggedIn);
-
-      navigate("/dashboard");
-    } else if (response.status == 401 || response.status == 400) {
-      console.log("Not valid login credentials");
-      SetIsError(true);
-      navigate("/signin");
-    } else {
-      navigate("/signin");
-    }
-  };
-
-  let logoutUser = () => {
+  const clearSession = () => {
     setAuthToken(null);
     setUser(null);
-    localStorage.removeItem("authToken");
-    navigate("/");
+    clearStoredAuthToken();
+  };
+
+  const storeSession = (nextAuthToken) => {
+    const decodedUser = decodeAccessToken(nextAuthToken?.access);
+    if (!decodedUser) {
+      clearSession();
+      return false;
+    }
+
+    setAuthToken(nextAuthToken);
+    setUser(decodedUser);
+    persistAuthToken(nextAuthToken);
+    return true;
+  };
+
+  let loginUser = async (email, password) => {
+    try {
+      let response = await axiosInstance.post("token/", {
+        email: email,
+        password: password,
+      });
+
+      let data = response.data;
+
+      if (response.status === 200 && storeSession(data)) {
+        SetIsError(false);
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+    }
+
+    SetIsError(true);
+    clearSession();
+    navigate("/signin", { replace: true });
+  };
+
+  let logoutUser = (redirectTo = "/") => {
+    clearSession();
+    setLoading(false);
+    navigate(redirectTo, { replace: true });
   };
 
   let updateToken = async () => {
     if (!authToken?.refresh) {
-      if (loading) {
-        setLoading(false);
+      if (!hasValidAccessToken(authToken)) {
+        clearSession();
       }
-      return;
-    }
-    // console.log("update token called", authToken.refresh);
-    let response = await axiosInstance.post("token/refresh/", {
-      refresh: authToken.refresh,
-    });
-    let data = response.data;
-    console.log(response.data);
-    // let data = await response.json();
-
-    if (response.status === 200) {
-      setAuthToken(data);
-      setUser(jwtDecode(data.access));
-      localStorage.setItem("authToken", JSON.stringify(data));
-    } else {
-      console.log("problem in updating token");
-      logoutUser();
-    }
-    if (loading) {
       setLoading(false);
+      return false;
     }
+
+    try {
+      let response = await axiosInstance.post("token/refresh/", {
+        refresh: authToken.refresh,
+      });
+      let data = response.data;
+
+      if (response.status === 200 && data?.access) {
+        const nextAuthToken = {
+          ...authToken,
+          ...data,
+          refresh: data.refresh || authToken.refresh,
+        };
+        SetIsError(false);
+        const stored = storeSession(nextAuthToken);
+        setLoading(false);
+        return stored;
+      }
+    } catch (err) {
+      console.error("Token refresh failed:", err);
+    }
+
+    SetIsError(true);
+    clearSession();
+    setLoading(false);
+    navigate("/signin", { replace: true });
+    return false;
   };
+
+  const isAuthenticated = Boolean(user && hasValidAccessToken(authToken));
 
   let contextData = {
     isError: isError,
+    isAuthenticated: isAuthenticated,
+    loading: loading,
     user: user,
     authToken: authToken,
     loginUser: loginUser,
@@ -110,18 +122,44 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (loading) {
-      console.log("first loading......");
-      updateToken();
+    const initializeAuth = async () => {
+      if (!authToken) {
+        setLoading(false);
+        return;
+      }
+
+      if (hasValidAccessToken(authToken)) {
+        if (!user) {
+          setUser(decodeAccessToken(authToken.access));
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (authToken.refresh) {
+        await updateToken();
+        return;
+      }
+
+      clearSession();
+      setLoading(false);
+    };
+
+    initializeAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!authToken?.refresh) {
+      return undefined;
     }
 
-    let duration = 1000 * 60 * 4; //4minutes
-
     let interval = setInterval(() => {
-      if (authToken) {
+      if (shouldRefreshAccessToken(authToken)) {
         updateToken();
       }
-    }, duration);
+    }, 1000 * 60);
+
     return () => clearInterval(interval);
   }, [authToken]);
 

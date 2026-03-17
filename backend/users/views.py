@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import login, logout
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework import status
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 from django.db import IntegrityError
 @api_view(["POST"])
-# @permission_classes([AllowAny])
+@permission_classes([AllowAny])
 def registration_view(request):
     data = {}
     serializer = RegistrationSerializer(data=request.data)
@@ -94,10 +95,16 @@ def logout_view(request):
    return Response({"message":"User logged out"})
 
 @api_view(["GET",])
+@permission_classes([IsAuthenticated])
 def get_user(request, id):
-    user = NewUser.objects.get(id=id)
-    logger.debug("get_user request_user=%s target_user=%s", request.user, user)
+    if request.user.id != id:
+        return Response(
+            {"message":"You can only get your information"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
+    user = get_object_or_404(NewUser, id=id)
+    logger.debug("get_user request_user=%s target_user=%s", request.user, user)
     youtubeData = YouTubeAnalysis.objects.filter(user=user).order_by('-id')
     searched_lists = []
     for analysis in youtubeData:
@@ -106,17 +113,10 @@ def get_user(request, id):
             'title': analysis.video.title
         })
 
-    isSameUser = request.user == user
-    if user.is_authenticated & isSameUser:
-        if user.id == id:
-            return Response({
-            "user_name":user.user_name,
-            "email":user.email,
-            "id":user.id,
-            "searched_list": searched_lists
-            #    "expires_in": expires_in(request.auth)
-            })
-    else:
-        return Response({
-            "message":"You can only get your information"
-        })
+    return Response({
+        "user_name":user.user_name,
+        "email":user.email,
+        "id":user.id,
+        "searched_list": searched_lists
+        #    "expires_in": expires_in(request.auth)
+    })

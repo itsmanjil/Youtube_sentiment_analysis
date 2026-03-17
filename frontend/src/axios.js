@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getStoredAccessToken } from "./utils/auth";
 
 // Prefer Vite dev proxy (`/api`) but allow override for deployments.
 // Example: set `VITE_API_URL=http://127.0.0.1:8000/api/`
@@ -24,22 +25,9 @@ const axiosInstance = axios.create({
   },
 });
 
-const getAccessTokenFromStorage = () => {
-  const raw = localStorage.getItem("authToken");
-  if (!raw) return null;
-
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed?.access || null;
-  } catch (err) {
-    // Fallback: some code paths may store the raw access token string.
-    return raw;
-  }
-};
-
 // Ensure Authorization header stays in sync after login/refresh.
 axiosInstance.interceptors.request.use((config) => {
-  const accessToken = getAccessTokenFromStorage();
+  const accessToken = getStoredAccessToken();
   if (accessToken) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${accessToken}`;

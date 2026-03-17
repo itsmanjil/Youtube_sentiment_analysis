@@ -64,42 +64,38 @@ def _coerce_ensemble_weights(value):
     def unwrap_weights(payload):
         if isinstance(payload, dict):
             nested = payload.get("weights")
-            if isinstance(nested, dict):
+            if isinstance(nested, (dict, list, tuple)):
                 return nested, "weights"
         return payload, None
 
-    if isinstance(value, (dict, list, tuple)):
-        weights, suffix = unwrap_weights(value)
-        source = "request"
+    def coerce_structured_weights(payload, source):
+        weights, suffix = unwrap_weights(payload)
+        if not isinstance(weights, (dict, list, tuple)):
+            return None, None
         if suffix:
             source = f"{source}:{suffix}"
         return weights, source
+
+    if isinstance(value, (dict, list, tuple)):
+        return coerce_structured_weights(value, "request")
     if isinstance(value, str):
         raw = value.strip()
         if not raw:
             return None, None
         try:
             payload = json.loads(raw)
-            weights, suffix = unwrap_weights(payload)
-            source = "json"
-            if suffix:
-                source = f"{source}:{suffix}"
-            return weights, source
+            return coerce_structured_weights(payload, "json")
         except json.JSONDecodeError:
-            path = Path(raw)
-            if not path.is_absolute():
-                path = BASE_DIR / raw
-            if path.exists():
-                try:
-                    payload = json.loads(path.read_text(encoding="utf-8"))
-                    weights, suffix = unwrap_weights(payload)
-                    source = str(path)
-                    if suffix:
-                        source = f"{source}:{suffix}"
-                    return weights, source
-                except json.JSONDecodeError:
-                    return None, None
+            return None, None
     return None, None
+
+
+def _has_value(value):
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True
 
 
 
@@ -137,17 +133,25 @@ def analyze_youtube_video(request):
 
     if ensemble_models is None:
         ensemble_models = ["logreg", "svm", "tfidf"]
-    if isinstance(meta_learner_path, str) and not meta_learner_path.strip():
-        meta_learner_path = None
-
     ensemble_weights, ensemble_weights_source = _coerce_ensemble_weights(
         ensemble_weights_input
     )
-    if ensemble_weights_input is not None and ensemble_weights is None:
+    if _has_value(ensemble_weights_input) and ensemble_weights is None:
         return Response(
-            {"msg": "Invalid ensemble_weights. Provide JSON or a path to a weights file."},
+            {"msg": "Invalid ensemble_weights. Provide inline JSON weights."},
             status=400,
         )
+    if _has_value(meta_learner_path):
+        return Response(
+            {
+                "msg": (
+                    "meta_learner_path overrides are not supported from API requests. "
+                    "Use the server-configured meta-learner artifact."
+                )
+            },
+            status=400,
+        )
+    meta_learner_path = None
 
     if sentiment_model == "ci_ensemble":
         sentiment_model = "ensemble"
@@ -402,8 +406,11 @@ def analyze_youtube_video(request):
                 "model_errors": getattr(engine, "model_errors", {}),
             }
         if sentiment_model == "meta_learner":
+            meta_model_artifact = None
+            if getattr(engine, "meta_model_path", None):
+                meta_model_artifact = Path(engine.meta_model_path).name
             analysis_meta["meta_learner"] = {
-                "model_path": str(getattr(engine, "meta_model_path", meta_learner_path) or ""),
+                "model_artifact": meta_model_artifact,
                 "base_models": getattr(engine, "base_models", meta_learner_models),
                 "base_models_source": getattr(engine, "base_models_source", None),
                 "feature_type": getattr(engine, "feature_type", None),
@@ -500,7 +507,8 @@ def analyze_youtube_video(request):
 def get_youtube_analysis(request, video_id):
     try:
         analysis = YouTubeAnalysis.objects.filter(
-            video__video_id=video_id
+            user=request.user,
+            video__video_id=video_id,
         ).order_by('-fetched_date').first()
 
         if not analysis:

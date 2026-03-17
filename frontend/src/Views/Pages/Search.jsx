@@ -11,11 +11,9 @@ function Search() {
     logoutUser();
   }
 
-  const token = localStorage.getItem("authToken");
-  console.log("token", token);
   const navigate = useNavigate();
   const [hasError, setHasError] = useState(false);
-  const { logoutUser, authToken } = useContext(AuthContext);
+  const { logoutUser, isAuthenticated } = useContext(AuthContext);
   const [video_url, setVideoUrl] = useState("");
   const [max_comments, setMaxComments] = useState(200);
   const [useApi, setUseApi] = useState(true);
@@ -23,7 +21,6 @@ function Search() {
   const [showResearchOptions, setShowResearchOptions] = useState(false);
   const [ensembleModels, setEnsembleModels] = useState(["logreg", "svm", "tfidf"]);
   const [ensembleWeights, setEnsembleWeights] = useState("");
-  const [metaLearnerPath, setMetaLearnerPath] = useState("");
   const [metaLearnerModels, setMetaLearnerModels] = useState(["logreg", "svm", "tfidf"]);
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.6);
   const [bootstrapSamples, setBootstrapSamples] = useState(500);
@@ -195,7 +192,6 @@ function Search() {
           sentiment_model: sentimentModel,
           ensemble_models: ensembleModels,
           ensemble_weights: ensembleWeights || null,
-          meta_learner_path: metaLearnerPath || null,
           meta_learner_models: metaLearnerModels,
           confidence_threshold: confidenceThreshold,
           bootstrap_samples: bootstrapSamples,
@@ -279,7 +275,7 @@ function Search() {
               </li>
               
 
-              {token !== null && (
+              {isAuthenticated && (
                 <>
                   <li className="nav-item">
                     <Link to="/dashboard" className="nav-link" aria-current="page">
@@ -480,17 +476,9 @@ function Search() {
                       {sentimentModel === "meta_learner" && (
                         <>
                           <div className="col-md-12 mt-3">
-                            <label className="labels" htmlFor="meta-learner-path">Meta-Learner Model Path</label>
-                            <input
-                              id="meta-learner-path"
-                              className="form-control"
-                              type="text"
-                              placeholder="backend/models/meta_learner.pkl"
-                              value={metaLearnerPath}
-                              onChange={(e) => setMetaLearnerPath(e.target.value)}
-                            />
+                            <label className="labels">Meta-Learner Artifact</label>
                             <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                              Path to stacking model artifact (e.g., backend/models/meta_learner.pkl).
+                              The API uses the server-configured stacking artifact. Client-side path overrides are disabled.
                             </p>
                           </div>
                           <div className="col-md-12 mt-3">

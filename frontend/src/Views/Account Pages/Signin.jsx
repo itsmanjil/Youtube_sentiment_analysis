@@ -1,13 +1,18 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useContext } from "react";
+import { Link, Navigate } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 
 // import Navbar from "../../Components/Navbar";
 import SigninForm from "./SigninForm";
+import AuthContext from "../../context/AuthContext";
 
 function Signin() {
-  const token = localStorage.getItem("authToken");
-  console.log("token", token);
+  const { isAuthenticated, loading } = useContext(AuthContext);
+
+  if (!loading && isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <>
       {/* Navbar */}
@@ -50,7 +55,7 @@ function Signin() {
               
               
 
-              {token !== null && (
+              {isAuthenticated && (
                 <>
                   <li className="nav-item">
                     <Link to="/dashboard" className="nav-link" aria-current="page">
@@ -65,7 +70,7 @@ function Signin() {
                 </>
               )}
             </ul>
-            {token == null && (
+            {!isAuthenticated && (
               <span className="nav-item">
                 <Link to="/signin" className="btn-outline-sm">
                   Log in

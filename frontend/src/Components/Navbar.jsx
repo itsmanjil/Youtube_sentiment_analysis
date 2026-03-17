@@ -1,14 +1,13 @@
-import React, {useState} from "react";
+import React, { useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
+import AuthContext from "../context/AuthContext";
 // Link for routing to diff pages & Hashlink for smooth transition to different parts of same page
 
 
 export default function Navbar() {
-  const [isActive,setActive] = useState("home")
-  
-  const token = localStorage.getItem("authToken");
-  console.log("token", token);
+  const [isActive, setActive] = useState("home");
+  const { isAuthenticated } = useContext(AuthContext);
 
 
   
@@ -81,7 +80,7 @@ export default function Navbar() {
                 </HashLink>
               </li>
 
-              {token !== null && (
+              {isAuthenticated && (
                 <>
                   <li className="nav-item">
                     <Link to="/dashboard" className="nav-link" aria-current="page">
@@ -101,7 +100,7 @@ export default function Navbar() {
                 </>
               )}
             </ul>
-            {token == null && (
+            {!isAuthenticated && (
               <span className="nav-item">
                 <Link to="/signin" className="btn-outline-sm">
                   Log in

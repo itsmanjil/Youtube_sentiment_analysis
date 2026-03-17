@@ -1,12 +1,15 @@
 
 from unittest.mock import patch, MagicMock
 
+from django.core.exceptions import ImproperlyConfigured
+from django.test import SimpleTestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
 from googleapiclient.errors import HttpError
 
 from users.models import NewUser
+from core.settings_utils import DEV_SECRET_KEY, resolve_runtime_settings
 from .analysis_utils import (
     aggregate_confidence_stats,
     bootstrap_confidence_intervals,
@@ -114,6 +117,30 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['msg'], 'video_url is required')
 
+    def test_analyze_video_rejects_path_based_ensemble_weights(self):
+        data = {
+            "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+            "sentiment_model": "ensemble",
+            "ensemble_weights": "backend/models/pso_ensemble_weights.json",
+        }
+
+        response = self.client.post(self.analyze_url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("inline JSON weights", response.data["msg"])
+
+    def test_analyze_video_rejects_meta_learner_path_override(self):
+        data = {
+            "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+            "sentiment_model": "meta_learner",
+            "meta_learner_path": "backend/models/meta_learner.pkl",
+        }
+
+        response = self.client.post(self.analyze_url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("meta_learner_path overrides are not supported", response.data["msg"])
+
     @patch('app.views.YouTubeFetcher')
     def test_analyze_video_api_error_quota(self, mock_fetcher):
         mock_error_content = b'{"error": {"errors": [{"reason": "quotaExceeded"}], "message": "Quota Exceeded"}}'
@@ -182,6 +209,43 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.data['data']['video']['id'], 'v1')
         self.assertEqual(response.data['data']['model_used'], 'LOGREG')
 
+    def test_get_single_analysis_is_scoped_to_authenticated_user(self):
+        video = YouTubeVideo.objects.create(
+            video_id='v1',
+            title='Video 1',
+            channel_name='Channel 1',
+            published_at='2026-01-01T00:00:00Z',
+        )
+        YouTubeAnalysis.objects.create(
+            user=self.user,
+            video=video,
+            sentiment_data={'Positive': 1, 'Neutral': 0, 'Negative': 0},
+            total_comments_analyzed=1,
+            analysis_model='LOGREG',
+        )
+        other_user = NewUser.objects.create_user(
+            email='other2@test.com',
+            user_name='otheruser2',
+            first_name='Other',
+            last_name='User',
+            password='password',
+        )
+        YouTubeAnalysis.objects.create(
+            user=other_user,
+            video=video,
+            sentiment_data={'Positive': 0, 'Neutral': 0, 'Negative': 5},
+            total_comments_analyzed=5,
+            analysis_model='SVM',
+        )
+
+        url = reverse('app:get_youtube_analysis', kwargs={'video_id': 'v1'})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['data']['model_used'], 'LOGREG')
+        self.assertEqual(response.data['data']['sentiment_data']['Positive'], 1)
+        self.assertEqual(response.data['data']['sentiment_data']['Negative'], 0)
+
     def test_get_single_analysis_not_found(self):
         url = reverse('app:get_youtube_analysis', kwargs={'video_id': 'nonexistent'})
         response = self.client.get(url)
@@ -208,3 +272,74 @@ class AnalysisUtilsTests(APITestCase):
             intervals["Positive"]["lower"],
             intervals["Positive"]["upper"],
         )
+
+
+class SettingsResolutionTests(SimpleTestCase):
+    def test_resolve_runtime_settings_uses_local_defaults_for_development(self):
+        settings_data = resolve_runtime_settings(
+            {"DJANGO_ENV": "development"},
+        )
+
+        self.assertTrue(settings_data["debug"])
+        self.assertEqual(settings_data["secret_key"], DEV_SECRET_KEY)
+        self.assertEqual(
+            settings_data["allowed_hosts"],
+            ["localhost", "127.0.0.1"],
+        )
+        self.assertEqual(
+            settings_data["cors_allowed_origins"],
+            ["http://localhost:3000", "http://127.0.0.1:3000"],
+        )
+
+    def test_resolve_runtime_settings_requires_secret_key_in_production(self):
+        with self.assertRaisesMessage(
+            ImproperlyConfigured,
+            "SECRET_KEY must be set when DEBUG is False.",
+        ):
+            resolve_runtime_settings(
+                {
+                    "DJANGO_ENV": "production",
+                    "ALLOWED_HOSTS": "api.example.com",
+                    "CORS_ALLOWED_ORIGINS": "https://app.example.com",
+                },
+            )
+
+    def test_resolve_runtime_settings_requires_allowed_hosts_in_production(self):
+        with self.assertRaisesMessage(
+            ImproperlyConfigured,
+            "ALLOWED_HOSTS must be set when DEBUG is False.",
+        ):
+            resolve_runtime_settings(
+                {
+                    "DJANGO_ENV": "production",
+                    "SECRET_KEY": "prod-secret",
+                    "CORS_ALLOWED_ORIGINS": "https://app.example.com",
+                },
+            )
+
+    def test_resolve_runtime_settings_requires_cors_origins_in_production(self):
+        with self.assertRaisesMessage(
+            ImproperlyConfigured,
+            "CORS_ALLOWED_ORIGINS must be set when DEBUG is False.",
+        ):
+            resolve_runtime_settings(
+                {
+                    "DJANGO_ENV": "production",
+                    "SECRET_KEY": "prod-secret",
+                    "ALLOWED_HOSTS": "api.example.com",
+                },
+            )
+
+    def test_resolve_runtime_settings_rejects_allow_all_cors_in_production(self):
+        with self.assertRaisesMessage(
+            ImproperlyConfigured,
+            "CORS_ALLOW_ALL_ORIGINS cannot be enabled when DEBUG is False.",
+        ):
+            resolve_runtime_settings(
+                {
+                    "DJANGO_ENV": "production",
+                    "SECRET_KEY": "prod-secret",
+                    "ALLOWED_HOSTS": "api.example.com",
+                    "CORS_ALLOW_ALL_ORIGINS": "true",
+                },
+            )

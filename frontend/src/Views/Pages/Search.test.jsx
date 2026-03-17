@@ -279,6 +279,9 @@ describe('Search Component', () => {
         })
       );
     });
+
+    const payload = axiosInstance.mock.calls[0][0].data;
+    expect(payload).not.toHaveProperty('meta_learner_path');
   });
 
   test('navigates to dashboard on successful analysis', async () => {

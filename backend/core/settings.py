@@ -2,22 +2,31 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+import sys
 from dotenv import load_dotenv
-
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / ".env")
+
+from core.settings_utils import resolve_runtime_settings
+
+DEFAULT_ENVIRONMENT = "test" if "test" in sys.argv else "production"
+RUNTIME_SETTINGS = resolve_runtime_settings(
+    os.environ,
+    default_environment=DEFAULT_ENVIRONMENT,
+)
+
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
+SECRET_KEY = RUNTIME_SETTINGS["secret_key"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+DEBUG = RUNTIME_SETTINGS["debug"]
 
-ALLOWED_HOSTS = [host for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host]
+ALLOWED_HOSTS = RUNTIME_SETTINGS["allowed_hosts"]
 
 # Application definition
 
@@ -112,7 +121,7 @@ STATIC_URL = 'static/'
 REST_FRAMEWORK = {
 
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny'
+        'rest_framework.permissions.IsAuthenticated'
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -156,7 +165,15 @@ SIMPLE_JWT = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_ALL_ORIGINS = RUNTIME_SETTINGS["cors_allow_all_origins"]
+CORS_ALLOWED_ORIGINS = RUNTIME_SETTINGS["cors_allowed_origins"]
+CSRF_TRUSTED_ORIGINS = RUNTIME_SETTINGS["csrf_trusted_origins"]
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
 
 # Custom user model
 AUTH_USER_MODEL = "users.NewUser"

@@ -212,6 +212,7 @@ pip install -r requirements.txt  # If requirements.txt exists
 # Create .env file
 cp .env.example .env
 # Edit .env and set:
+#   - DJANGO_ENV=development
 #   - SECRET_KEY (Django secret key)
 #   - YOUTUBE_API_KEY (optional - get from Google Cloud Console)
 
@@ -225,7 +226,7 @@ python3 manage.py migrate
 python3 manage.py createsuperuser
 
 # Run tests (optional)
-python3 test_youtube.py
+python3 manage.py test app app_api users
 
 # Start development server
 python3 manage.py runserver
@@ -244,7 +245,7 @@ npm install
 npm run dev
 ```
 
-Frontend will run on http://localhost:5173 (Vite default)
+Frontend will run on http://localhost:3000
 
 ### 4. Environment Variables
 
@@ -252,6 +253,7 @@ Create a `.env` file in the `backend/` directory:
 
 ```env
 # Django Configuration
+DJANGO_ENV=development
 SECRET_KEY=your-secret-key-here-generate-a-random-string
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
@@ -262,8 +264,9 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 # YouTube API (Optional - scraper works without it)
 YOUTUBE_API_KEY=your-youtube-api-key-here
 
-# CORS (for frontend - Vite default port)
-CORS_ALLOWED_ORIGINS=http://localhost:5173
+# CORS (for frontend dev server)
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+CSRF_TRUSTED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
 **Generate a Secret Key:**
@@ -806,7 +809,8 @@ pipenv install  # or pip install -r requirements.txt
 Check `backend/core/settings.py` and ensure:
 ```python
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite default port
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 ```
 

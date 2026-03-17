@@ -280,10 +280,10 @@ export default function Report() {
                     )}
                     {metaLearnerInfo && (
                       <>
-                        {metaLearnerInfo.model_path && (
+                        {metaLearnerInfo.model_artifact && (
                           <tr>
-                            <td>Meta-Learner Path</td>
-                            <td>{metaLearnerInfo.model_path}</td>
+                            <td>Meta-Learner Artifact</td>
+                            <td>{metaLearnerInfo.model_artifact}</td>
                           </tr>
                         )}
                         {metaLearnerInfo.base_models && (

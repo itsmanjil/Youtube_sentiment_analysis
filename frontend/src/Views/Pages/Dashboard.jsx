@@ -653,8 +653,8 @@ function Dashboard(props) {
                         <div className="text-sm mb-2">
                           <strong>Meta-Learner:</strong>
                           <ul className="mb-0">
-                            {metaLearnerInfo.model_path && (
-                              <li>Model Path: {metaLearnerInfo.model_path}</li>
+                            {metaLearnerInfo.model_artifact && (
+                              <li>Model Artifact: {metaLearnerInfo.model_artifact}</li>
                             )}
                             {metaLearnerInfo.base_models && (
                               <li>
