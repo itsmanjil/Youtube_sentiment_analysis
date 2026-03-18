@@ -66,7 +66,18 @@ export const AuthProvider = ({ children }) => {
     navigate("/signin", { replace: true });
   };
 
-  let logoutUser = (redirectTo = "/") => {
+  let logoutUser = async (redirectTo = "/") => {
+    const refreshToken = authToken?.refresh;
+    if (refreshToken) {
+      try {
+        await axiosInstance.post("user/logout/", {
+          refresh: refreshToken,
+        });
+      } catch (err) {
+        console.warn("Logout token revoke failed:", err);
+      }
+    }
+
     clearSession();
     setLoading(false);
     navigate(redirectTo, { replace: true });

@@ -408,9 +408,10 @@ python backend/research/visualization/generate_all.py
 ### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/users/register/` | Register new user |
+| POST | `/api/user/register/` | Register new user |
 | POST | `/api/token/` | Login and get JWT tokens |
 | POST | `/api/token/refresh/` | Refresh access token |
+| POST | `/api/user/logout/` | Blacklist a refresh token on logout |
 
 ### YouTube Analysis
 | Method | Endpoint | Description | Auth Required |
@@ -418,7 +419,7 @@ python backend/research/visualization/generate_all.py
 | POST | `/api/youtube/analyze/` | Analyze YouTube video comments | Yes |
 | GET | `/api/youtube/analysis/<video_id>/` | Get saved analysis for a video | Yes |
 | GET | `/api/youtube/analyses/` | Get all user's analyses (last 20) | Yes |
-| GET | `/api/youtube/test/` | Health check endpoint | No |
+| GET | `/api/youtube/health/` | Health check endpoint | Yes |
 
 ### Request Parameters
 
@@ -432,8 +433,7 @@ python backend/research/visualization/generate_all.py
 | `filter_language` | boolean | true | Filter non-English comments |
 | `sentiment_model` | string | "logreg" | Model to use: "logreg", "svm", "tfidf", "ensemble", "meta_learner", "hybrid_dl", "bert" |
 | `ensemble_models` | string/list | "logreg,svm,tfidf" | Base models for the ensemble |
-| `ensemble_weights` | object/list | null | Weights for ensemble (dict or list, or path to JSON file) |
-| `meta_learner_path` | string | null | Path to trained meta-learner model |
+| `ensemble_weights` | object/list | null | Weights for ensemble (inline dict or list JSON only) |
 | `meta_learner_models` | string/list | null | Base models for meta-learner |
 | `bootstrap_samples` | integer | 500 | Bootstrap samples for CI estimation |
 | `random_seed` | integer | 42 | Seed for reproducibility |
@@ -597,7 +597,7 @@ The application uses JWT (JSON Web Tokens) for authentication:
 
 ### User Registration
 ```bash
-POST /api/users/register/
+POST /api/user/register/
 {
   "user_name": "username",
   "email": "user@example.com",
@@ -631,6 +631,14 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 ### Token Refresh
 ```bash
 POST /api/token/refresh/
+{
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+}
+```
+
+### Logout
+```bash
+POST /api/user/logout/
 {
   "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
 }

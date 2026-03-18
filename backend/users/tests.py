@@ -1,6 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+from rest_framework_simplejwt.tokens import AccessToken
 
 from app.models import YouTubeAnalysis, YouTubeVideo
 from users.models import NewUser
@@ -65,4 +66,64 @@ class UserProfileAPITests(APITestCase):
         self.assertEqual(
             response.data["message"],
             "You can only get your information",
+        )
+
+
+class UserAuthAliasAPITests(APITestCase):
+    def setUp(self):
+        self.user = NewUser.objects.create_user(
+            email="jwtlogin@example.com",
+            user_name="jwtloginuser",
+            first_name="JWT",
+            last_name="Login",
+            password="testpassword123",
+        )
+
+    def test_login_alias_returns_jwt_pair_with_custom_claims(self):
+        response = self.client.post(
+            reverse("login"),
+            {"email": self.user.email, "password": "testpassword123"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
+
+        access_token = AccessToken(response.data["access"])
+        self.assertEqual(access_token["user_name"], self.user.user_name)
+        self.assertEqual(access_token["is_registered"], self.user.is_registered)
+
+    def test_logout_requires_refresh_token(self):
+        response = self.client.post(reverse("logout"), {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["message"], "refresh token is required")
+
+    def test_logout_blacklists_refresh_token(self):
+        login_response = self.client.post(
+            reverse("login"),
+            {"email": self.user.email, "password": "testpassword123"},
+            format="json",
+        )
+        refresh_token = login_response.data["refresh"]
+
+        logout_response = self.client.post(
+            reverse("logout"),
+            {"refresh": refresh_token},
+            format="json",
+        )
+
+        self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(logout_response.data["message"], "User logged out")
+
+        refresh_response = self.client.post(
+            reverse("token_refresh"),
+            {"refresh": refresh_token},
+            format="json",
+        )
+
+        self.assertIn(
+            refresh_response.status_code,
+            {status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED},
         )

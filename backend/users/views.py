@@ -1,33 +1,18 @@
-from django.core.exceptions import ValidationError
-from django.contrib.auth.hashers import check_password
-from django.contrib.auth import login, logout
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth.decorators import login_required
-# from users.authentication import expires_in
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from users.models import NewUser
 from app.models import YouTubeAnalysis
+from app_api.views import MyTokenObtainPairSerializer
 from .serializers import RegistrationSerializer
-# from .authentication import token_expire_handler, expires_in
-from .authentication import ExpiringTokenAuthentication
-
-import pytz
-import datetime
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-
-
-from django.db import IntegrityError
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def registration_view(request):
@@ -49,49 +34,31 @@ def registration_view(request):
 @api_view(["POST",])
 @permission_classes([AllowAny])
 def login_view(request):
-    data = {}
-    email = request.data['email']
-    password = request.data['password']
-
-    logger.debug("login_view email=%s", email)
-
-    try:
-        User = NewUser.objects.get(email=email)
-        logger.debug("login_view user id=%s", User.id)
-    except BaseException as e:
-        raise serializers.ValidationError({"400":f'{str(e)}'})
-    
-    utc_now = datetime.datetime.utcnow()
-    utc_now = utc_now.replace(tzinfo=pytz.utc)
+    serializer = MyTokenObtainPairSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    logger.debug("login_view issued JWT pair for email=%s", request.data.get("email"))
+    return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
-
-    if not check_password(password, User.password):
-        raise serializers.ValidationError({"error": "Incorrect login credentials"})
-
-    if User:
-        if User.is_active:
-            login(request, User)
-            data["message"] = "User logged in."
-            data["email"] = User.email
-            data["id"] = User.id
-            data["is_registered"] = User.is_registered
-            res = {"data": data, 
-            }
-
-            return Response(res)
-
-        else:
-            raise ValidationError({"message":"User not active"})
-    else:
-        raise ValidationError({"message":"Account doesnot exists."})
-
-
-@api_view(["GET",])
-@permission_classes([IsAuthenticated])
+@api_view(["POST",])
+@permission_classes([AllowAny])
 def logout_view(request):
-#    request.user.auth_token.delete()
-   logout(request)
+   refresh = request.data.get("refresh")
+   if not refresh:
+       return Response(
+           {"message": "refresh token is required"},
+           status=status.HTTP_400_BAD_REQUEST,
+       )
+
+   try:
+       token = RefreshToken(refresh)
+       token.blacklist()
+   except TokenError:
+       return Response(
+           {"message": "Invalid refresh token"},
+           status=status.HTTP_400_BAD_REQUEST,
+       )
+
    return Response({"message":"User logged out"})
 
 @api_view(["GET",])
