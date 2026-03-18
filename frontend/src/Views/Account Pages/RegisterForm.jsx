@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../../axios";
 
@@ -12,7 +12,6 @@ const RegisterForm = () => {
   });
 
   const [formErrors, setFormErrors] = useState([]);
-  const [isSubmit, setIsSubmit] = useState(false);
   const [emailError, setEmailError] = useState({});
   const [usernameError, setUsernameError] = useState({});
 
@@ -30,7 +29,6 @@ const RegisterForm = () => {
     const error = {};
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
     const nameRegex = /^[A-Za-z\s]+$/;
-    setIsSubmit(false);
     if (!inputData.user_name) {
       error.user_name = "Name is required!";
     }
@@ -59,7 +57,6 @@ const RegisterForm = () => {
     if (inputData.password !== inputData.password2) {
       error.password2 = "Password doesn't match!";
     }
-    console.log("errorr", error);
     return error;
   };
 
@@ -72,52 +69,29 @@ const RegisterForm = () => {
         password2: password2,
       })
       .then((res) => {
-        console.log("response", res);
         if (res.status === 400) {
           const email = {};
           const user_name = {};
-          console.log("res-data", res.data);
           email.error = res.data.email;
           user_name.error = res.data.user_name;
           setEmailError(email);
           setUsernameError(user_name);
-          // console.log("error in username,email", usernameError, emailError);
         } else {
-          console.log("in else");
           alert("User created");
-          console.log("Sign up done user data: ");
-          console.log(user_name, email, password, password2);
           navigate("/signin");
-          console.log(res);
-          console.log(res.data);
         }
       })
-      .catch((e) => {
-        console.log("error", e.message);
-      });
+      .catch(() => {});
   };
 
   const submitHandler = (e) => {
     e.preventDefault();
-    // console.log("clicked");
     let errorForm = validationHanlder(inputData);
-    // console.log("error in form", errorForm);
     setFormErrors(errorForm);
-    // console.log("validated front end");
-    setIsSubmit(true);
     if (Object.keys(errorForm).length === 0) {
-      console.log("can check in db..");
-      console.log(formErrors);
       storeDataHandler();
     }
   };
-
-  useEffect(() => {
-    // console.log(formErrors);
-    if (Object.keys(inputData).length === 0 && isSubmit) {
-      // console.log(inputData);
-    }
-  }, [formErrors]);
 
   return (
     <>

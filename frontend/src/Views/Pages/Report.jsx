@@ -5,11 +5,9 @@ import { useLocation, Link, useNavigate } from "react-router-dom";
 export default function Report() {
   const location = useLocation();
   const navigate = useNavigate();
-  console.log(location);
 
   const sentimentData = location.state;
   const user_name = sentimentData?.user_name || "Unknown User";
-  console.log(sentimentData);
 
   const [totalComments, setTotalComments] = useState(0);
   const confidenceStats = sentimentData?.confidenceStats || null;
@@ -93,12 +91,9 @@ export default function Report() {
     },
     {}
   );
-
-
   const handlePrint = () => {
-     window.print()
-  }
-
+    window.print();
+  };
 
   useEffect(() => {
     if (!sentimentData) {

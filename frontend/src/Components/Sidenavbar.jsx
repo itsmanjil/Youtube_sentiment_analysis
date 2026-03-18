@@ -6,7 +6,6 @@ import AuthContext from "../context/AuthContext";
 function Sidenavbar() {
   let { logoutUser } = useContext(AuthContext);
   function logoutHandler() {
-    // console.log("logout");
     logoutUser();
   }
   return (

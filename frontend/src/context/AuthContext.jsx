@@ -57,9 +57,7 @@ export const AuthProvider = ({ children }) => {
         navigate("/dashboard", { replace: true });
         return;
       }
-    } catch (err) {
-      console.error("Login failed:", err);
-    }
+    } catch {}
 
     SetIsError(true);
     clearSession();
@@ -73,9 +71,7 @@ export const AuthProvider = ({ children }) => {
         await axiosInstance.post("user/logout/", {
           refresh: refreshToken,
         });
-      } catch (err) {
-        console.warn("Logout token revoke failed:", err);
-      }
+      } catch {}
     }
 
     clearSession();
@@ -109,9 +105,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
         return stored;
       }
-    } catch (err) {
-      console.error("Token refresh failed:", err);
-    }
+    } catch {}
 
     SetIsError(true);
     clearSession();

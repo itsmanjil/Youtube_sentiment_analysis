@@ -17,7 +17,6 @@ function Profile(props) {
       }
 
       const { user_id } = jwtDecode(authToken.access);
-      console.log(user_id);
       if (user_id) {
         try {
           const userData = await axiosInstance({
@@ -33,14 +32,9 @@ function Profile(props) {
             ? userData.data.searched_list
             : [];
           setSearchedList(list);
-          console.log("user", userData);
-        } catch (e) {
-          console.log(e);
-        }
+        } catch {}
       }
-    } catch (err) {
-      console.log(err.message);
-    }
+    } catch {}
   }, [authToken]);
   useEffect(() => {
     getData();

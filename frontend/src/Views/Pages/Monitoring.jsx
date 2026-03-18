@@ -34,8 +34,7 @@ function Monitoring() {
       } else {
         setError("Failed to load analyses");
       }
-    } catch (err) {
-      console.error("Error fetching analyses:", err);
+    } catch {
       setError("Failed to load analyses. Please try again.");
     } finally {
       setIsLoading(false);
@@ -50,9 +49,7 @@ function Monitoring() {
       }
       const { user_id, user_name } = jwtDecode(authToken.access);
       setUser({ user_id, user_name });
-    } catch (err) {
-      console.error("Error getting user data:", err);
-    }
+    } catch {}
   };
 
   // Fetch on component mount
@@ -163,9 +160,7 @@ function Monitoring() {
         });
         return;
       }
-    } catch (err) {
-      console.error("Error fetching analysis detail:", err);
-    }
+    } catch {}
 
     navigate("/dashboard", { state: fallbackState });
   };

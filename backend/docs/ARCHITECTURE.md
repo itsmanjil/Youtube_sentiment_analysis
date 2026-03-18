@@ -1,376 +1,188 @@
 # System Architecture
 
-## Overview
+This document describes the runtime architecture that is actually present in the repository today. It focuses on the web application request path first, then the research layer that lives alongside it.
 
-This document describes the architecture of the YouTube Sentiment Analysis system,
-designed for Master's thesis research in Computational Intelligence and NLP.
+## Runtime Overview
 
-## Directory Structure
-
+```text
+React/Vite frontend
+    |
+    |  /api/*
+    v
+Django REST Framework API
+    |
+    +--> JWT auth / profile endpoints
+    |
+    +--> YouTube analysis endpoints
+            |
+            +--> comment fetch (YouTube API or scraper)
+            +--> preprocessing / filtering
+            +--> sentiment engine selection
+            +--> analytics aggregation
+            +--> persistence to SQLite
 ```
+
+## Main Components
+
+### Frontend
+
+- `frontend/src/App.jsx` defines the main routes.
+- `frontend/src/context/AuthContext.jsx` owns login, logout, refresh, and auth bootstrap.
+- `frontend/src/axios.js` uses `/api/` by default and attaches non-expired bearer tokens.
+- `frontend/src/Views/Pages/Search.jsx` collects analysis parameters and calls `/api/youtube/analyze/`.
+- `frontend/src/Views/Pages/Dashboard.jsx`, `Monitoring.jsx`, and `Report.jsx` render saved or freshly returned analysis data.
+
+### Backend
+
+- `backend/core/urls.py` wires the API surface together.
+- `backend/app/` owns the main analysis endpoints and database models.
+- `backend/users/` owns registration, JWT alias login/logout, and the user profile endpoint.
+- `backend/app_api/` extends SimpleJWT so issued tokens include `user_name` and `is_registered`.
+- `backend/src/` contains reusable preprocessing helpers and sentiment engines.
+
+### Research Layer
+
+- `backend/research/` contains experiment, benchmark, visualization, explainability, and computational intelligence code.
+- This codebase is important for thesis work, but it is not on the critical path for a normal API request.
+
+## Repository Shape
+
+```text
 backend/
-├── src/                          # Core application package
-│   ├── sentiment/                # Sentiment analysis engines
-│   │   ├── base.py              # SentimentResult, utilities
-│   │   ├── factory.py           # Engine factory functions
-│   │   └── engines/             # Individual engine implementations
-│   │       ├── tfidf_engine.py  # TF-IDF + Naive Bayes
-│   │       ├── logreg_engine.py # TF-IDF + Logistic Regression
-│   │       ├── svm_engine.py    # TF-IDF + Linear SVM
-│   │       ├── ensemble_engine.py    # Weighted voting
-│   │       ├── meta_learner_engine.py # Stacked ensemble
-│   │       ├── hybrid_dl_engine.py   # CNN-BiLSTM-Attention
-│   │       └── transformer_engine.py # BERT-based
-│   ├── preprocessing/           # Text preprocessing
-│   ├── services/               # Business logic layer
-│   └── utils/                  # Shared utilities
-│       ├── analysis_utils.py   # Metrics, confidence intervals
-│       └── config.py           # Centralized configuration
-│
-├── research/                    # Thesis research components
-│   ├── architectures/          # Neural network architectures
-│   │   ├── hybrid_cnn_bilstm.py
-│   │   ├── attention.py
-│   │   └── transformers/
-│   │       └── bert_classifier.py
-│   ├── evaluation/             # Evaluation framework
-│   │   ├── statistical_tests.py # McNemar, Wilcoxon, Friedman
-│   │   └── ablation.py         # Ablation study framework
-│   ├── explainability/         # XAI module
-│   │   ├── shap_explainer.py
-│   │   ├── lime_explainer.py
-│   │   └── attention_explainer.py
-│   ├── training/               # Training infrastructure
-│   └── absa/                   # Aspect-Based Sentiment Analysis
-│
-├── app/                        # Django application
-├── scripts/                    # Training/evaluation scripts
-├── tests/                      # Test suite
-├── configs/                    # Configuration files
-├── models/                     # Trained model artifacts
-└── docs/                       # Documentation
+├── app/                    # Analysis endpoints, ORM models, persistence
+├── app_api/                # JWT serializer/view customization
+├── core/                   # Settings, settings helpers, root URLs
+├── docs/                   # Architecture and gap docs
+├── files/                  # Language resources / preprocessing assets
+├── models/                 # Trained model artifacts
+├── research/               # Thesis and experiment code
+├── src/                    # Shared preprocessing + sentiment engine code
+└── users/                  # User registration/profile/auth alias endpoints
+
+frontend/
+├── src/Components/
+├── src/Views/
+├── src/context/
+├── src/utils/
+├── package.json
+└── vite.config.mjs
 ```
 
-## Model Architecture
+## Request Flows
 
-### 1. Classical ML Models
+### 1. Authentication Flow
 
-```
-Input Text
-    ↓
-TF-IDF Vectorization (unigrams + bigrams, max 5000 features)
-    ↓
-┌─────────────────┬─────────────────┬─────────────────┐
-│ Naive Bayes     │ Logistic Reg    │ Linear SVM      │
-│ (baseline)      │ (calibrated)    │ (best accuracy) │
-└─────────────────┴─────────────────┴─────────────────┘
-    ↓                    ↓                  ↓
-Probability Distribution: P(Neg), P(Neu), P(Pos)
+```text
+Signin form
+    -> POST /api/token/
+    -> access + refresh JWT pair
+    -> AuthContext stores session
+    -> axios request interceptor sends Bearer token
 ```
 
-### 2. Hybrid CNN-BiLSTM-Attention
+There is also a compatibility alias at `/api/user/login/`. Logout posts the refresh token to `/api/user/logout/`, which blacklists it server-side.
 
-```
-Input Text (max 200 tokens)
-    ↓
-Word Embeddings (GloVe 300d)
-    ↓
-┌─────────────────────────────────────────────────────┐
-│                 PARALLEL BRANCHES                    │
-├────────────────────────┬────────────────────────────┤
-│      CNN Branch        │      BiLSTM Branch         │
-│  ┌─────────────────┐   │  ┌─────────────────────┐   │
-│  │ Conv1d (k=3,4,5)│   │  │ BiLSTM (128 hidden) │   │
-│  │ 128 filters each│   │  │ 2 layers            │   │
-│  └────────┬────────┘   │  └──────────┬──────────┘   │
-│           ↓            │             ↓              │
-│  Global MaxPool        │  Multi-Head Attention      │
-│  Output: 384-dim       │  (4 heads)                 │
-│                        │  Output: 256-dim           │
-└────────────────────────┴────────────────────────────┘
-                    ↓
-            Feature Fusion
-            (Concatenate: 640-dim)
-                    ↓
-            Dense Classifier
-            (640 → 256 → 128 → 3)
-                    ↓
-            Softmax Output
+### 2. Analysis Submission Flow
+
+```text
+Search page
+    -> POST /api/youtube/analyze/
+    -> normalize request options
+    -> fetch video metadata + comments
+    -> preprocess/filter comments
+    -> select sentiment engine
+    -> run inference
+    -> compute analytics
+    -> save analysis + comments
+    -> return response to frontend
 ```
 
-### 3. BERT Transformer
+The frontend can request classical models, ensemble variants, and research-oriented options such as fuzzy ensemble configuration. The backend now only accepts inline structured configuration for user-controlled options like `ensemble_weights`.
 
-```
-Input Text
-    ↓
-BERT Tokenizer (WordPiece)
-    ↓
-[CLS] token1 token2 ... [SEP]
-    ↓
-BERT Encoder (12 layers, 768-dim)
-    ↓
-[CLS] Embedding (768-dim)
-    ↓
-Dropout (0.1)
-    ↓
-Linear Classifier (768 → 3)
-    ↓
-Softmax Output
+### 3. Analysis Retrieval Flow
+
+```text
+Monitoring / Dashboard
+    -> GET /api/youtube/analyses/
+    -> list current user's saved analyses
+
+Monitoring detail action
+    -> GET /api/youtube/analysis/<video_id>/
+    -> fetch one saved analysis for the current user
 ```
 
-### 4. Ensemble Methods
+Saved analysis retrieval is scoped to the authenticated user, so the same external YouTube video ID does not expose another user's latest result.
 
-#### Weighted Soft Voting
-```
-┌─────────────────────────────────────────────────────┐
-│              Base Model Predictions                  │
-├──────────────┬──────────────┬───────────────────────┤
-│   LogReg     │     SVM      │       TF-IDF          │
-│   (w=0.4)    │   (w=0.4)    │       (w=0.2)         │
-└──────────────┴──────────────┴───────────────────────┘
-                        ↓
-        P_ensemble(c) = Σ w_i × P_i(c)
-                        ↓
-                 Final Prediction
-```
+## Backend Analysis Pipeline
 
-#### Meta-Learner (Stacking)
-```
-Level 0: Base Models
-┌─────────────────────────────────────────────────────┐
-│ LogReg → P(neg), P(neu), P(pos)                     │
-│ SVM    → P(neg), P(neu), P(pos)                     │
-│ TF-IDF → P(neg), P(neu), P(pos)                     │
-└─────────────────────────────────────────────────────┘
-                        ↓
-            Feature Vector (9-dim)
-                        ↓
-Level 1: Meta-Classifier (Logistic Regression)
-                        ↓
-            Final Prediction
-```
+The main API path in `backend/app/views.py` follows this sequence:
 
-## Evaluation Framework
+1. Validate request parameters.
+2. Normalize model aliases and optional experiment settings.
+3. Fetch video metadata and comments with either the YouTube API or scraper path.
+4. Preprocess comments:
+   - spam filtering
+   - language filtering
+   - text normalization
+   - short-comment removal
+5. Select a sentiment engine from `backend/src/sentiment/`.
+6. Run batch inference and collect per-comment sentiment output.
+7. Aggregate analytics:
+   - sentiment totals
+   - weighted/top comment summaries
+   - word-frequency output
+   - aspect sentiment
+   - confidence statistics and intervals
+   - timeline data
+8. Persist `YouTubeVideo`, `YouTubeComment`, and `YouTubeAnalysis` records.
 
-### Metrics Computed
+## Data Model Responsibilities
 
-1. **Classification Metrics**
-   - Accuracy
-   - Precision (macro, micro, per-class)
-   - Recall (macro, micro, per-class)
-   - F1-Score (macro, micro, per-class)
-   - Cohen's Kappa
+At a high level:
 
-2. **Statistical Tests**
-   - McNemar's Test: Compare two classifiers
-   - Wilcoxon Signed-Rank: Compare fold-wise scores
-   - Friedman Test: Compare 3+ classifiers
-   - Nemenyi Post-hoc: Pairwise after Friedman
+- `NewUser` stores account data.
+- `YouTubeVideo` stores normalized video metadata.
+- `YouTubeComment` stores fetched/processed comments.
+- `YouTubeAnalysis` stores a user's saved analysis snapshot for a video and model configuration.
 
-3. **Confidence Estimation**
-   - Bootstrap Confidence Intervals (95%)
-   - Entropy-based Confidence Scoring
+The frontend relies on both direct analysis responses and previously saved `YouTubeAnalysis` records for dashboard and monitoring views.
 
-### Cross-Validation Protocol
+## Security Boundaries
 
-```
-Dataset (N samples)
-        ↓
-Stratified 10-Fold CV
-        ↓
-┌─────────────────────────────────────────────────────┐
-│ For each fold k:                                    │
-│   1. Train on folds ≠ k                            │
-│   2. Evaluate on fold k                            │
-│   3. Store predictions and metrics                  │
-└─────────────────────────────────────────────────────┘
-        ↓
-Aggregate Results:
-- Mean ± Std for each metric
-- Statistical significance tests
-- Confusion matrices
-```
+Recent hardening changed the architecture in a few important ways:
 
-## Explainability (XAI)
+- DRF defaults to authenticated access.
+- Registration is explicitly public; profile access is user-scoped.
+- API clients cannot submit server filesystem paths for model artifacts.
+- Logout uses refresh-token blacklisting instead of Django session logout.
+- Production settings are environment-driven and reject insecure defaults.
 
-### SHAP Explanations
-```
-Input: "This video is amazing!"
-        ↓
-SHAP Explainer
-        ↓
-Token-level SHAP values:
-  "This"    → +0.02 (neutral)
-  "video"   → +0.01 (neutral)
-  "is"      → +0.00 (neutral)
-  "amazing" → +0.35 (strongly positive)
-        ↓
-Visualization: Bar plot / Force plot
-```
+## Settings and Environment
 
-### LIME Explanations
-```
-Input: "Terrible video, waste of time"
-        ↓
-Generate perturbations (5000 samples)
-        ↓
-Get model predictions for perturbations
-        ↓
-Fit local linear model
-        ↓
-Feature weights:
-  "Terrible" → -0.42 (strongly negative)
-  "waste"    → -0.28 (negative)
-  "time"     → -0.15 (slightly negative)
-```
+`backend/core/settings.py` delegates runtime policy resolution to `backend/core/settings_utils.py`.
 
-### Attention Visualization
-```
-Hybrid Model / BERT
-        ↓
-Extract attention weights
-        ↓
-Token importance heatmap
-        ↓
-Highlighted text visualization
-```
+Key behaviors:
 
-## Data Flow
+- local/test environments can use safe development defaults
+- production requires explicit `SECRET_KEY`
+- production requires `ALLOWED_HOSTS`
+- production requires explicit CORS allowlists
+- secure cookie/browser headers are enabled when `DEBUG` is false
 
-### Analysis Pipeline
+## Testing and CI
 
-```
-1. Input: YouTube Video URL
-        ↓
-2. YouTube API / Scraper
-   - Fetch video metadata
-   - Fetch comments (max 200)
-        ↓
-3. Preprocessing Pipeline
-   - Spam detection
-   - Language filtering (English)
-   - Emoji handling
-   - Text normalization
-   - Short comment filtering
-        ↓
-4. Sentiment Analysis
-   - Select engine (logreg, svm, bert, etc.)
-   - Batch prediction
-   - Confidence scoring
-        ↓
-5. Analytics
-   - Sentiment distribution
-   - Timeline analysis
-   - Aspect extraction
-   - Bootstrap confidence intervals
-        ↓
-6. Response
-   - JSON with all results
-   - Stored in database
-```
+The project currently validates the main web app with:
 
-## Configuration
+- backend: `python manage.py check`
+- backend: `python manage.py test app app_api users`
+- frontend: `npm test -- --run`
 
-### Model Paths (src/utils/config.py)
+Those commands are enforced in `.github/workflows/ci.yml`.
 
-```python
-Config.MODELS_DIR / "logreg" / "model.sav"
-Config.MODELS_DIR / "svm" / "model.sav"
-Config.MODELS_DIR / "hybrid_dl" / "hybrid_v1.pt"
-Config.MODELS_DIR / "transformers" / "bert"
-```
+## What This Document Does Not Cover
 
-### Training Configuration (YAML)
+- Detailed thesis experiment design in `backend/research/`
+- Training procedures for every model artifact under `backend/models/`
+- Deployment-specific infrastructure such as containers, reverse proxies, or cloud hosting
 
-```yaml
-model:
-  type: hybrid_dl
-  embed_dim: 300
-  hidden_dim: 128
-  num_heads: 4
-  dropout: 0.5
-
-training:
-  epochs: 50
-  batch_size: 32
-  learning_rate: 0.001
-  early_stopping_patience: 7
-
-evaluation:
-  cv_folds: 10
-  metrics: [accuracy, f1_macro, f1_micro]
-```
-
-## API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/analyze/` | POST | Analyze YouTube video |
-| `/api/analyses/` | GET | List user analyses |
-| `/api/analyses/{id}/` | GET | Get specific analysis |
-
-### Request Format
-
-```json
-{
-  "video_url": "https://youtube.com/watch?v=...",
-  "max_comments": 200,
-  "model_type": "logreg",
-  "include_aspects": true
-}
-```
-
-### Response Format
-
-```json
-{
-  "video": {
-    "title": "...",
-    "channel": "...",
-    "views": 1000000
-  },
-  "sentiment_data": {
-    "Positive": 120,
-    "Neutral": 50,
-    "Negative": 30
-  },
-  "confidence_intervals": {
-    "Positive": {"lower": 0.55, "upper": 0.65}
-  },
-  "aspects": [
-    {"aspect": "content", "sentiment": {"Positive": 0.7, ...}}
-  ]
-}
-```
-
-## Performance Benchmarks
-
-| Model | Accuracy | F1-Macro | Inference (ms/sample) |
-|-------|----------|----------|----------------------|
-| TF-IDF | 67.71% | 67.70% | ~1ms |
-| LogReg | 74.27% | 74.34% | ~1ms |
-| SVM | 75.08% | 75.14% | ~1ms |
-| Hybrid-DL | ~78% | ~77% | ~10ms (CPU) |
-| BERT | ~85-90% | ~84-89% | ~50ms (GPU) |
-
-## Dependencies
-
-### Core Dependencies
-- Django 4.0+
-- PyTorch 2.0+
-- scikit-learn 1.0+
-- transformers 4.30+
-
-### XAI Dependencies
-- shap 0.42+
-- lime 0.2+
-
-### Statistical Analysis
-- scipy 1.10+
-- statsmodels 0.14+
-
-## References
-
-1. Devlin et al. (2019). BERT: Pre-training of Deep Bidirectional Transformers
-2. Lundberg & Lee (2017). A Unified Approach to Interpreting Model Predictions
-3. Demsar (2006). Statistical Comparisons of Classifiers over Multiple Data Sets
+Those concerns belong in separate operational or research docs.

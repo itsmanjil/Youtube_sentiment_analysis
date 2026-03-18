@@ -7,7 +7,6 @@ import AuthContext from "../../context/AuthContext";
 
 function Search() {
   function logoutHandler() {
-    // console.log("logout");
     logoutUser();
   }
 
@@ -62,13 +61,12 @@ function Search() {
 
   const parseModelComparison = () => {
     if (!modelComparison) {
-      return null;
+      return { value: null, error: null };
     }
     try {
-      return JSON.parse(modelComparison);
+      return { value: JSON.parse(modelComparison), error: null };
     } catch (err) {
-      console.warn("Invalid model comparison JSON:", err);
-      return null;
+      return { value: null, error: "Model comparison JSON must be valid JSON." };
     }
   };
 
@@ -119,7 +117,6 @@ function Search() {
 
   const searchHandler = async (e) => {
     e.preventDefault();
-    console.log("Analyze button clicked");
 
     // Reset errors
     setHasError(false);
@@ -128,7 +125,6 @@ function Search() {
 
     // Validate video URL
     if (!video_url) {
-      console.log("Empty video URL");
       setHasError(true);
       setErrorMessage("YouTube URL is required");
       return;
@@ -154,6 +150,13 @@ function Search() {
         setErrorMessage("Ensemble weights must be valid JSON.");
         return;
       }
+    }
+
+    const { value: parsedModelComparison, error: modelComparisonError } = parseModelComparison();
+    if (modelComparisonError) {
+      setHasError(true);
+      setErrorMessage(modelComparisonError);
+      return;
     }
 
     if (sentimentModel === "fuzzy_ensemble") {
@@ -205,10 +208,9 @@ function Search() {
           fuzzy_t_conorm: fuzzyTConorm,
           fuzzy_alpha_cut: fuzzyAlphaCut,
           fuzzy_resolution: fuzzyResolution,
-          model_comparison: parseModelComparison(),
+          model_comparison: parsedModelComparison,
         },
       });
-      console.log("YouTube analysis response:", resp.data);
       setIsLoading(false);
       if (resp.status >= 400) {
         setSearchError(true);
@@ -231,8 +233,6 @@ function Search() {
       } else {
         setErrorMessage("An unexpected error occurred. Please try again.");
       }
-
-      console.error("Analysis error:", e);
     }
   };
   return (

@@ -172,8 +172,7 @@ function Dashboard(props) {
         return;
       }
 
-      const { user_id, user_name } = jwtDecode(authToken.access);
-      console.log(user_name);
+      const { user_id } = jwtDecode(authToken.access);
       if (user_id) {
         const userDatas = await axiosInstance({
           method: "GET",
@@ -188,7 +187,6 @@ function Dashboard(props) {
           ? userDatas.data.searched_list
           : [];
         setSearchedList(list);
-        console.log("user", user);
 
         // Fetch all user's analyses for statistics
         try {
@@ -230,14 +228,11 @@ function Dashboard(props) {
               avgNegative,
             });
           }
-        } catch (err) {
-          console.log("Error fetching user analyses:", err);
-        }
+        } catch {}
 
         // Check if YouTube analysis data was passed from Search page
         if (location.state && location.state.sentiment_data) {
           const youtubeData = location.state;
-          console.log("YouTube data received:", youtubeData);
 
           const sentimentArray = [
             { name: "Negative", value: youtubeData.sentiment_data.Negative || 0 },
@@ -318,7 +313,6 @@ function Dashboard(props) {
         }
       }
     } catch (err) {
-      console.log(err);
       setHasSearched(false);
     }
   };
@@ -331,7 +325,6 @@ function Dashboard(props) {
 
   const lineDownload = React.useCallback(async () => {
     const png = await getLinePng();
-    // console.log("clicked", lineRef);
     if (png) {
       // Download with FileSaver
       FileSaver.saveAs(png, "line-chart.png");
@@ -343,7 +336,6 @@ function Dashboard(props) {
 
   const pieDownload = React.useCallback(async () => {
     const png = await getPiePng();
-    // console.log("clicked", pieRef);
     if (png) {
       // Download with FileSaver
       FileSaver.saveAs(png, "pie-chart.png");

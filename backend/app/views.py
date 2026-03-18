@@ -1,6 +1,4 @@
 
-from __future__ import print_function
-
 import json
 import os
 import logging
@@ -168,7 +166,7 @@ def analyze_youtube_video(request):
 
     try:
         # Step 1: Fetch comments
-        print(f"Fetching comments from: {video_url}")
+        logger.debug("Fetching comments from %s", video_url)
         if use_api:
             try:
                 fetcher = YouTubeFetcher()
@@ -216,7 +214,7 @@ def analyze_youtube_video(request):
                 status=404
             )
 
-        print(f"Fetched {len(comments_raw)} comments")
+        logger.debug("Fetched %s raw comments", len(comments_raw))
 
         # Step 2: Save or update video metadata
         video, created = YouTubeVideo.objects.get_or_create(
@@ -242,7 +240,7 @@ def analyze_youtube_video(request):
             video.save()
 
         # Step 3: Preprocess comments
-        print("Preprocessing comments...")
+        logger.debug("Preprocessing comments")
         preprocessor = YouTubePreprocessor()
         processed_comments, filter_stats = preprocessor.batch_preprocess(
             comments_raw,
@@ -257,10 +255,10 @@ def analyze_youtube_video(request):
                 status=400
             )
 
-        print(f"Processed {len(processed_comments)} comments")
+        logger.debug("Processed %s comments after filtering", len(processed_comments))
 
         # Step 4: Sentiment Analysis
-        print(f"Running sentiment analysis using {sentiment_model}...")
+        logger.debug("Running sentiment analysis using %s", sentiment_model)
         engine_kwargs = {}
         if sentiment_model == "ensemble":
             engine_kwargs = {
@@ -312,7 +310,7 @@ def analyze_youtube_video(request):
             item['confidence'] = confidence_from_probs(result.probs)
 
         # Step 5: Save comments to database
-        print("Saving comments to database...")
+        logger.debug("Saving processed comments to database")
         for item in processed_comments:
             try:
                 YouTubeComment.objects.update_or_create(
@@ -331,11 +329,16 @@ def analyze_youtube_video(request):
                     }
                 )
             except Exception as e:
-                print(f"Error saving comment: {e}")
+                logger.warning(
+                    "Failed to save comment %s for video %s: %s",
+                    item.get('comment_id', ''),
+                    video.video_id,
+                    e,
+                )
                 continue
 
         # Step 6: Generate analytics
-        print("Generating analytics...")
+        logger.debug("Generating analysis aggregates")
         sentiments = [item['sentiment'] for item in processed_comments]
         sentiment_counts = Counter(sentiments)
         confidences = [item.get('confidence', 0.0) for item in processed_comments]
@@ -458,7 +461,12 @@ def analyze_youtube_video(request):
             'neutral_percent': round(sentiment_data['Neutral'] / total * 100, 2) if total > 0 else 0
         }
 
-        print("Analysis complete!")
+        logger.debug(
+            "Analysis complete for user=%s video=%s model=%s",
+            user.id,
+            video.video_id,
+            sentiment_model,
+        )
 
         # Step 9: Return response
         return Response({
@@ -494,8 +502,11 @@ def analyze_youtube_video(request):
         })
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.exception(
+            "Analysis failed for user=%s video_url=%s",
+            getattr(user, "id", None),
+            video_url,
+        )
         return Response(
             {"msg": f"Analysis failed: {str(e)}"},
             status=500
