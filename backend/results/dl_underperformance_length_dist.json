@@ -1,0 +1,71 @@
+{
+  "overall": {
+    "mean_words": 21.04,
+    "median_words": 14.0,
+    "std_words": 25.09,
+    "p25_words": 9.0,
+    "p75_words": 25.0,
+    "pct_very_short": 9.6,
+    "pct_short": 44.3,
+    "pct_medium": 28.6,
+    "pct_long": 17.5
+  },
+  "per_class": {
+    "Negative": {
+      "mean": 22.73,
+      "median": 16.0,
+      "std": 26.62
+    },
+    "Neutral": {
+      "mean": 18.65,
+      "median": 12.0,
+      "std": 25.63
+    },
+    "Positive": {
+      "mean": 21.42,
+      "median": 15.0,
+      "std": 22.57
+    }
+  },
+  "bucket_class": {
+    "Very Short (1\u20135)": {
+      "count": 15781,
+      "pct_total": 9.6,
+      "pct_Negative": 30.6,
+      "pct_Neutral": 37.8,
+      "pct_Positive": 31.5
+    },
+    "Short (6\u201315)": {
+      "count": 73083,
+      "pct_total": 44.3,
+      "pct_Negative": 33.9,
+      "pct_Neutral": 34.3,
+      "pct_Positive": 31.8
+    },
+    "Medium (16\u201330)": {
+      "count": 47272,
+      "pct_total": 28.6,
+      "pct_Negative": 38.4,
+      "pct_Neutral": 26.8,
+      "pct_Positive": 34.8
+    },
+    "Long (31+)": {
+      "count": 28974,
+      "pct_total": 17.5,
+      "pct_Negative": 41.0,
+      "pct_Neutral": 23.6,
+      "pct_Positive": 35.4
+    }
+  },
+  "labels": [
+    "Negative",
+    "Neutral",
+    "Positive"
+  ],
+  "buckets": [
+    "Very Short (1\u20135)",
+    "Short (6\u201315)",
+    "Medium (16\u201330)",
+    "Long (31+)"
+  ]
+}

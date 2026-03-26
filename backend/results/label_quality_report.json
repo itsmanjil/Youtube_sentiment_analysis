@@ -1,0 +1,83 @@
+{
+  "agreement": {
+    "n_samples": 300,
+    "cohen_kappa": 1.0,
+    "kappa_interpretation": "Almost Perfect",
+    "percent_agreement": 100.0,
+    "labels": [
+      "Negative",
+      "Neutral",
+      "Positive"
+    ],
+    "confusion_matrix": [
+      [
+        108,
+        0,
+        0
+      ],
+      [
+        0,
+        80,
+        0
+      ],
+      [
+        0,
+        0,
+        112
+      ]
+    ],
+    "per_class_changes": [
+      {
+        "source_class": "Negative",
+        "total": 108,
+        "kept": 108,
+        "changed": 0,
+        "change_pct": 0.0
+      },
+      {
+        "source_class": "Neutral",
+        "total": 80,
+        "kept": 80,
+        "changed": 0,
+        "change_pct": 0.0
+      },
+      {
+        "source_class": "Positive",
+        "total": 112,
+        "kept": 112,
+        "changed": 0,
+        "change_pct": 0.0
+      }
+    ]
+  },
+  "distribution": {
+    "source_label": {
+      "Negative": {
+        "count": 108,
+        "pct": 36.0
+      },
+      "Neutral": {
+        "count": 80,
+        "pct": 26.7
+      },
+      "Positive": {
+        "count": 112,
+        "pct": 37.3
+      }
+    },
+    "label": {
+      "Negative": {
+        "count": 108,
+        "pct": 36.0
+      },
+      "Neutral": {
+        "count": 80,
+        "pct": 26.7
+      },
+      "Positive": {
+        "count": 112,
+        "pct": 37.3
+      }
+    }
+  }
+}

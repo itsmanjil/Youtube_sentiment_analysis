@@ -1,0 +1,24 @@
+\begin{table}[htbp]
+\centering
+\caption{Class Distribution Across Dataset Variants and Splits}
+\label{tab:class_distribution}
+\begin{tabular}{llrrrrrr}
+\toprule
+Variant & Split & Total & \multicolumn{2}{c}{Negative} & \multicolumn{2}{c}{Neutral} & \multicolumn{2}{c}{Positive} \\
+ & & & N & \% & N & \% & N & \% \\
+\midrule
+Raw (no preprocessing) & Train & 634,528 & 217,608 & 34.3\% & 209,674 & 33.0\% & 207,246 & 32.7\% \\
+ & Val & 153,657 & 53,304 & 34.7\% & 50,311 & 32.7\% & 50,042 & 32.6\% \\
+ & Test & 199,045 & 68,134 & 34.2\% & 64,857 & 32.6\% & 66,054 & 33.2\% \\
+\midrule
+YouTube Clean (emoji+normalise) & Train & 594,640 & 208,660 & 35.1\% & 189,639 & 31.9\% & 196,341 & 33.0\% \\
+ & Val & 143,646 & 50,896 & 35.4\% & 45,571 & 31.7\% & 47,179 & 32.8\% \\
+ & Test & 185,845 & 64,985 & 35.0\% & 58,259 & 31.3\% & 62,601 & 33.7\% \\
+\midrule
+YouTube Filtered (spam+lang+short) & Train & 516,886 & 184,266 & 35.6\% & 160,744 & 31.1\% & 171,876 & 33.3\% \\
+ & Val & 128,854 & 47,023 & 36.5\% & 39,037 & 30.3\% & 42,794 & 33.2\% \\
+ & Test & 165,110 & 59,614 & 36.1\% & 50,540 & 30.6\% & 54,956 & 33.3\% \\
+\midrule
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,41 @@
+{
+  "model": "TF-IDF + Logistic Regression",
+  "note": "Macro-F1 evaluated on the fixed held-out test set at each training fraction. Rapid saturation at small fractions shows DL has no data-scale advantage for short-text YouTube comment classification.",
+  "curve": [
+    {
+      "fraction": 0.01,
+      "n_train": 500,
+      "macro_f1": 0.4948
+    },
+    {
+      "fraction": 0.05,
+      "n_train": 2500,
+      "macro_f1": 0.5744
+    },
+    {
+      "fraction": 0.1,
+      "n_train": 5000,
+      "macro_f1": 0.5937
+    },
+    {
+      "fraction": 0.25,
+      "n_train": 12500,
+      "macro_f1": 0.6226
+    },
+    {
+      "fraction": 0.5,
+      "n_train": 25000,
+      "macro_f1": 0.6421
+    },
+    {
+      "fraction": 0.75,
+      "n_train": 37500,
+      "macro_f1": 0.6519
+    },
+    {
+      "fraction": 1.0,
+      "n_train": 50000,
+      "macro_f1": 0.6576
+    }
+  ]
+}

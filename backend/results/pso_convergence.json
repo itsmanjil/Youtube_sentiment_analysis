@@ -1,0 +1,226 @@
+{
+  "config": {
+    "n_particles": 20,
+    "n_iterations": 40,
+    "sample_size": 8000,
+    "seed": 42,
+    "models": [
+      "logreg",
+      "svm",
+      "tfidf"
+    ]
+  },
+  "results": {
+    "pso_val_f1": 0.691554,
+    "pso_test_f1": 0.693829,
+    "uniform_val_f1": 0.687544,
+    "random_search_val_f1": 0.69135,
+    "best_weights": {
+      "logreg": 0.880485,
+      "svm": 0.0,
+      "tfidf": 0.119515
+    }
+  },
+  "convergence_history": [
+    {
+      "iteration": 1,
+      "global_best_f1": 0.690356,
+      "mean_personal_best_f1": 0.684352
+    },
+    {
+      "iteration": 2,
+      "global_best_f1": 0.690651,
+      "mean_personal_best_f1": 0.687458
+    },
+    {
+      "iteration": 3,
+      "global_best_f1": 0.690659,
+      "mean_personal_best_f1": 0.689727
+    },
+    {
+      "iteration": 4,
+      "global_best_f1": 0.691326,
+      "mean_personal_best_f1": 0.690079
+    },
+    {
+      "iteration": 5,
+      "global_best_f1": 0.691326,
+      "mean_personal_best_f1": 0.69023
+    },
+    {
+      "iteration": 6,
+      "global_best_f1": 0.691326,
+      "mean_personal_best_f1": 0.690374
+    },
+    {
+      "iteration": 7,
+      "global_best_f1": 0.691326,
+      "mean_personal_best_f1": 0.690544
+    },
+    {
+      "iteration": 8,
+      "global_best_f1": 0.691342,
+      "mean_personal_best_f1": 0.690785
+    },
+    {
+      "iteration": 9,
+      "global_best_f1": 0.691342,
+      "mean_personal_best_f1": 0.690922
+    },
+    {
+      "iteration": 10,
+      "global_best_f1": 0.691374,
+      "mean_personal_best_f1": 0.691005
+    },
+    {
+      "iteration": 11,
+      "global_best_f1": 0.691486,
+      "mean_personal_best_f1": 0.6911
+    },
+    {
+      "iteration": 12,
+      "global_best_f1": 0.691486,
+      "mean_personal_best_f1": 0.691122
+    },
+    {
+      "iteration": 13,
+      "global_best_f1": 0.691486,
+      "mean_personal_best_f1": 0.691246
+    },
+    {
+      "iteration": 14,
+      "global_best_f1": 0.691486,
+      "mean_personal_best_f1": 0.691255
+    },
+    {
+      "iteration": 15,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691293
+    },
+    {
+      "iteration": 16,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691302
+    },
+    {
+      "iteration": 17,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691348
+    },
+    {
+      "iteration": 18,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.69138
+    },
+    {
+      "iteration": 19,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691383
+    },
+    {
+      "iteration": 20,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691406
+    },
+    {
+      "iteration": 21,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691406
+    },
+    {
+      "iteration": 22,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691406
+    },
+    {
+      "iteration": 23,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691406
+    },
+    {
+      "iteration": 24,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691408
+    },
+    {
+      "iteration": 25,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691423
+    },
+    {
+      "iteration": 26,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691437
+    },
+    {
+      "iteration": 27,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691447
+    },
+    {
+      "iteration": 28,
+      "global_best_f1": 0.691551,
+      "mean_personal_best_f1": 0.691448
+    },
+    {
+      "iteration": 29,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.691452
+    },
+    {
+      "iteration": 30,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.691455
+    },
+    {
+      "iteration": 31,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.691459
+    },
+    {
+      "iteration": 32,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.691459
+    },
+    {
+      "iteration": 33,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.691487
+    },
+    {
+      "iteration": 34,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.691488
+    },
+    {
+      "iteration": 35,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.691502
+    },
+    {
+      "iteration": 36,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.691507
+    },
+    {
+      "iteration": 37,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.69151
+    },
+    {
+      "iteration": 38,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.69151
+    },
+    {
+      "iteration": 39,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.69151
+    },
+    {
+      "iteration": 40,
+      "global_best_f1": 0.691554,
+      "mean_personal_best_f1": 0.69151
+    }
+  ]
+}
