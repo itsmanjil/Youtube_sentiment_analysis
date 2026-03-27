@@ -36,6 +36,28 @@ from src.sentiment import (
 # Use absolute paths from Django project root
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+_MODEL_ALIASES = {
+    "ci_ensemble": "ensemble",
+    "meta": "meta_learner",
+    "meta-learner": "meta_learner",
+    "stacking": "meta_learner",
+    "fuzzy": "fuzzy_ensemble",
+    "fuzzy-ensemble": "fuzzy_ensemble",
+    "deberta-v3": "deberta_v3",
+    "xlm-v": "xlm_v",
+    "mdeberta-v3": "mdeberta_v3",
+}
+
+_TRANSFORMER_MODELS = {
+    "bert",
+    "transformer",
+    "roberta",
+    "modernbert",
+    "deberta_v3",
+    "xlm_v",
+    "mdeberta_v3",
+}
+
 
 def _coerce_model_list(value):
     if value is None:
@@ -96,6 +118,29 @@ def _has_value(value):
     return True
 
 
+def _normalize_sentiment_model(value):
+    normalized = str(value or "logreg").lower().strip()
+    return _MODEL_ALIASES.get(normalized, normalized)
+
+
+def _is_transformer_model(model_name):
+    return model_name in _TRANSFORMER_MODELS
+
+
+def _get_processing_profile(model_name):
+    return "transformer" if _is_transformer_model(model_name) else "classical"
+
+
+def _get_model_family(model_name):
+    if _is_transformer_model(model_name):
+        return "transformer"
+    if model_name in ("ensemble", "meta_learner", "fuzzy_ensemble"):
+        return "ensemble"
+    if model_name == "hybrid_dl":
+        return "deep_learning"
+    return "classical"
+
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -109,8 +154,8 @@ def analyze_youtube_video(request):
     emoji_mode = request.data.get("emoji_mode", "convert")
     filter_spam = request.data.get("filter_spam", True)
     filter_language = request.data.get("filter_language", True)
-    sentiment_model = request.data.get("sentiment_model", "logreg")
-    sentiment_model = str(sentiment_model).lower()
+    sentiment_model = _normalize_sentiment_model(request.data.get("sentiment_model", "logreg"))
+    calibration_profile = str(request.data.get("calibration_profile", "auto") or "auto")
     bootstrap_samples = int(request.data.get("bootstrap_samples", 500))
     random_seed = int(request.data.get("random_seed", 42))
     aspect_top_n = int(request.data.get("aspect_top_n", 12))
@@ -150,13 +195,6 @@ def analyze_youtube_video(request):
             status=400,
         )
     meta_learner_path = None
-
-    if sentiment_model == "ci_ensemble":
-        sentiment_model = "ensemble"
-    if sentiment_model in ("meta", "meta_learner", "meta-learner", "stacking"):
-        sentiment_model = "meta_learner"
-    if sentiment_model in ("fuzzy", "fuzzy_ensemble", "fuzzy-ensemble"):
-        sentiment_model = "fuzzy_ensemble"
 
     if sentiment_model == "fuzzy_ensemble" and not fuzzy_models:
         fuzzy_models = ["logreg", "svm", "tfidf"]
@@ -242,8 +280,10 @@ def analyze_youtube_video(request):
         # Step 3: Preprocess comments
         logger.debug("Preprocessing comments")
         preprocessor = YouTubePreprocessor()
+        processing_profile = _get_processing_profile(sentiment_model)
         processed_comments, filter_stats = preprocessor.batch_preprocess(
             comments_raw,
+            profile=processing_profile,
             emoji_mode=emoji_mode,
             check_spam=filter_spam,
             check_lang=filter_language
@@ -293,6 +333,10 @@ def analyze_youtube_video(request):
                 "alpha_cut": alpha_cut,
                 "resolution": resolution,
                 "confidence_threshold": confidence_threshold,
+            }
+        elif _is_transformer_model(sentiment_model):
+            engine_kwargs = {
+                "calibration_profile": calibration_profile,
             }
         try:
             engine = get_sentiment_engine(sentiment_model, **engine_kwargs)
@@ -384,7 +428,11 @@ def analyze_youtube_video(request):
         negative_words = []
 
         for item in processed_comments:
-            words = item['processed_text'].split()
+            words = (
+                item.get('processed_text_classical')
+                or item.get('processed_text')
+                or ''
+            ).split()
             if item['sentiment'] == 'Positive':
                 positive_words.extend(words)
             elif item['sentiment'] == 'Negative':
@@ -394,12 +442,27 @@ def analyze_youtube_video(request):
         top_negative = Counter(negative_words).most_common(50)
 
         analysis_meta = {
+            "model_family": _get_model_family(sentiment_model),
+            "model_artifact": getattr(engine, "model_artifact", None),
+            "preprocessing_profile": processing_profile,
             "confidence_stats": confidence_stats,
             "sentiment_confidence_intervals": sentiment_cis,
             "aspect_sentiment": aspect_sentiment,
             "bootstrap_samples": bootstrap_samples,
             "random_seed": random_seed,
         }
+        if _is_transformer_model(sentiment_model):
+            analysis_meta["transformer"] = {
+                "preset": getattr(engine, "model_preset", None),
+                "source": getattr(engine, "model_source", None),
+                "artifact": getattr(engine, "model_artifact", None),
+                "max_length": getattr(engine, "max_length", None),
+                "device": str(getattr(engine, "device", "")),
+                "calibration_profile": getattr(engine, "calibration_profile", calibration_profile),
+                "calibration_applied": getattr(engine, "calibration_applied", False),
+                "temperature": getattr(engine, "temperature", None),
+                "temperature_artifact_path": getattr(engine, "temperature_artifact_path", None),
+            }
         if sentiment_model == "ensemble":
             analysis_meta["ensemble"] = {
                 "models": getattr(engine, "requested_models", ensemble_models),

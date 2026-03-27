@@ -191,6 +191,7 @@ on every `push` and `pull_request`.
 ## Related Docs
 
 - [backend/docs/ARCHITECTURE.md](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/docs/ARCHITECTURE.md)
+- [backend/docs/ROUTE_A_IMPLEMENTATION_ROADMAP.md](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/docs/ROUTE_A_IMPLEMENTATION_ROADMAP.md)
 - [backend/docs/THESIS_RISKS_GAPS.md](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/docs/THESIS_RISKS_GAPS.md)
 - [frontend/TESTING_GUIDE.md](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/frontend/TESTING_GUIDE.md)
 

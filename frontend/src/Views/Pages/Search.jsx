@@ -387,15 +387,19 @@ function Search() {
                       value={sentimentModel}
                       onChange={(e) => setSentimentModel(e.target.value)}
                     >
-                      <option value="logreg">Logistic Regression (trained)</option>
-                      <option value="svm">Linear SVM (trained)</option>
-                      <option value="tfidf">TF-IDF (legacy)</option>
+                      <option value="modernbert">ModernBERT (transformer)</option>
+                      <option value="deberta_v3">DeBERTa-v3 (transformer)</option>
+                      <option value="xlm_v">XLM-V (multilingual transformer)</option>
+                      <option value="mdeberta_v3">mDeBERTa-v3 (multilingual transformer)</option>
+                      <option value="logreg">Logistic Regression (baseline)</option>
+                      <option value="svm">Linear SVM (baseline)</option>
+                      <option value="tfidf">TF-IDF (legacy baseline)</option>
                       <option value="ensemble">Ensemble (custom weights)</option>
                       <option value="fuzzy_ensemble">Fuzzy Ensemble (uncertainty-aware)</option>
                       <option value="meta_learner">Meta-Learner (stacking)</option>
                     </select>
                     <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                      Baselines: LogReg/SVM/TF‑IDF. Ensemble combines models (use PSO‑optimized weights if available). Fuzzy adds uncertainty‑aware fusion.
+                      Phase 1 path: ModernBERT / DeBERTa-v3 for strong encoder baselines. Classical models remain available as baselines and fallback comparators.
                     </p>
                   </div>
                   <div className="col-md-12 mt-3">

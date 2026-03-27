@@ -1,3 +1,15 @@
+"""
+Keyword-level sentiment aggregation (aspect proxy).
+
+NOTE: This module does NOT implement full Aspect-Based Sentiment Analysis (ABSA).
+It uses token-frequency counting to surface the most common content words and
+aggregates the sentiment of comments that contain each word. This is a lightweight
+proxy for aspect analysis, not opinion-target extraction or aspect-opinion linking.
+
+For full ABSA (aspect-opinion triplet extraction), see the pyabsa library or
+transformer-based models such as ASTE-Transformer (Xu et al., 2021).
+"""
+
 import re
 from collections import Counter, defaultdict
 
@@ -24,7 +36,11 @@ def extract_aspect_sentiment(comments, top_n=12, min_freq=3):
     aspect_sentiments = defaultdict(Counter)
 
     for item in comments:
-        text = item.get("processed_text") or item.get("text", "")
+        text = (
+            item.get("processed_text_classical")
+            or item.get("processed_text")
+            or item.get("text", "")
+        )
         sentiment = item.get("sentiment", "Neutral")
         tokens = [
             token

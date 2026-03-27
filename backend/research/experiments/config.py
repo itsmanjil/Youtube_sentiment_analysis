@@ -4,7 +4,7 @@ Experiment Configuration Classes
 Provides structured configuration for thesis experiments with
 sensible defaults and validation.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from dataclasses import dataclass, field

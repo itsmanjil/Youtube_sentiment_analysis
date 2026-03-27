@@ -1,6 +1,9 @@
-
+import json
 from unittest.mock import patch, MagicMock
+import tempfile
+from pathlib import Path
 
+import numpy as np
 from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
 from django.urls import reverse
@@ -16,7 +19,19 @@ from .analysis_utils import (
     normalize_probs,
 )
 from .models import YouTubeVideo, YouTubeAnalysis, YouTubeComment
+from .youtube_preprocessor import YouTubePreprocessor
 from src.sentiment import SentimentResult
+from research.transformers.model_registry import get_encoder_spec
+from research.transformers.train_encoder import (
+    load_split_metadata,
+    resolve_text_column,
+    summarize_split_provenance,
+)
+from src.utils.calibration import (
+    apply_temperature_to_logits,
+    load_temperature_artifact,
+    save_temperature_artifact,
+)
 
 # Mock data for YouTube Fetcher/Scraper
 MOCK_VIDEO_METADATA = {
@@ -110,6 +125,43 @@ class YouTubeAnalysisAPITests(APITestCase):
         # MockSentimentEngine marks "I did not like this." as Negative.
         self.assertEqual(analysis.sentiment_data['Negative'], 1)
         self.assertEqual(analysis.sentiment_data['Neutral'], 1)
+
+    @patch('app.views.YouTubeFetcher')
+    @patch('app.views.get_sentiment_engine')
+    def test_analyze_video_uses_transformer_preprocessing_for_encoder_models(self, mock_get_engine, mock_fetcher):
+        mock_fetcher_instance = mock_fetcher.return_value
+        mock_fetcher_instance.extract_video_id.return_value = 'HLUamwXQ218'
+        mock_fetcher_instance.fetch_video_metadata.return_value = MOCK_VIDEO_METADATA
+        mock_fetcher_instance.fetch_comments.return_value = MOCK_COMMENTS_RAW[:3]
+
+        mock_engine = MockSentimentEngine()
+        mock_engine.model_preset = "modernbert"
+        mock_engine.model_source = "answerdotai/ModernBERT-base"
+        mock_engine.model_artifact = "ModernBERT-base"
+        mock_engine.calibration_applied = False
+        mock_engine.calibration_profile = "auto"
+        mock_engine.temperature = 1.0
+        mock_engine.temperature_artifact_path = None
+        mock_engine.max_length = 128
+        mock_engine.device = "cpu"
+        mock_get_engine.return_value = mock_engine
+
+        data = {
+            "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+            "sentiment_model": "modernbert",
+            "filter_spam": False,
+            "filter_language": False,
+        }
+
+        response = self.client.post(self.analyze_url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["model_used"], "MODERNBERT")
+        self.assertEqual(response.data["analysis_meta"]["model_family"], "transformer")
+        self.assertEqual(response.data["analysis_meta"]["preprocessing_profile"], "transformer")
+        self.assertEqual(response.data["analysis_meta"]["transformer"]["preset"], "modernbert")
+        self.assertEqual(response.data["analysis_meta"]["transformer"]["calibration_profile"], "auto")
+        mock_get_engine.assert_called_with("modernbert", calibration_profile="auto")
 
     def test_analyze_video_missing_url(self):
         data = {"max_comments": 100}
@@ -272,6 +324,93 @@ class AnalysisUtilsTests(APITestCase):
             intervals["Positive"]["lower"],
             intervals["Positive"]["upper"],
         )
+
+
+class YouTubePreprocessorTests(SimpleTestCase):
+    def test_profiles_preserve_transformer_cues_but_clean_classical_text(self):
+        preprocessor = YouTubePreprocessor()
+        text = "WOW!!! This video is sooo good 😍 #Amazing @channel 01:23"
+
+        classical, classical_meta = preprocessor.preprocess_youtube_comment(
+            text,
+            check_spam=False,
+            check_lang=False,
+            profile="classical",
+        )
+        transformer, transformer_meta = preprocessor.preprocess_youtube_comment(
+            text,
+            check_spam=False,
+            check_lang=False,
+            profile="transformer",
+        )
+
+        self.assertFalse(classical_meta["filtered"])
+        self.assertFalse(transformer_meta["filtered"])
+        self.assertEqual(classical_meta["processing_profile"], "classical")
+        self.assertEqual(transformer_meta["processing_profile"], "transformer")
+        self.assertIn("WOW!!!", transformer)
+        self.assertNotIn("!", classical)
+        self.assertNotIn("#", classical)
+        self.assertIn("uppercase_ratio", transformer_meta["text_features"])
+        self.assertGreaterEqual(transformer_meta["text_features"]["emoji_count"], 1)
+
+
+class TransformerTrainingScriptTests(SimpleTestCase):
+    def test_resolve_text_column_prefers_canonical_text(self):
+        resolved = resolve_text_column(
+            ["label", "text_transformer", "text", "text_classical"]
+        )
+        self.assertEqual(resolved, "text")
+
+    def test_load_split_metadata_and_provenance_summary(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            tmp_path = Path(temp_dir)
+            train_csv = tmp_path / "train.csv"
+            meta_path = tmp_path / "split_metadata.json"
+            train_csv.write_text("text,label\nhello,Positive\n", encoding="utf-8")
+            meta_path.write_text(
+                json.dumps(
+                    {
+                        "split": {
+                            "strategy": "group",
+                            "random_state": 42,
+                            "rows": {"train": 10, "val": 3, "test": 4},
+                        },
+                        "youtube_preprocess": {
+                            "primary_text_profile": "transformer",
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            metadata, resolved_path = load_split_metadata(train_csv)
+            summary = summarize_split_provenance(metadata)
+
+            self.assertEqual(resolved_path, meta_path)
+            self.assertEqual(summary, "group_seed42_train10_val3_test4_transformer")
+
+    def test_encoder_spec_normalizes_aliases(self):
+        spec = get_encoder_spec("deberta-v3")
+        self.assertEqual(spec.key, "deberta_v3")
+        self.assertIn("DeBERTa", spec.description)
+
+
+class CalibrationUtilsTests(SimpleTestCase):
+    def test_apply_temperature_to_logits_returns_valid_probabilities(self):
+        logits = np.array([[2.0, 1.0, 0.5], [0.1, 0.2, 0.3]])
+        probs = apply_temperature_to_logits(logits, 1.7)
+        self.assertEqual(probs.shape, logits.shape)
+        self.assertTrue(np.allclose(probs.sum(axis=1), np.ones(logits.shape[0])))
+
+    def test_temperature_artifact_roundtrip(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            artifact_path = Path(temp_dir) / "temperature_scaling.json"
+            payload = {"temperature": 1.42, "method": "temperature_scaling"}
+            save_temperature_artifact(artifact_path, payload)
+            loaded = load_temperature_artifact(artifact_path)
+            self.assertEqual(loaded["temperature"], 1.42)
+            self.assertEqual(loaded["method"], "temperature_scaling")
 
 
 class SettingsResolutionTests(SimpleTestCase):

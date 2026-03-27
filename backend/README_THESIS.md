@@ -9,7 +9,7 @@ This is a thesis-grade sentiment analysis system for YouTube comments, implement
 ### 🎯 Multiple Model Architectures
 - **Classical ML**: TF-IDF + Naive Bayes, Logistic Regression, SVM
 - **Deep Learning**: Hybrid CNN-BiLSTM-Attention (2.5M parameters)
-- **Transformers**: BERT-based classifier (optional; requires separate fine-tuning artifacts)
+- **Transformers**: Encoder baselines via `research/transformers/train_encoder.py` (`ModernBERT`, `DeBERTa-v3`, `XLM-V`, `mDeBERTa-v3`, `BERT`)
 - **Ensemble Methods**: Weighted voting, Meta-learner stacking
 
 ### 🔬 Research-Grade Evaluation
@@ -24,7 +24,7 @@ This is a thesis-grade sentiment analysis system for YouTube comments, implement
 - **Attention Visualization**: Attention weight heatmaps
 
 ### 📊 Advanced Analytics
-- Aspect-Based Sentiment Analysis (ABSA)
+- Keyword-level sentiment aggregation (token-frequency aspect proxy; see `backend/app/aspect_mining.py`)
 - Temporal sentiment dynamics
 - Engagement-weighted analysis
 - Ethical Bias Analysis (e.g., Dialect, Demographics)
@@ -64,8 +64,19 @@ python train_tfidf_youtube.py --data data/train.csv --test_data data/test.csv
 # Train deep learning model
 python research/train_hybrid_dl.py --config research/config/hybrid_dl_config.yaml
 
-# Train BERT transformer (fine-tuning script not included)
-# Use HuggingFace Trainer to fine-tune and save to ./models/transformers/bert
+# Train transformer encoder baseline
+python research/transformers/train_encoder.py \
+  --model_preset modernbert \
+  --train_csv data/train.csv \
+  --val_csv data/val.csv \
+  --test_csv data/test.csv \
+  --overwrite_output_dir
+
+# Calibrate the trained encoder
+python research/transformers/calibrate_encoder.py \
+  --model_preset modernbert \
+  --val_csv data/val.csv \
+  --test_csv data/test.csv
 ```
 
 ### Dataset Leakage Check (Important)
@@ -368,9 +379,9 @@ If you use this system in your research, please cite:
 
 ```bibtex
 @mastersthesis{your_thesis,
-  author  = {Your Name},
-  title   = {YouTube Sentiment Analysis: A Transformer-Based Approach with Explainable AI},
-  school  = {Your University},
+  author  = {FILL IN: Your Full Name},
+  title   = {FILL IN: Your Thesis Title},
+  school  = {FILL IN: Your University},
   year    = {2026},
   type    = {Master's thesis}
 }
@@ -394,9 +405,7 @@ This project is intended for academic research purposes.
 
 ## Contact
 
-For questions or collaboration:
-- Email: your.email@university.edu
-- GitHub: [Your GitHub]
+For questions or collaboration, refer to the GitHub repository linked at the top of this file.
 
 ## Acknowledgments
 

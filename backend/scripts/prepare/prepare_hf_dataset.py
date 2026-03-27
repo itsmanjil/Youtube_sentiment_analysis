@@ -81,6 +81,7 @@ def _apply_youtube_preprocessing(
     filter_language: bool,
     min_words: int,
     chunk_size: int,
+    primary_text_profile: str,
 ) -> Tuple[pd.DataFrame, Dict[str, int]]:
     """
     Apply the API's `YouTubePreprocessor` to the text column.
@@ -88,7 +89,9 @@ def _apply_youtube_preprocessing(
     Returns
     -------
     (df_out, stats)
-        df_out contains at least ['text', 'label'] (and preserves group columns if present).
+        df_out contains at least ['text', 'label'] and may include
+        ['text_raw', 'text_classical', 'text_transformer'].
+        The canonical `text` column is the dedupe/split column.
         stats includes filter counts (spam/language/too_short/empty_after_processing).
     """
     # Make backend/ importable for `from app...` imports even when executed from repo root.
@@ -110,17 +113,26 @@ def _apply_youtube_preprocessing(
 
     out_texts = []
     out_labels = []
+    out_raw_texts = []
+    out_classical_texts = []
+    out_transformer_texts = []
     out_groups = [] if group_vals is not None else None
 
     stats = Counter()
 
     def handle_one(raw_text: str, label: str, group_value: Optional[str]) -> None:
+        selected_profile = (
+            "transformer"
+            if primary_text_profile == "normalized"
+            else (primary_text_profile or "classical")
+        )
         processed, meta = pre.preprocess_youtube_comment(
             raw_text,
             emoji_mode=emoji_mode,
             check_spam=filter_spam,
             check_lang=filter_language,
             min_words=min_words,
+            profile=selected_profile,
         )
 
         if meta.get("filtered"):
@@ -133,8 +145,28 @@ def _apply_youtube_preprocessing(
             stats["empty_after_processing"] += 1
             return
 
-        out_texts.append(processed)
+        classical_text, _ = pre.preprocess_youtube_comment(
+            raw_text,
+            emoji_mode=emoji_mode,
+            check_spam=False,
+            check_lang=False,
+            min_words=1,
+            profile="classical",
+        )
+        transformer_text, _ = pre.preprocess_youtube_comment(
+            raw_text,
+            emoji_mode=emoji_mode,
+            check_spam=False,
+            check_lang=False,
+            min_words=1,
+            profile="transformer",
+        )
+        canonical_text = str(raw_text).strip() if primary_text_profile == "normalized" else processed
+        out_texts.append(canonical_text)
         out_labels.append(label)
+        out_raw_texts.append(str(raw_text).strip())
+        out_classical_texts.append(classical_text or processed)
+        out_transformer_texts.append(transformer_text or processed)
         if out_groups is not None and group_value is not None:
             out_groups.append(group_value)
 
@@ -151,7 +183,15 @@ def _apply_youtube_preprocessing(
         if n >= 50000:
             print(f"Processed {end}/{n} rows")
 
-    out = pd.DataFrame({"text": out_texts, "label": out_labels})
+    out = pd.DataFrame(
+        {
+            "text": out_texts,
+            "label": out_labels,
+            "text_raw": out_raw_texts,
+            "text_classical": out_classical_texts,
+            "text_transformer": out_transformer_texts,
+        }
+    )
     if out_groups is not None:
         out[group_col] = out_groups
 
@@ -206,6 +246,15 @@ def main() -> None:
         default=5000,
         help="Chunk size for Python-loop preprocessing (lower uses less memory).",
     )
+    parser.add_argument(
+        "--primary_text_profile",
+        choices=["normalized", "classical", "transformer"],
+        default=None,
+        help=(
+            "Canonical text profile used for dedupe/splitting and exported as `text`. "
+            "Defaults to `classical` when --youtube_preprocess is enabled, otherwise `normalized`."
+        ),
+    )
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir) if args.output_dir else (_backend_dir() / "data")
@@ -234,6 +283,10 @@ def main() -> None:
     df = df[df["label"].isin(VALID_LABELS)]
     df = df[df["text"].astype(bool)]
 
+    primary_text_profile = args.primary_text_profile
+    if primary_text_profile is None:
+        primary_text_profile = "classical" if args.youtube_preprocess else "normalized"
+
     youtube_stats: Dict[str, int] = {}
     if args.youtube_preprocess:
         df, youtube_stats = _apply_youtube_preprocessing(
@@ -243,6 +296,7 @@ def main() -> None:
             filter_language=bool(args.filter_language),
             min_words=int(args.min_words),
             chunk_size=int(args.chunk_size),
+            primary_text_profile=primary_text_profile,
         )
 
     # Drop conflicting labels by (final) text.
@@ -298,14 +352,19 @@ def main() -> None:
             random_state=args.random_seed,
         )
 
-    # Export (keep only the required columns).
+    # Export the canonical text column plus optional profile columns.
     train_path = output_dir / "train.csv"
     val_path = output_dir / "val.csv"
     test_path = output_dir / "test.csv"
 
-    final_train[["text", "label"]].to_csv(train_path, index=False)
-    val_df[["text", "label"]].to_csv(val_path, index=False)
-    test_df[["text", "label"]].to_csv(test_path, index=False)
+    export_columns = ["text", "label"]
+    for extra_column in ("text_raw", "text_classical", "text_transformer"):
+        if extra_column in final_train.columns:
+            export_columns.append(extra_column)
+
+    final_train[export_columns].to_csv(train_path, index=False)
+    val_df[export_columns].to_csv(val_path, index=False)
+    test_df[export_columns].to_csv(test_path, index=False)
 
     metadata = {
         "created_at": _utcnow(),
@@ -319,12 +378,14 @@ def main() -> None:
         },
         "youtube_preprocess": {
             "enabled": bool(args.youtube_preprocess),
+            "primary_text_profile": primary_text_profile,
             "emoji_mode": args.emoji_mode,
             "min_words": int(args.min_words),
             "filter_spam": bool(args.filter_spam),
             "filter_language": bool(args.filter_language),
             "chunk_size": int(args.chunk_size),
             "filter_stats": youtube_stats,
+            "export_columns": export_columns,
         },
         "dedupe": {
             "conflicting_texts_dropped": conflicting_count,

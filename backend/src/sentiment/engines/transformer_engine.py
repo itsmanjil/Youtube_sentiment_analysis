@@ -25,11 +25,13 @@ Devlin et al. (2019). "BERT: Pre-training of Deep Bidirectional
 Transformers for Language Understanding." NAACL-HLT.
 """
 
+import math
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional
 
-from src.utils import SENTIMENT_LABELS, normalize_probs
-from src.utils.config import get_model_path, Config
+from src.utils import normalize_probs
+from src.utils.config import Config
+from src.utils.calibration import load_temperature_artifact
 from src.sentiment.base import SentimentResult, BaseSentimentEngine
 
 
@@ -91,12 +93,26 @@ class TransformerSentimentEngine(BaseSentimentEngine):
     - F1-Macro: 84-91%
     """
 
+    MODEL_PRESETS = {
+        "bert": "bert-base-uncased",
+        "transformer": "bert-base-uncased",
+        "roberta": "cardiffnlp/twitter-roberta-base-sentiment-latest",
+        "modernbert": "answerdotai/ModernBERT-base",
+        "deberta_v3": "microsoft/deberta-v3-base",
+        "xlm_v": "facebook/xlm-v-base",
+        "mdeberta_v3": "microsoft/mdeberta-v3-base",
+    }
+
     def __init__(
         self,
-        model_name_or_path: str = "bert-base-uncased",
+        model_name_or_path: Optional[str] = None,
         num_labels: int = 3,
         device: str = "auto",
         max_length: int = 128,
+        model_preset: Optional[str] = None,
+        calibration_profile: str = "auto",
+        temperature_artifact_path: Optional[str] = None,
+        temperature: Optional[float] = None,
     ):
         # Lazy import dependencies
         try:
@@ -111,6 +127,9 @@ class TransformerSentimentEngine(BaseSentimentEngine):
         self.torch = torch
         self.max_length = max_length
         self.num_labels = num_labels
+        self.model_preset = self._normalize_preset(model_preset or model_name_or_path)
+        self.engine_name = self.model_preset or "transformer"
+        self.calibration_profile = str(calibration_profile or "auto").lower().strip()
 
         # Select device
         if device == "auto":
@@ -123,10 +142,18 @@ class TransformerSentimentEngine(BaseSentimentEngine):
         else:
             self.device = torch.device(device)
 
-        # Check if model_name_or_path is a local path
-        model_path = Path(model_name_or_path)
-        if model_path.exists():
-            model_name_or_path = str(model_path)
+        model_name_or_path = self._resolve_model_name_or_path(model_name_or_path)
+        self.model_source = model_name_or_path
+        self.model_artifact = Path(model_name_or_path).name if Path(model_name_or_path).exists() else model_name_or_path
+        self.temperature = 1.0
+        self.temperature_artifact_path = None
+        self.calibration_metadata = None
+        self.calibration_applied = False
+
+        self._configure_calibration(
+            temperature=temperature,
+            temperature_artifact_path=temperature_artifact_path,
+        )
 
         # Load tokenizer and model
         try:
@@ -149,6 +176,90 @@ class TransformerSentimentEngine(BaseSentimentEngine):
         # Label mapping
         self.idx2label = {0: "Negative", 1: "Neutral", 2: "Positive"}
         self.label2idx = {"Negative": 0, "Neutral": 1, "Positive": 2}
+
+    def _normalize_preset(self, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = str(value).strip().lower().replace("-", "_")
+        if normalized in self.MODEL_PRESETS:
+            return normalized
+        return None
+
+    def _resolve_model_name_or_path(self, model_name_or_path: Optional[str]) -> str:
+        explicit_value = str(model_name_or_path).strip() if model_name_or_path else ""
+
+        if explicit_value:
+            explicit_path = Path(explicit_value)
+            if explicit_path.exists():
+                return str(explicit_path)
+            explicit_preset = self._normalize_preset(explicit_value)
+            if explicit_preset:
+                self.model_preset = explicit_preset
+            else:
+                return explicit_value
+
+        if self.model_preset:
+            local_path = Config.get_model_path(self.model_preset)
+            if local_path and Path(local_path).exists():
+                return str(local_path)
+            return self.MODEL_PRESETS[self.model_preset]
+
+        local_bert_path = Config.get_model_path("bert")
+        if local_bert_path and Path(local_bert_path).exists():
+            self.model_preset = "bert"
+            return str(local_bert_path)
+
+        self.model_preset = "bert"
+        return self.MODEL_PRESETS["bert"]
+
+    def _resolve_temperature_artifact_path(
+        self,
+        explicit_path: Optional[str],
+    ) -> Optional[Path]:
+        if explicit_path:
+            path = Path(explicit_path)
+            return path if path.exists() else None
+
+        model_path = Path(self.model_source)
+        if model_path.exists() and model_path.is_dir():
+            candidate = model_path / "temperature_scaling.json"
+            if candidate.exists():
+                return candidate
+
+        if self.model_preset:
+            configured = Config.get_model_path(self.model_preset, "calibration")
+            if configured and Path(configured).exists():
+                return Path(configured)
+
+        return None
+
+    def _configure_calibration(
+        self,
+        *,
+        temperature: Optional[float],
+        temperature_artifact_path: Optional[str],
+    ) -> None:
+        if self.calibration_profile in {"off", "none", "disabled", "raw"}:
+            self.temperature = 1.0
+            self.calibration_applied = False
+            return
+
+        if temperature is not None:
+            self.temperature = max(float(temperature), 1e-6)
+            self.calibration_applied = True
+            return
+
+        artifact_path = self._resolve_temperature_artifact_path(temperature_artifact_path)
+        artifact = load_temperature_artifact(artifact_path)
+        if artifact is None:
+            self.temperature = 1.0
+            self.calibration_applied = False
+            return
+
+        self.temperature_artifact_path = str(artifact_path)
+        self.calibration_metadata = artifact
+        self.temperature = max(float(artifact.get("temperature", 1.0)), 1e-6)
+        self.calibration_applied = True
 
     def analyze(self, text: str) -> SentimentResult:
         """
@@ -202,7 +313,10 @@ class TransformerSentimentEngine(BaseSentimentEngine):
         with self.torch.no_grad():
             outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
             logits = outputs.logits
-            probs = F.softmax(logits, dim=-1)
+            if self.calibration_applied:
+                probs = F.softmax(logits / self.temperature, dim=-1)
+            else:
+                probs = F.softmax(logits, dim=-1)
 
         # Convert to results
         results = []
@@ -217,16 +331,36 @@ class TransformerSentimentEngine(BaseSentimentEngine):
             }
             prob_dict = normalize_probs(prob_dict)
             label = max(prob_dict, key=prob_dict.get)
+            sorted_probs = sorted(prob_dict.values(), reverse=True)
+            top2_margin = (
+                float(sorted_probs[0] - sorted_probs[1])
+                if len(sorted_probs) > 1 else float(sorted_probs[0])
+            )
+            entropy = 0.0
+            if self.num_labels > 1:
+                entropy = -sum(
+                    prob * math.log(max(prob, 1e-12))
+                    for prob in prob_dict.values()
+                ) / math.log(self.num_labels)
 
             results.append(
                 SentimentResult(
                     label=label,
                     score=float(prob_dict[label]),
                     probs=prob_dict,
-                    model="transformer",
+                    model=self.engine_name,
                     raw={
                         "model_name": str(self.model.config._name_or_path),
+                        "model_preset": self.model_preset,
+                        "model_source": self.model_source,
+                        "model_artifact": self.model_artifact,
                         "logits": logits[i].cpu().tolist(),
+                        "entropy": float(entropy),
+                        "top2_margin": float(top2_margin),
+                        "calibration_applied": self.calibration_applied,
+                        "calibration_profile": self.calibration_profile,
+                        "temperature": float(self.temperature),
+                        "temperature_artifact_path": self.temperature_artifact_path,
                     },
                 )
             )

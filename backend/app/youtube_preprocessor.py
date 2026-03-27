@@ -1,5 +1,6 @@
-
 import re
+import string
+
 import emoji
 from nltk.tokenize import word_tokenize
 
@@ -39,6 +40,30 @@ class YouTubePreprocessor:
 
     def __init__(self):
         self.spam_regex = [re.compile(pattern) for pattern in self.SPAM_PATTERNS]
+
+    def _count_tokens(self, text):
+        try:
+            return len(word_tokenize(text))
+        except Exception:
+            return len(text.split())
+
+    def _extract_text_features(self, text):
+        text = text or ""
+        non_space_chars = max(1, sum(1 for char in text if not char.isspace()))
+        alpha_chars = sum(1 for char in text if char.isalpha())
+        uppercase_chars = sum(1 for char in text if char.isalpha() and char.isupper())
+        emoji_count = sum(1 for char in text if emoji.is_emoji(char))
+        punctuation_count = sum(1 for char in text if char in string.punctuation)
+
+        return {
+            'char_length': len(text),
+            'token_length': self._count_tokens(text),
+            'emoji_count': emoji_count,
+            'emoji_density': round(emoji_count / non_space_chars, 4),
+            'uppercase_ratio': round(uppercase_chars / max(alpha_chars, 1), 4),
+            'punctuation_ratio': round(punctuation_count / non_space_chars, 4),
+            'has_elongation': bool(re.search(r'(.)\1{2,}', text)),
+        }
 
     def is_spam(self, text):
         for pattern in self.spam_regex:
@@ -86,14 +111,46 @@ class YouTubePreprocessor:
             # Fallback to simple split if tokenization fails
             return len(text.split()) >= min_words
 
+    def _apply_common_cleanup(self, text, emoji_mode='convert'):
+        text = self.convert_emojis(text, mode=emoji_mode)
+        text = self.remove_timestamps(text)
+        text = self.remove_channel_mentions(text)
+        text = re.sub(r'\[[^]]*\]', ' ', text)
+        text = re.sub(r'((http\S+)|(www\.))', ' ', text)
+        text = re.sub(r'\s+', ' ', text)
+        return text.strip()
+
+    def preprocess_for_classical(self, text, emoji_mode='convert', min_words=3):
+        text = self._apply_common_cleanup(text, emoji_mode=emoji_mode)
+        text = text.lower()
+        text = self.normalize_elongated_words(text)
+        text = re.sub(r'[^a-zA-Z\s]', ' ', text)
+        text = re.sub(r'\b[a-zA-Z]\b', ' ', text)
+        text = re.sub(r'\s+', ' ', text).strip()
+        if not text:
+            return None
+        if not self.filter_short_comments(text, min_words):
+            return None
+        return text
+
+    def preprocess_for_transformer(self, text, emoji_mode='convert', min_words=3):
+        text = self._apply_common_cleanup(text, emoji_mode=emoji_mode)
+        if not text:
+            return None
+        if not self.filter_short_comments(text, min_words):
+            return None
+        return text
+
     def preprocess_youtube_comment(self, text, emoji_mode='convert',
                                    check_spam=True, check_lang=True,
-                                   min_words=3):
+                                   min_words=3, profile='classical'):
         metadata = {
             'is_spam': False,
             'language': 'en',
             'filtered': False,
-            'filter_reason': None
+            'filter_reason': None,
+            'processing_profile': profile,
+            'text_features': self._extract_text_features(text),
         }
 
         # Spam detection (check before processing)
@@ -116,31 +173,30 @@ class YouTubePreprocessor:
                 # If language detection fails, assume English
                 metadata['language'] = 'en'
 
-        # Emoji handling
-        text = self.convert_emojis(text, mode=emoji_mode)
+        selected_profile = (profile or 'classical').lower().strip()
+        if selected_profile == 'transformer':
+            processed_text = self.preprocess_for_transformer(
+                text,
+                emoji_mode=emoji_mode,
+                min_words=min_words,
+            )
+        else:
+            selected_profile = 'classical'
+            metadata['processing_profile'] = selected_profile
+            processed_text = self.preprocess_for_classical(
+                text,
+                emoji_mode=emoji_mode,
+                min_words=min_words,
+            )
 
-        # YouTube-specific cleaning
-        text = self.remove_timestamps(text)
-        text = self.remove_channel_mentions(text)
-
-        # Standard cleaning
-        text = text.lower()
-        text = self.normalize_elongated_words(text)
-        text = re.sub(r'\[[^]]*\]', '', text)  # Remove square brackets
-        text = re.sub(r'((http\S+)|(www\.))', '', text)  # Remove URLs
-        text = re.sub(r'[^a-zA-Z\s]', '', text)  # Remove special chars
-        text = re.sub(r'\b[a-zA-Z]\b', '', text)  # Remove single chars
-        text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
-
-        # Filter short comments
-        if not self.filter_short_comments(text.strip(), min_words):
+        if processed_text is None:
             metadata['filtered'] = True
             metadata['filter_reason'] = 'too_short'
             return None, metadata
 
-        return text.strip(), metadata
+        return processed_text.strip(), metadata
 
-    def batch_preprocess(self, comments, **kwargs):
+    def batch_preprocess(self, comments, profile='classical', **kwargs):
         processed = []
         stats = {
             'total': len(comments),
@@ -152,7 +208,11 @@ class YouTubePreprocessor:
 
         for comment in comments:
             text = comment.get('text', '')
-            processed_text, metadata = self.preprocess_youtube_comment(text, **kwargs)
+            processed_text, metadata = self.preprocess_youtube_comment(
+                text,
+                profile=profile,
+                **kwargs,
+            )
 
             if metadata['filtered']:
                 if metadata['filter_reason'] == 'spam':
@@ -163,7 +223,25 @@ class YouTubePreprocessor:
                     stats['filtered_short'] += 1
             else:
                 comment_copy = comment.copy()
+                classical_text, _ = self.preprocess_youtube_comment(
+                    text,
+                    profile='classical',
+                    check_spam=False,
+                    check_lang=False,
+                    min_words=1,
+                    emoji_mode=kwargs.get('emoji_mode', 'convert'),
+                )
+                transformer_text, _ = self.preprocess_youtube_comment(
+                    text,
+                    profile='transformer',
+                    check_spam=False,
+                    check_lang=False,
+                    min_words=1,
+                    emoji_mode=kwargs.get('emoji_mode', 'convert'),
+                )
                 comment_copy['processed_text'] = processed_text
+                comment_copy['processed_text_classical'] = classical_text or processed_text
+                comment_copy['processed_text_transformer'] = transformer_text or processed_text
                 comment_copy['metadata'] = metadata
                 processed.append(comment_copy)
                 stats['processed'] += 1

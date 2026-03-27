@@ -22,6 +22,38 @@ Optional arguments:
 - `--ensemble-weights '{"logreg": 0.3, "svm": 0.5, "tfidf": 0.2}'`
 - `--output results.json`
 
+## Train a transformer encoder baseline
+
+```bash
+cd backend
+python research/transformers/train_encoder.py \
+  --model_preset modernbert \
+  --train_csv data/train.csv \
+  --val_csv data/val.csv \
+  --test_csv data/test.csv \
+  --overwrite_output_dir
+```
+
+Notes:
+- Defaults to the canonical `text` column from the split builder.
+- If you regenerate splits for transformer training, prefer:
+  `python scripts/prepare/prepare_hf_dataset.py --youtube_preprocess --primary_text_profile transformer`
+- Artifacts are written to `backend/models/transformers/<preset>/`.
+
+## Calibrate a trained encoder
+
+```bash
+cd backend
+python research/transformers/calibrate_encoder.py \
+  --model_preset modernbert \
+  --val_csv data/val.csv \
+  --test_csv data/test.csv
+```
+
+Notes:
+- Writes `temperature_scaling.json` into the encoder artifact directory.
+- Runtime inference loads that file automatically when the API uses the matching transformer preset.
+
 ## Evaluate a human gold set
 
 ```bash

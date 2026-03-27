@@ -21,7 +21,11 @@ Available Engines
 - 'meta_learner': Stacked ensemble (learns combination rules)
 - 'fuzzy_ensemble': Fuzzy inference ensemble (uncertainty-aware)
 - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
-- 'bert': BERT transformer (requires transformers, best accuracy)
+- 'bert': BERT transformer preset
+- 'modernbert': ModernBERT transformer preset
+- 'deberta_v3': DeBERTa-v3 transformer preset
+- 'xlm_v': XLM-V transformer preset
+- 'mdeberta_v3': mDeBERTa-v3 transformer preset
 """
 
 from typing import Any, Dict, List, Optional
@@ -32,6 +36,16 @@ from .engines.svm_engine import SVMSentimentEngine
 from .engines.ensemble_engine import EnsembleSentimentEngine
 from .engines.meta_learner_engine import MetaLearnerSentimentEngine
 from .engines.fuzzy_engine import FuzzyEnsembleSentimentEngine
+
+_TRANSFORMER_ENGINE_ALIASES = {
+    "bert",
+    "transformer",
+    "roberta",
+    "modernbert",
+    "deberta_v3",
+    "xlm_v",
+    "mdeberta_v3",
+}
 
 
 # Registry of available engines
@@ -79,7 +93,7 @@ def list_available_engines() -> List[str]:
         engines.append("hybrid_dl")
 
     if importlib.util.find_spec("transformers") is not None:
-        engines.extend(["bert", "transformer"])
+        engines.extend(sorted(_TRANSFORMER_ENGINE_ALIASES))
 
     # Remove aliases for cleaner output
     engines = [e for e in engines if e not in ("ci_ensemble", "stacking", "fuzzy")]
@@ -101,7 +115,11 @@ def get_sentiment_engine(engine_type: str = "logreg", **kwargs) -> Any:
         - 'meta_learner': Stacked ensemble
         - 'fuzzy_ensemble': Fuzzy inference ensemble (uncertainty-aware)
         - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
-        - 'bert': BERT transformer (requires transformers)
+        - 'bert': BERT transformer preset (requires transformers)
+        - 'modernbert': ModernBERT transformer preset
+        - 'deberta_v3': DeBERTa-v3 transformer preset
+        - 'xlm_v': XLM-V transformer preset
+        - 'mdeberta_v3': mDeBERTa-v3 transformer preset
     **kwargs
         Additional arguments passed to the engine constructor.
 
@@ -157,9 +175,10 @@ def get_sentiment_engine(engine_type: str = "logreg", **kwargs) -> Any:
                 f"Error: {e}"
             )
 
-    if engine_type in ("bert", "transformer", "roberta"):
+    if engine_type in _TRANSFORMER_ENGINE_ALIASES:
         try:
             from .engines.transformer_engine import TransformerSentimentEngine
+            kwargs.setdefault("model_preset", engine_type)
             return TransformerSentimentEngine(**kwargs)
         except ImportError as e:
             raise ImportError(
@@ -192,6 +211,7 @@ def get_base_engine(engine_type: str = "logreg", **kwargs) -> Any:
         - 'logreg': TF-IDF + Logistic Regression (default)
         - 'svm': TF-IDF + Linear SVM
         - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
+        - 'bert' / 'modernbert' / 'deberta_v3' / 'xlm_v' / 'mdeberta_v3': transformer presets
     **kwargs
         Additional arguments passed to the engine constructor.
 
@@ -225,6 +245,18 @@ def get_base_engine(engine_type: str = "logreg", **kwargs) -> Any:
             raise ImportError(
                 f"HybridDLSentimentEngine requires PyTorch. "
                 f"Install with: pip install torch\n"
+                f"Error: {e}"
+            )
+
+    if engine_type in _TRANSFORMER_ENGINE_ALIASES:
+        try:
+            from .engines.transformer_engine import TransformerSentimentEngine
+            kwargs.setdefault("model_preset", engine_type)
+            return TransformerSentimentEngine(**kwargs)
+        except ImportError as e:
+            raise ImportError(
+                f"TransformerSentimentEngine requires transformers and torch. "
+                f"Install with: pip install transformers torch\n"
                 f"Error: {e}"
             )
 
