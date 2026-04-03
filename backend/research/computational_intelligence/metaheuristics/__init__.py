@@ -18,7 +18,7 @@ Reference:
 - Coello et al. (2004): Multi-Objective PSO
 - Deb et al. (2002): NSGA-II
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from .base import (

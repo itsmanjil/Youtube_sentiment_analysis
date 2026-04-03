@@ -1,0 +1,82 @@
+{
+  "algorithm": "NSGA-II",
+  "objectives": [
+    "neg_macro_f1",
+    "ece",
+    "neg_coverage"
+  ],
+  "confidence_threshold": 0.7,
+  "population_size": 12,
+  "generations": 12,
+  "models": [
+    "deberta_v3",
+    "logreg",
+    "svm"
+  ],
+  "val_cube": "results/prob_cubes/route_a_transformer_smoke_val_deberta_logreg_svm.npz",
+  "test_cube": "results/prob_cubes/route_a_transformer_smoke_test_deberta_logreg_svm.npz",
+  "runtime_s": 1.53,
+  "evaluations": 156,
+  "pareto_front_size": 4,
+  "pareto_front": [
+    {
+      "weights": {
+        "deberta_v3": 0.023314,
+        "logreg": 0.157105,
+        "svm": 0.819581
+      },
+      "macro_f1": 0.737961,
+      "ece": 0.145188,
+      "coverage": 0.483333
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.00273,
+        "logreg": 0.603439,
+        "svm": 0.39383
+      },
+      "macro_f1": 0.688889,
+      "ece": 0.123975,
+      "coverage": 0.483333
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.14874,
+        "logreg": 0.603824,
+        "svm": 0.247436
+      },
+      "macro_f1": 0.688889,
+      "ece": 0.118788,
+      "coverage": 0.383333
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.001032,
+        "logreg": 0.828872,
+        "svm": 0.170096
+      },
+      "macro_f1": 0.670186,
+      "ece": 0.121976,
+      "coverage": 0.5
+    }
+  ],
+  "knee_point": {
+    "index": 1,
+    "weights": {
+      "deberta_v3": 0.00273,
+      "logreg": 0.603439,
+      "svm": 0.39383
+    },
+    "val": {
+      "macro_f1": 0.688889,
+      "ece": 0.123975,
+      "coverage": 0.483333
+    },
+    "test": {
+      "macro_f1": 0.764625,
+      "ece": 0.120805,
+      "coverage": 0.416667
+    }
+  },
+  "pso_baseline_val_f1": null
+}

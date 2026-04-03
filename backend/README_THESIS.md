@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a thesis-grade sentiment analysis system for YouTube comments, implementing state-of-the-art methods in Natural Language Processing and Computational Intelligence.
+This is a thesis-oriented sentiment analysis system for YouTube comments with benchmark-scoped, reproducible evaluation artifacts for NLP and Computational Intelligence methods. The current full-test headline should be taken from the pinned live runtime benchmark, not from a generic “state-of-the-art” claim.
 
 ## Key Features
 
@@ -228,7 +228,7 @@ ablation.generate_report('ablation_results/')
 
 ## Model Performance
 
-### Reproducible Benchmark (Current Repository Snapshot)
+### Historical Offline Benchmark (Current Repository Snapshot)
 
 | Model | Accuracy | F1-Macro | F1-Pos | F1-Neu | F1-Neg |
 |-------|----------|----------|--------|--------|--------|
@@ -244,6 +244,34 @@ Source artifacts:
 
 These numbers are from a fixed held-out test set (`data/test.csv` in this snapshot), not 10-fold CV.
 
+### Pinned Live Runtime Benchmark (`route_a_live_v1`)
+
+This is the current thesis-facing runtime benchmark for the deployed stack, tied to:
+
+- `results/runtime/route_a_live_v1/manifest.json`
+- `results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.md`
+- `results/runtime/route_a_live_v1/offline_vs_live_reconciliation.md`
+- `docs/THESIS_RESULTS_RUNTIME_DRAFT.md`
+- `docs/THESIS_ABSTRACT_CHAPTER4_POLISHED.md`
+- `docs/THESIS_CHAPTER5_CONCLUSION_FUTURE_WORK.md`
+- `docs/THESIS_VIVA_DEFENSE_BRIEF.md`
+
+| Model | Accuracy | F1-Macro | ECE | Brier | Notes |
+|-------|----------|----------|-----|-------|-------|
+| Meta-learner | 69.53% | **69.45%** | 0.015711 | 0.411713 | Best live macro-F1 |
+| Ensemble (NSGA-II) | **69.59%** | 69.40% | 0.004601 | **0.409204** | Best live calibrated ensemble |
+| TF-IDF + LogReg | 69.46% | 69.28% | **0.003900** | 0.410009 | Best single-model calibration |
+| Ensemble (PSO) | 68.72% | 68.52% | 0.011272 | 0.419490 | F1-oriented ensemble variant |
+| TF-IDF + SVM | 68.01% | 67.80% | 0.016953 | 0.429259 | Classical baseline |
+| TF-IDF + NB | 66.22% | 65.67% | 0.017889 | 0.449058 | Classical baseline |
+| Fuzzy Ensemble | 66.22% | 65.67% | 0.018516 | 0.448920 | Live-only CI row; not full-test headline |
+
+Interpretation:
+
+- Use `Meta-learner` as the current full-test runtime macro-F1 headline.
+- Use `Ensemble (NSGA-II)` when the thesis emphasizes calibration / deployment reliability.
+- Do not treat the old offline `ensemble` row as the current live default; the runtime now exposes explicit `ensemble_pso` and `ensemble_nsga2` variants.
+
 ### Statistical Significance
 
 From `results/thesis_mcnemar.md` (Holm-adjusted McNemar):
@@ -256,9 +284,12 @@ Bootstrap confidence intervals are in `results/thesis_bootstrap_ci.md`.
 
 ### Reproducibility Notes
 
-- Treat `results/thesis_*` files as the thesis-ready, source-of-truth tables.
+- Treat `results/thesis_*` files as historical offline tables for the fixed held-out split.
+- Treat `results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.*` plus `results/runtime/route_a_live_v1/manifest.json` as the source-of-truth artifacts for deployed runtime behavior.
+- Use `results/runtime/route_a_live_v1/offline_vs_live_reconciliation.md` when explaining differences between historical offline tables and current live runtime numbers.
 - If you retrain or change preprocessing, regenerate tables before updating thesis text.
 - Avoid reporting BERT/Hybrid-DL headline metrics unless their held-out test artifacts are saved alongside the classical/ensemble results.
+- Avoid claiming generic “state-of-the-art”; claim benchmark-scoped performance on the pinned runtime artifact version.
 - Use `research/run_thesis_pipeline.py --command_log results/experiment_command_log.txt` to append exact run commands.
 - Package each finalized run with:
 

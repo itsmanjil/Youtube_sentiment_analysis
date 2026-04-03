@@ -8,7 +8,7 @@ Design Pattern:
     Strategy pattern - different optimizers can be swapped while
     maintaining the same interface.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from abc import ABC, abstractmethod

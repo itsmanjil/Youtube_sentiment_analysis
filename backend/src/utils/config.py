@@ -54,9 +54,15 @@ class Config:
     DATA_DIR: Path = BACKEND_DIR / "data"
     EMBEDDINGS_DIR: Path = BACKEND_DIR / "embeddings"
     OUTPUT_DIR: Path = BACKEND_DIR / "output"
+    RESULTS_DIR: Path = BACKEND_DIR / "results"
+    RUNTIME_ARTIFACTS_DIR: Path = RESULTS_DIR / "runtime"
     CONFIGS_DIR: Path = BACKEND_DIR / "configs"
     FILES_DIR: Path = BACKEND_DIR / "files"
     RESEARCH_DIR: Path = BACKEND_DIR / "research"
+    DEFAULT_RUNTIME_ARTIFACT_VERSION: str = os.getenv(
+        "YSA_RUNTIME_ARTIFACT_VERSION",
+        "route_a_live_v1",
+    )
 
     # Model subdirectories
     MODEL_PATHS = {
@@ -152,6 +158,8 @@ class Config:
             cls.DATA_DIR,
             cls.EMBEDDINGS_DIR,
             cls.OUTPUT_DIR,
+            cls.RESULTS_DIR,
+            cls.RUNTIME_ARTIFACTS_DIR,
             cls.CONFIGS_DIR,
             cls.FILES_DIR,
         ]

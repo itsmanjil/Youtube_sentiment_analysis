@@ -14,7 +14,7 @@ Run this script to:
 Usage:
     python fuzzy_sentiment_demo.py
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis
 """
 

@@ -1,0 +1,108 @@
+{
+  "architecture": {
+    "n_models": 3,
+    "model_names": [
+      "logreg",
+      "svm",
+      "tfidf"
+    ],
+    "n_fuzzy_sets": 3,
+    "n_parameters": 27,
+    "activation": "Gaussian MF",
+    "aggregation": "softmax",
+    "reference": "ANFIS (Jang, 1993)"
+  },
+  "training": {
+    "nll_before": 0.716383,
+    "nll_after": 0.704842,
+    "converged": true,
+    "n_iterations": 106
+  },
+  "learned_mfs": [
+    {
+      "model": "logreg",
+      "fuzzy_set": "Low",
+      "center": 0.6338,
+      "width": 0.0715,
+      "alpha": 5.0
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "Medium",
+      "center": 0.2763,
+      "width": 0.1383,
+      "alpha": 2.7604
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "High",
+      "center": 0.99,
+      "width": 0.4123,
+      "alpha": 0.6182
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Low",
+      "center": 0.6621,
+      "width": 0.4891,
+      "alpha": -2.1546
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Medium",
+      "center": 0.7647,
+      "width": 0.4893,
+      "alpha": -1.9965
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "High",
+      "center": 0.7313,
+      "width": 0.4304,
+      "alpha": -2.1107
+    },
+    {
+      "model": "tfidf",
+      "fuzzy_set": "Low",
+      "center": 0.01,
+      "width": 0.05,
+      "alpha": -1.3548
+    },
+    {
+      "model": "tfidf",
+      "fuzzy_set": "Medium",
+      "center": 0.8656,
+      "width": 0.05,
+      "alpha": 3.5224
+    },
+    {
+      "model": "tfidf",
+      "fuzzy_set": "High",
+      "center": 0.6853,
+      "width": 0.2349,
+      "alpha": -1.0397
+    }
+  ],
+  "val_metrics": {
+    "macro_f1": 0.689349,
+    "ece": 0.009094,
+    "brier": 0.409377
+  },
+  "test_metrics": {
+    "macro_f1": 0.695513,
+    "accuracy": 0.69715,
+    "ece": 0.007004,
+    "brier": 0.407624
+  },
+  "static_ensemble_test_metrics": {
+    "macro_f1": 0.693833,
+    "accuracy": 0.6959,
+    "ece": 0.026014,
+    "brier": 0.412276
+  },
+  "delta_vs_static": {
+    "macro_f1": 0.00168,
+    "ece": -0.01901,
+    "brier": -0.004652
+  }
+}

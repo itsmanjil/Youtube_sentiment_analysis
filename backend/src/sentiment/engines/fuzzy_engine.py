@@ -12,10 +12,14 @@ and an uncertainty-aware sentiment label.
 
 from __future__ import annotations
 
+import json
+import math
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from src.sentiment.base import BaseSentimentEngine, SentimentResult, normalize_label
 from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.utils.runtime_artifacts import load_runtime_artifact_json
 from src.preprocessing import ClassicalPreprocessConfig
 
 
@@ -106,6 +110,7 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
             )
 
         self.base_models = list(base_engines.keys())
+        self._base_engines = base_engines  # kept for NF gate access
 
         # Lazy import the fuzzy engine implementation (lives in research module).
         from research.computational_intelligence.fuzzy.engine_integration import (
@@ -131,6 +136,59 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
         self.alpha_cut = float(alpha_cut or 0.0)
         self.resolution = int(resolution or 100)
         self.confidence_threshold = float(confidence_threshold or 0.0)
+
+        # Load neuro-fuzzy gate params (ANFIS learned MFs from research).
+        # Only activates when base models match the trained gate exactly.
+        self._nf_mfs: Dict[str, List[Dict]] = {}
+        try:
+            _nf_data = load_runtime_artifact_json("neuro_fuzzy_gate") or {}
+            _nf_models = _nf_data.get("architecture", {}).get("model_names", [])
+            if set(_nf_models) == set(self.base_models):
+                for _entry in _nf_data.get("learned_mfs", []):
+                    _m = _entry["model"]
+                    self._nf_mfs.setdefault(_m, []).append({
+                        "center": float(_entry["center"]),
+                        "width": float(_entry["width"]),
+                        "alpha": float(_entry["alpha"]),
+                    })
+        except Exception:
+            self._nf_mfs = {}
+
+    def _nf_gate_blend(self, probs_by_model: Dict[str, Dict[str, float]]):
+        """
+        Neuro-fuzzy adaptive gating (ANFIS-lite).
+        Blends base model probs using Gaussian MF activations → softmax gate weights.
+        Returns (blended_probs, gate_weights).
+        """
+        # Confidence = 1 - normalised Shannon entropy per model
+        model_conf = {}
+        for m, probs in probs_by_model.items():
+            p_list = [max(v, 1e-10) for v in probs.values()]
+            H = -sum(p * math.log(p) for p in p_list)
+            H_norm = H / math.log(max(len(p_list), 2))
+            model_conf[m] = 1.0 - H_norm
+
+        # Gaussian MF activation sum per model
+        model_act = {}
+        for m in probs_by_model:
+            act = 0.0
+            for mf in self._nf_mfs.get(m, []):
+                c, w, a = mf["center"], mf["width"], mf["alpha"]
+                act += math.exp(-a * (model_conf[m] - c) ** 2 / (2 * max(w ** 2, 1e-10)))
+            model_act[m] = act
+
+        # Softmax → gate weights
+        max_act = max(model_act.values()) if model_act else 0.0
+        exp_act = {m: math.exp(v - max_act) for m, v in model_act.items()}
+        total = sum(exp_act.values()) or 1.0
+        gate_w = {m: v / total for m, v in exp_act.items()}
+
+        # Weighted blend of probabilities
+        combined = {lbl: 0.0 for lbl in SENTIMENT_LABELS}
+        for m, w in gate_w.items():
+            for lbl in SENTIMENT_LABELS:
+                combined[lbl] += w * probs_by_model[m].get(lbl, 0.0)
+        return normalize_probs(combined), gate_w
 
     def _to_sentiment_result(self, result: Any) -> SentimentResult:
         probs = getattr(result, "probs", None)
@@ -186,20 +244,58 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
         )
 
     def analyze(self, text: str) -> SentimentResult:
+        if self._nf_mfs:
+            probs_by_model = {}
+            for m, eng in self._base_engines.items():
+                r = eng.analyze(text)
+                probs_by_model[m] = normalize_probs(getattr(r, "probs", {}) or {})
+            combined, gate_w = self._nf_gate_blend(probs_by_model)
+            sentiment = max(combined, key=combined.get)
+            return SentimentResult(
+                label=sentiment,
+                score=float(combined.get(sentiment, 0.0)),
+                probs=combined,
+                model="fuzzy_ensemble",
+                raw={"gate_weights": gate_w, "routing": "neuro_fuzzy"},
+            )
         result = self._engine.analyze(text)
         return self._to_sentiment_result(result)
 
     def batch_analyze(self, texts: List[str]) -> List[SentimentResult]:
         if not texts:
             return []
+        if self._nf_mfs:
+            # Collect batch probs from each base engine
+            model_batch: Dict[str, List[Dict[str, float]]] = {}
+            for m, eng in self._base_engines.items():
+                if hasattr(eng, "batch_analyze"):
+                    batch_results = eng.batch_analyze(texts)
+                else:
+                    batch_results = [eng.analyze(t) for t in texts]
+                model_batch[m] = [
+                    normalize_probs(getattr(r, "probs", {}) or {}) for r in batch_results
+                ]
+            out = []
+            for i in range(len(texts)):
+                probs_by_model = {m: model_batch[m][i] for m in model_batch}
+                combined, gate_w = self._nf_gate_blend(probs_by_model)
+                sentiment = max(combined, key=combined.get)
+                out.append(SentimentResult(
+                    label=sentiment,
+                    score=float(combined.get(sentiment, 0.0)),
+                    probs=combined,
+                    model="fuzzy_ensemble",
+                    raw={"gate_weights": gate_w, "routing": "neuro_fuzzy"},
+                ))
+            return out
         results = self._engine.analyze_batch(texts)
         return [self._to_sentiment_result(result) for result in results]
 
     def get_model_info(self) -> Dict[str, Any]:
         try:
-            return self._engine.get_model_info()
+            info = self._engine.get_model_info()
         except Exception:
-            return {
+            info = {
                 "base_models": self.base_models,
                 "requested_models": self.requested_models,
                 "mf_type": self.mf_type,
@@ -210,3 +306,5 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
                 "resolution": self.resolution,
                 "confidence_threshold": self.confidence_threshold,
             }
+        info["nf_gate_active"] = bool(self._nf_mfs)
+        return info

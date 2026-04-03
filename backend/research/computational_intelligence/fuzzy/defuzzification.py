@@ -25,7 +25,7 @@ Reference:
     Lee, C.C. (1990). "Fuzzy Logic in Control Systems: Fuzzy Logic
     Controller—Part I". IEEE Transactions on Systems, Man, and Cybernetics.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from typing import Tuple, Optional, Dict, List

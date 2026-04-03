@@ -8,7 +8,7 @@ relevant to sentiment analysis.
 Usage:
     python -m research.computational_intelligence.metaheuristics.demo
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 import sys

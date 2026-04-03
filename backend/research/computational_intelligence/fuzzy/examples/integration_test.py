@@ -8,7 +8,7 @@ and the existing sentiment engines (LogReg, SVM, TF-IDF).
 Usage:
     python -m research.computational_intelligence.fuzzy.examples.integration_test
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 import sys

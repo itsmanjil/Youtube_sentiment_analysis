@@ -20,7 +20,7 @@ Supported Membership Functions:
 Reference:
     Zadeh, L.A. (1965). "Fuzzy Sets". Information and Control, 8(3), 338-353.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from abc import ABC, abstractmethod

@@ -18,7 +18,7 @@ Usage:
     # Custom config
     python -m research.experiments.run_thesis_experiments --config my_config.yaml
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis
 """
 

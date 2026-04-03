@@ -29,9 +29,12 @@ Weights can be optimized using various methods:
 - Bayesian optimization
 """
 
+import json
+from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.utils.runtime_artifacts import load_runtime_artifact_json
 from src.preprocessing import ClassicalPreprocessConfig
 from src.sentiment.base import SentimentResult, coerce_sentiment_result, BaseSentimentEngine
 
@@ -90,9 +93,11 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         self,
         base_models: Optional[List[str]] = None,
         weights: Optional[Union[Dict[str, float], List[float]]] = None,
+        weights_optimization: Optional[str] = None,
         preprocess: bool = False,
         preprocess_config: Optional[ClassicalPreprocessConfig] = None,
     ):
+        self._weights_optimization = weights_optimization  # "pso" | "nsga2" | None
         if base_models is None:
             base_models = ["logreg", "svm", "tfidf"]
 
@@ -126,7 +131,27 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
             )
 
         self.base_models = list(self.engines.keys())
-        self.weights = self._normalize_weights(weights)
+        self.weights, self.weights_source = self._normalize_weights(weights)
+        self.temperature, self.calibration_applied = self._load_temperature("ensemble")
+
+    def _load_temperature(self, model_name: str):
+        """Load fitted temperature from research results; return (T, applied)."""
+        try:
+            data = load_runtime_artifact_json("temperature_scaling") or {}
+            for entry in data.get("models", []):
+                if entry.get("model") == model_name:
+                    return float(entry["temperature"]), True
+        except Exception:
+            pass
+        return 1.0, False
+
+    def _apply_temperature(self, probs):
+        """Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)."""
+        if self.temperature == 1.0:
+            return probs
+        scaled = {k: max(v, 1e-10) ** (1.0 / self.temperature) for k, v in probs.items()}
+        total = sum(scaled.values())
+        return {k: v / total for k, v in scaled.items()}
 
     def _normalize_weights(
         self, weights: Optional[Union[Dict[str, float], List[float]]]
@@ -144,16 +169,40 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         Dict[str, float]
             Normalized weights that sum to 1.0.
         """
-        # Default weights based on empirical performance
+        # Default weights: try optimized weights (pso/nsga2), fall back to empirical
+        source = "default"
         if weights is None:
-            default_weights = {
-                "logreg": 0.4,
-                "svm": 0.4,
-                "tfidf": 0.2,
-            }
-            weights = {
-                model: default_weights.get(model, 1.0) for model in self.base_models
-            }
+            opt = getattr(self, "_weights_optimization", None) or "pso"
+
+            loaded_w = None
+            if opt == "nsga2":
+                try:
+                    _data = load_runtime_artifact_json("multi_objective_ensemble") or {}
+                    loaded_w = _data.get("knee_point", {}).get("weights", {})
+                    if loaded_w and set(self.base_models).issubset(loaded_w):
+                        source = "nsga2"
+                    else:
+                        loaded_w = None
+                except Exception:
+                    pass
+
+            if loaded_w is None:  # try PSO (default)
+                try:
+                    loaded_w = (
+                        load_runtime_artifact_json("pso_ensemble_weights") or {}
+                    ).get("weights", {})
+                    if loaded_w and set(self.base_models).issubset(loaded_w):
+                        source = "pso"
+                    else:
+                        loaded_w = None
+                except Exception:
+                    pass
+
+            if loaded_w:
+                weights = {model: float(loaded_w.get(model, 0.0)) for model in self.base_models}
+            else:
+                default_weights = {"logreg": 0.4, "svm": 0.4, "tfidf": 0.2}
+                weights = {model: default_weights.get(model, 1.0) for model in self.base_models}
 
         # Convert list to dict
         if isinstance(weights, (list, tuple)):
@@ -162,6 +211,7 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
                 for idx, model in enumerate(self.base_models)
                 if idx < len(weights)
             }
+            source = "request"
 
         # Normalize dict weights
         if isinstance(weights, dict):
@@ -174,11 +224,11 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         # Ensure positive and normalized
         total = sum(max(value, 0.0) for value in normalized.values())
         if total <= 0:
-            return {model: 1.0 / len(self.base_models) for model in self.base_models}
+            return {model: 1.0 / len(self.base_models) for model in self.base_models}, source
 
         return {
             model: max(value, 0.0) / total for model, value in normalized.items()
-        }
+        }, source
 
     def analyze(self, text: str) -> SentimentResult:
         """
@@ -206,7 +256,7 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
             for label in SENTIMENT_LABELS:
                 combined[label] += weight * result.probs.get(label, 0.0)
 
-        combined = normalize_probs(combined)
+        combined = self._apply_temperature(normalize_probs(combined))
         sentiment = max(combined, key=combined.get)
 
         return SentimentResult(
@@ -256,7 +306,7 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
                 for label in SENTIMENT_LABELS:
                     combined[label] += weight * result.probs.get(label, 0.0)
 
-            combined = normalize_probs(combined)
+            combined = self._apply_temperature(normalize_probs(combined))
             sentiment = max(combined, key=combined.get)
 
             combined_results.append(

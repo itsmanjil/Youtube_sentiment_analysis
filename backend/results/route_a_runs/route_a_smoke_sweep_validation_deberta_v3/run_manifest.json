@@ -1,0 +1,23 @@
+{
+  "created_at": "2026-03-31T02:53:17Z",
+  "run_tag": "route_a_smoke_sweep_validation_deberta_v3",
+  "split_dir": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/route_a_transformer_smoke",
+  "train_csv": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/route_a_transformer_smoke/train.csv",
+  "val_csv": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/route_a_transformer_smoke/val.csv",
+  "test_csv": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/route_a_transformer_smoke/test.csv",
+  "model_preset": "deberta_v3",
+  "ci_models": [
+    "deberta_v3",
+    "logreg",
+    "svm"
+  ],
+  "artifacts": {
+    "metrics": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/deberta_v3_metrics.json",
+    "calibration": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/deberta_v3_temperature_scaling.json",
+    "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_val_deberta_v3_logreg_svm.npz",
+    "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_test_deberta_v3_logreg_svm.npz",
+    "ci_dir": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/ci",
+    "fuzzy_dir": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/fuzzy",
+    "significance": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/significance.json"
+  }
+}

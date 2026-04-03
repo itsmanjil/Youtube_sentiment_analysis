@@ -136,6 +136,21 @@ The main API path in `backend/app/views.py` follows this sequence:
    - timeline data
 8. Persist `YouTubeVideo`, `YouTubeComment`, and `YouTubeAnalysis` records.
 
+### Runtime Artifact Pinning
+
+Live CI behavior is now resolved from a pinned manifest instead of mutable root
+research outputs:
+
+- manifest: `backend/results/runtime/route_a_live_v1/manifest.json`
+- calibrated temperatures: `temperature_scaling.json`
+- PSO weights: `pso_ensemble_weights.json`
+- NSGA-II weights: `multi_objective_ensemble.json`
+- neuro-fuzzy gate: `neuro_fuzzy_gate.json`
+
+This keeps thesis-facing runtime inference tied to a named artifact version. The
+selected version is exposed in `analysis_meta["runtime_artifacts"]` for each
+saved analysis.
+
 ## Data Model Responsibilities
 
 At a high level:

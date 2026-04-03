@@ -11,6 +11,7 @@ runtime model directory under `backend/models/transformers/<preset>`.
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import sys
 from collections import Counter
@@ -343,6 +344,7 @@ def main() -> None:
         num_labels=len(LABELS),
         id2label={index: label for label, index in LABEL_TO_ID.items()},
         label2id=LABEL_TO_ID,
+        use_safetensors=True,
     )
 
     if model.config.pad_token_id is None and tokenizer.pad_token_id is not None:
@@ -385,29 +387,38 @@ def main() -> None:
             "macro_recall": recall,
         }
 
-    training_args = TrainingArguments(
-        output_dir=str(artifact_dir),
-        overwrite_output_dir=args.overwrite_output_dir,
-        run_name=run_name,
-        learning_rate=args.learning_rate,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.eval_batch_size,
-        gradient_accumulation_steps=args.gradient_accumulation_steps,
-        num_train_epochs=args.epochs,
-        weight_decay=args.weight_decay,
-        warmup_ratio=args.warmup_ratio,
-        evaluation_strategy="epoch",
-        save_strategy="epoch",
-        logging_strategy="steps",
-        logging_steps=max(1, args.logging_steps),
-        load_best_model_at_end=True,
-        metric_for_best_model="macro_f1",
-        greater_is_better=True,
-        save_total_limit=2,
-        report_to=[],
-        fp16=bool(args.fp16),
-        seed=args.seed,
-    )
+    training_args_kwargs = {
+        "output_dir": str(artifact_dir),
+        "overwrite_output_dir": args.overwrite_output_dir,
+        "run_name": run_name,
+        "learning_rate": args.learning_rate,
+        "per_device_train_batch_size": args.batch_size,
+        "per_device_eval_batch_size": args.eval_batch_size,
+        "gradient_accumulation_steps": args.gradient_accumulation_steps,
+        "num_train_epochs": args.epochs,
+        "weight_decay": args.weight_decay,
+        "warmup_ratio": args.warmup_ratio,
+        "save_strategy": "epoch",
+        "logging_strategy": "steps",
+        "logging_steps": max(1, args.logging_steps),
+        "load_best_model_at_end": True,
+        "metric_for_best_model": "macro_f1",
+        "greater_is_better": True,
+        "save_total_limit": 2,
+        "report_to": [],
+        "fp16": bool(args.fp16),
+        "seed": args.seed,
+    }
+
+    training_args_signature = inspect.signature(TrainingArguments.__init__)
+    if "evaluation_strategy" in training_args_signature.parameters:
+        training_args_kwargs["evaluation_strategy"] = "epoch"
+    else:
+        training_args_kwargs["eval_strategy"] = "epoch"
+    if "save_safetensors" in training_args_signature.parameters:
+        training_args_kwargs["save_safetensors"] = True
+
+    training_args = TrainingArguments(**training_args_kwargs)
 
     trainer = Trainer(
         model=model,

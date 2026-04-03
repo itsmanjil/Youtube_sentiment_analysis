@@ -140,6 +140,7 @@ function Dashboard(props) {
   const [topComments, setTopComments] = useState([]);
   const [filterStats, setFilterStats] = useState(null);
   const [confidenceStats, setConfidenceStats] = useState(null);
+  const [uncertaintyStats, setUncertaintyStats] = useState(null);
   const [confidenceIntervals, setConfidenceIntervals] = useState(null);
   const [aspectSentiment, setAspectSentiment] = useState([]);
   const [analysisMeta, setAnalysisMeta] = useState(null);
@@ -298,6 +299,9 @@ function Dashboard(props) {
           if (youtubeData.confidence_stats) {
             setConfidenceStats(youtubeData.confidence_stats);
           }
+          if (youtubeData.uncertainty_stats) {
+            setUncertaintyStats(youtubeData.uncertainty_stats);
+          }
           if (youtubeData.sentiment_confidence_intervals) {
             setConfidenceIntervals(youtubeData.sentiment_confidence_intervals);
           }
@@ -352,6 +356,7 @@ function Dashboard(props) {
         fetchedDate,
         videoTitle,
         confidenceStats,
+        uncertaintyStats,
         confidenceIntervals,
         aspectSentiment,
         analysisMeta,
@@ -665,6 +670,11 @@ function Dashboard(props) {
                       {fuzzyInfo && (
                         <div className="text-sm mb-2">
                           <strong>Fuzzy Configuration:</strong>
+                          {fuzzyInfo.nf_gate_active && (
+                            <span className="badge badge-sm bg-gradient-success ms-2" style={{ fontSize: "10px", verticalAlign: "middle" }}>
+                              Neuro-Fuzzy Gate Active
+                            </span>
+                          )}
                           <ul className="mb-0">
                             {fuzzyInfo.base_models && (
                               <li>Base Models: {fuzzyInfo.base_models.join(", ")}</li>
@@ -720,6 +730,31 @@ function Dashboard(props) {
                         {confidenceStats.threshold !== undefined && (
                           <p className="text-xs text-muted mt-3 mb-0">
                             Low-confidence threshold: {confidenceStats.threshold}
+                          </p>
+                        )}
+                        {uncertaintyStats && (
+                          <div className="mt-3 pt-3" style={{ borderTop: "1px solid #eee" }}>
+                            <p className="text-xs text-uppercase text-muted mb-2">Entropy (Model Uncertainty)</p>
+                            <div className="row text-center">
+                              <div className="col-6">
+                                <h5 className="mb-0">{(uncertaintyStats.mean_entropy * 100).toFixed(1)}%</h5>
+                                <p className="text-xs text-muted mb-0">Mean Entropy</p>
+                              </div>
+                              <div className="col-6">
+                                <h5 className="mb-0" style={{ color: uncertaintyStats.high_uncertainty_ratio > 0.3 ? "#e74c3c" : "#2ecc71" }}>
+                                  {(uncertaintyStats.high_uncertainty_ratio * 100).toFixed(1)}%
+                                </h5>
+                                <p className="text-xs text-muted mb-0">High Uncertainty</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {analysisMeta?.calibration?.applied && (
+                          <p className="text-xs text-muted mt-2 mb-0">
+                            <span className="badge badge-sm bg-gradient-info" style={{ fontSize: "10px" }}>
+                              Calibrated
+                            </span>{" "}
+                            Temperature T={analysisMeta.calibration.temperature?.toFixed(4)}
                           </p>
                         )}
                       </div>

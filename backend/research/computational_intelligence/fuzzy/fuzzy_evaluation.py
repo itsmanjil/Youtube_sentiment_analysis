@@ -24,7 +24,7 @@ Reference:
     - Pedrycz, W. (2013). "Granular Computing: Analysis and Design of
       Intelligent Systems"
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from typing import Dict, List, Optional, Tuple, Any

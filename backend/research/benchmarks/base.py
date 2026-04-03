@@ -4,7 +4,7 @@ Base Classes for Benchmark Datasets
 Provides a unified interface for loading and managing
 sentiment analysis benchmark datasets.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from abc import ABC, abstractmethod

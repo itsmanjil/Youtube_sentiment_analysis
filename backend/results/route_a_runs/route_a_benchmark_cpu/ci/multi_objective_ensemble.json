@@ -1,0 +1,132 @@
+{
+  "algorithm": "NSGA-II",
+  "objectives": [
+    "neg_macro_f1",
+    "ece",
+    "neg_coverage"
+  ],
+  "confidence_threshold": 0.7,
+  "population_size": 16,
+  "generations": 16,
+  "models": [
+    "deberta_v3",
+    "logreg",
+    "svm"
+  ],
+  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_benchmark_cpu/prob_cubes/route_a_benchmark_cpu_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_benchmark_cpu/prob_cubes/route_a_benchmark_cpu_test_deberta_v3_logreg_svm.npz",
+  "runtime_s": 3.11,
+  "evaluations": 272,
+  "pareto_front_size": 9,
+  "pareto_front": [
+    {
+      "weights": {
+        "deberta_v3": 0.000282,
+        "logreg": 0.025248,
+        "svm": 0.97447
+      },
+      "macro_f1": 0.769313,
+      "ece": 0.085498,
+      "coverage": 0.5
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.00077,
+        "logreg": 0.193587,
+        "svm": 0.805643
+      },
+      "macro_f1": 0.763598,
+      "ece": 0.078093,
+      "coverage": 0.505556
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.00077,
+        "logreg": 0.193587,
+        "svm": 0.805643
+      },
+      "macro_f1": 0.763598,
+      "ece": 0.078093,
+      "coverage": 0.505556
+    },
+    {
+      "weights": {
+        "deberta_v3": 4.2e-05,
+        "logreg": 0.665633,
+        "svm": 0.334324
+      },
+      "macro_f1": 0.747512,
+      "ece": 0.078382,
+      "coverage": 0.516667
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.000306,
+        "logreg": 0.808839,
+        "svm": 0.190856
+      },
+      "macro_f1": 0.735874,
+      "ece": 0.067126,
+      "coverage": 0.527778
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.001108,
+        "logreg": 0.095741,
+        "svm": 0.903151
+      },
+      "macro_f1": 0.774749,
+      "ece": 0.090029,
+      "coverage": 0.511111
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.000282,
+        "logreg": 0.025248,
+        "svm": 0.97447
+      },
+      "macro_f1": 0.769313,
+      "ece": 0.085498,
+      "coverage": 0.5
+    },
+    {
+      "weights": {
+        "deberta_v3": 7e-06,
+        "logreg": 0.66242,
+        "svm": 0.337572
+      },
+      "macro_f1": 0.747512,
+      "ece": 0.081357,
+      "coverage": 0.522222
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.000282,
+        "logreg": 0.025248,
+        "svm": 0.97447
+      },
+      "macro_f1": 0.769313,
+      "ece": 0.085498,
+      "coverage": 0.5
+    }
+  ],
+  "knee_point": {
+    "index": 3,
+    "weights": {
+      "deberta_v3": 4.2e-05,
+      "logreg": 0.665633,
+      "svm": 0.334324
+    },
+    "val": {
+      "macro_f1": 0.747512,
+      "ece": 0.078382,
+      "coverage": 0.516667
+    },
+    "test": {
+      "macro_f1": 0.78257,
+      "ece": 0.081712,
+      "coverage": 0.522222
+    }
+  },
+  "pso_baseline_val_f1": null
+}

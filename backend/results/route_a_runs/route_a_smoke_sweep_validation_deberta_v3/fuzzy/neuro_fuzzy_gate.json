@@ -1,0 +1,110 @@
+{
+  "architecture": {
+    "n_models": 3,
+    "model_names": [
+      "deberta_v3",
+      "logreg",
+      "svm"
+    ],
+    "n_fuzzy_sets": 3,
+    "n_parameters": 27,
+    "activation": "Gaussian MF",
+    "aggregation": "softmax",
+    "reference": "ANFIS (Jang, 1993)"
+  },
+  "training": {
+    "nll_before": 0.700897,
+    "nll_after": 0.58839,
+    "converged": true,
+    "n_iterations": 106
+  },
+  "learned_mfs": [
+    {
+      "model": "deberta_v3",
+      "fuzzy_set": "Low",
+      "center": 0.1829,
+      "width": 0.05,
+      "alpha": -5.0
+    },
+    {
+      "model": "deberta_v3",
+      "fuzzy_set": "Medium",
+      "center": 0.4038,
+      "width": 0.0925,
+      "alpha": -5.0
+    },
+    {
+      "model": "deberta_v3",
+      "fuzzy_set": "High",
+      "center": 0.1977,
+      "width": 0.0542,
+      "alpha": -4.1437
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "Low",
+      "center": 0.2767,
+      "width": 0.1244,
+      "alpha": -5.0
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "Medium",
+      "center": 0.7273,
+      "width": 0.1775,
+      "alpha": 5.0
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "High",
+      "center": 0.5017,
+      "width": 0.052,
+      "alpha": 5.0
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Low",
+      "center": 0.105,
+      "width": 0.05,
+      "alpha": 3.6878
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Medium",
+      "center": 0.1068,
+      "width": 0.05,
+      "alpha": 2.5157
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "High",
+      "center": 0.99,
+      "width": 0.1782,
+      "alpha": 0.1583
+    }
+  ],
+  "val_metrics": {
+    "macro_f1": 0.721064,
+    "ece": 0.174435,
+    "brier": 0.345534
+  },
+  "test_metrics": {
+    "macro_f1": 0.781133,
+    "accuracy": 0.783333,
+    "ece": 0.149888,
+    "brier": 0.348355
+  },
+  "static_ensemble_test_metrics": {
+    "macro_f1": 0.762497,
+    "accuracy": 0.766667,
+    "ece": 0.15662,
+    "brier": 0.369263
+  },
+  "delta_vs_static": {
+    "macro_f1": 0.018637,
+    "ece": -0.006732,
+    "brier": -0.020907
+  },
+  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_test_deberta_v3_logreg_svm.npz"
+}

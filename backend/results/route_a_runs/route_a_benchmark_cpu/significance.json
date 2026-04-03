@@ -1,0 +1,453 @@
+{
+  "created_at": "2026-03-28T02:33:32Z",
+  "alpha": 0.05,
+  "bootstrap_samples": 1000,
+  "seed": 42,
+  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_benchmark_cpu/prob_cubes/route_a_benchmark_cpu_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_benchmark_cpu/prob_cubes/route_a_benchmark_cpu_test_deberta_v3_logreg_svm.npz",
+  "ci_results": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_benchmark_cpu/ci/multi_objective_ensemble.json",
+  "n_samples": 180,
+  "labels": [
+    "Positive",
+    "Neutral",
+    "Negative"
+  ],
+  "models": [
+    "deberta_v3",
+    "logreg",
+    "svm",
+    "static_uniform",
+    "nsga_knee",
+    "neuro_fuzzy"
+  ],
+  "metrics": {
+    "deberta_v3": {
+      "accuracy": 0.6555555555555556,
+      "macro_f1": 0.6579234972677596
+    },
+    "logreg": {
+      "accuracy": 0.7555555555555555,
+      "macro_f1": 0.7543905200159183
+    },
+    "svm": {
+      "accuracy": 0.7888888888888889,
+      "macro_f1": 0.786344560588463
+    },
+    "static_uniform": {
+      "accuracy": 0.7777777777777778,
+      "macro_f1": 0.7770077367331373
+    },
+    "nsga_knee": {
+      "accuracy": 0.7833333333333333,
+      "macro_f1": 0.7825700483091788
+    },
+    "neuro_fuzzy": {
+      "accuracy": 0.8055555555555556,
+      "macro_f1": 0.8046470971314345
+    }
+  },
+  "fit_info": {
+    "nll_before": 0.635781,
+    "nll_after": 0.585872,
+    "converged": true,
+    "n_iterations": 7
+  },
+  "mcnemar": [
+    {
+      "model_a": "deberta_v3",
+      "model_b": "logreg",
+      "n11": 106,
+      "n00": 32,
+      "n01": 30,
+      "n10": 12,
+      "p_value": 0.007915897334896727,
+      "odds_ratio_n01_over_n10": 2.5,
+      "p_value_adjusted": 0.08707487068386399,
+      "significant": false
+    },
+    {
+      "model_a": "deberta_v3",
+      "model_b": "svm",
+      "n11": 101,
+      "n00": 21,
+      "n01": 41,
+      "n10": 17,
+      "p_value": 0.0022325516199429235,
+      "odds_ratio_n01_over_n10": 2.411764705882353,
+      "p_value_adjusted": 0.026790619439315082,
+      "significant": true
+    },
+    {
+      "model_a": "deberta_v3",
+      "model_b": "static_uniform",
+      "n11": 110,
+      "n00": 32,
+      "n01": 30,
+      "n10": 8,
+      "p_value": 0.0004719867429230362,
+      "odds_ratio_n01_over_n10": 3.75,
+      "p_value_adjusted": 0.006607814400922507,
+      "significant": true
+    },
+    {
+      "model_a": "deberta_v3",
+      "model_b": "nsga_knee",
+      "n11": 107,
+      "n00": 28,
+      "n01": 34,
+      "n10": 11,
+      "p_value": 0.0008240823595997425,
+      "odds_ratio_n01_over_n10": 3.090909090909091,
+      "p_value_adjusted": 0.010713070674796652,
+      "significant": true
+    },
+    {
+      "model_a": "deberta_v3",
+      "model_b": "neuro_fuzzy",
+      "n11": 108,
+      "n00": 25,
+      "n01": 37,
+      "n10": 10,
+      "p_value": 9.848878492846323e-05,
+      "odds_ratio_n01_over_n10": 3.7,
+      "p_value_adjusted": 0.0014773317739269485,
+      "significant": true
+    },
+    {
+      "model_a": "logreg",
+      "model_b": "svm",
+      "n11": 129,
+      "n00": 31,
+      "n01": 13,
+      "n10": 7,
+      "p_value": 0.26317596435546875,
+      "odds_ratio_n01_over_n10": 1.8571428571428572,
+      "p_value_adjusted": 1.0,
+      "significant": false
+    },
+    {
+      "model_a": "logreg",
+      "model_b": "static_uniform",
+      "n11": 133,
+      "n00": 37,
+      "n01": 7,
+      "n10": 3,
+      "p_value": 0.34375,
+      "odds_ratio_n01_over_n10": 2.3333333333333335,
+      "p_value_adjusted": 1.0,
+      "significant": false
+    },
+    {
+      "model_a": "logreg",
+      "model_b": "nsga_knee",
+      "n11": 135,
+      "n00": 38,
+      "n01": 6,
+      "n10": 1,
+      "p_value": 0.125,
+      "odds_ratio_n01_over_n10": 6.0,
+      "p_value_adjusted": 1.0,
+      "significant": false
+    },
+    {
+      "model_a": "logreg",
+      "model_b": "neuro_fuzzy",
+      "n11": 135,
+      "n00": 34,
+      "n01": 10,
+      "n10": 1,
+      "p_value": 0.01171875,
+      "odds_ratio_n01_over_n10": 10.0,
+      "p_value_adjusted": 0.1171875,
+      "significant": false
+    },
+    {
+      "model_a": "svm",
+      "model_b": "static_uniform",
+      "n11": 131,
+      "n00": 29,
+      "n01": 9,
+      "n10": 11,
+      "p_value": 0.8238029479980469,
+      "odds_ratio_n01_over_n10": 0.8181818181818182,
+      "p_value_adjusted": 1.0,
+      "significant": false
+    },
+    {
+      "model_a": "svm",
+      "model_b": "nsga_knee",
+      "n11": 135,
+      "n00": 32,
+      "n01": 6,
+      "n10": 7,
+      "p_value": 1.0,
+      "odds_ratio_n01_over_n10": 0.8571428571428571,
+      "p_value_adjusted": 1.0,
+      "significant": false
+    },
+    {
+      "model_a": "svm",
+      "model_b": "neuro_fuzzy",
+      "n11": 138,
+      "n00": 31,
+      "n01": 7,
+      "n10": 4,
+      "p_value": 0.548828125,
+      "odds_ratio_n01_over_n10": 1.75,
+      "p_value_adjusted": 1.0,
+      "significant": false
+    },
+    {
+      "model_a": "static_uniform",
+      "model_b": "nsga_knee",
+      "n11": 136,
+      "n00": 35,
+      "n01": 5,
+      "n10": 4,
+      "p_value": 1.0,
+      "odds_ratio_n01_over_n10": 1.25,
+      "p_value_adjusted": 1.0,
+      "significant": false
+    },
+    {
+      "model_a": "static_uniform",
+      "model_b": "neuro_fuzzy",
+      "n11": 138,
+      "n00": 33,
+      "n01": 7,
+      "n10": 2,
+      "p_value": 0.1796875,
+      "odds_ratio_n01_over_n10": 3.5,
+      "p_value_adjusted": 1.0,
+      "significant": false
+    },
+    {
+      "model_a": "nsga_knee",
+      "model_b": "neuro_fuzzy",
+      "n11": 141,
+      "n00": 35,
+      "n01": 4,
+      "n10": 0,
+      "p_value": 0.125,
+      "odds_ratio_n01_over_n10": Infinity,
+      "p_value_adjusted": 1.0,
+      "significant": false
+    }
+  ],
+  "bootstrap_ci": {
+    "per_model": {
+      "deberta_v3": {
+        "accuracy": {
+          "low": 0.5833333333333334,
+          "high": 0.7222222222222222
+        },
+        "macro_f1": {
+          "low": 0.5849986393657578,
+          "high": 0.7230569088116051
+        }
+      },
+      "logreg": {
+        "accuracy": {
+          "low": 0.6888888888888889,
+          "high": 0.8222222222222222
+        },
+        "macro_f1": {
+          "low": 0.6851124808358533,
+          "high": 0.817480678330414
+        }
+      },
+      "svm": {
+        "accuracy": {
+          "low": 0.7277777777777777,
+          "high": 0.8444444444444444
+        },
+        "macro_f1": {
+          "low": 0.7250752063550328,
+          "high": 0.8428157380138164
+        }
+      },
+      "static_uniform": {
+        "accuracy": {
+          "low": 0.7166666666666667,
+          "high": 0.8388888888888889
+        },
+        "macro_f1": {
+          "low": 0.7126950360560824,
+          "high": 0.8350273331750997
+        }
+      },
+      "nsga_knee": {
+        "accuracy": {
+          "low": 0.7222222222222222,
+          "high": 0.8388888888888889
+        },
+        "macro_f1": {
+          "low": 0.7161127975617617,
+          "high": 0.8393392181848596
+        }
+      },
+      "neuro_fuzzy": {
+        "accuracy": {
+          "low": 0.7444444444444445,
+          "high": 0.8611111111111112
+        },
+        "macro_f1": {
+          "low": 0.7431822271968769,
+          "high": 0.8588311934382844
+        }
+      }
+    },
+    "pairwise_deltas": {
+      "logreg_minus_deberta_v3": {
+        "accuracy": {
+          "low": 0.033333333333333326,
+          "high": 0.16666666666666663
+        },
+        "macro_f1": {
+          "low": 0.03175087359729885,
+          "high": 0.16106435863634763
+        }
+      },
+      "svm_minus_deberta_v3": {
+        "accuracy": {
+          "low": 0.05555555555555558,
+          "high": 0.21111111111111114
+        },
+        "macro_f1": {
+          "low": 0.053064646821441165,
+          "high": 0.20680735373772782
+        }
+      },
+      "static_uniform_minus_deberta_v3": {
+        "accuracy": {
+          "low": 0.05555555555555558,
+          "high": 0.18888888888888888
+        },
+        "macro_f1": {
+          "low": 0.054675063112452335,
+          "high": 0.18282670391887382
+        }
+      },
+      "nsga_knee_minus_deberta_v3": {
+        "accuracy": {
+          "low": 0.061111111111111116,
+          "high": 0.19999999999999996
+        },
+        "macro_f1": {
+          "low": 0.05861137305925524,
+          "high": 0.19568731534045533
+        }
+      },
+      "neuro_fuzzy_minus_deberta_v3": {
+        "accuracy": {
+          "low": 0.08333333333333337,
+          "high": 0.21680555555555545
+        },
+        "macro_f1": {
+          "low": 0.08027717799118142,
+          "high": 0.21736472086824898
+        }
+      },
+      "svm_minus_logreg": {
+        "accuracy": {
+          "low": -0.01666666666666672,
+          "high": 0.08333333333333326
+        },
+        "macro_f1": {
+          "low": -0.019091220595348967,
+          "high": 0.08042524074351864
+        }
+      },
+      "static_uniform_minus_logreg": {
+        "accuracy": {
+          "low": -0.011111111111111183,
+          "high": 0.05555555555555558
+        },
+        "macro_f1": {
+          "low": -0.010392515822415033,
+          "high": 0.05649199825129155
+        }
+      },
+      "nsga_knee_minus_logreg": {
+        "accuracy": {
+          "low": 0.0,
+          "high": 0.061111111111111116
+        },
+        "macro_f1": {
+          "low": 0.00024005757756980783,
+          "high": 0.060418991281986016
+        }
+      },
+      "neuro_fuzzy_minus_logreg": {
+        "accuracy": {
+          "low": 0.016666666666666607,
+          "high": 0.0888888888888888
+        },
+        "macro_f1": {
+          "low": 0.017026727855369253,
+          "high": 0.0876994548663728
+        }
+      },
+      "static_uniform_minus_svm": {
+        "accuracy": {
+          "low": -0.061111111111111116,
+          "high": 0.03888888888888886
+        },
+        "macro_f1": {
+          "low": -0.0609498888313688,
+          "high": 0.040335441740687566
+        }
+      },
+      "nsga_knee_minus_svm": {
+        "accuracy": {
+          "low": -0.0444444444444444,
+          "high": 0.03888888888888886
+        },
+        "macro_f1": {
+          "low": -0.04358971461703475,
+          "high": 0.040288211168328425
+        }
+      },
+      "neuro_fuzzy_minus_svm": {
+        "accuracy": {
+          "low": -0.01666666666666672,
+          "high": 0.05555555555555558
+        },
+        "macro_f1": {
+          "low": -0.016278162653799284,
+          "high": 0.057763547292374776
+        }
+      },
+      "nsga_knee_minus_static_uniform": {
+        "accuracy": {
+          "low": -0.02777777777777779,
+          "high": 0.03888888888888886
+        },
+        "macro_f1": {
+          "low": -0.027546386289626846,
+          "high": 0.03863200981244247
+        }
+      },
+      "neuro_fuzzy_minus_static_uniform": {
+        "accuracy": {
+          "low": -0.005555555555555536,
+          "high": 0.061111111111111116
+        },
+        "macro_f1": {
+          "low": -0.0037345879569896157,
+          "high": 0.06073085977159017
+        }
+      },
+      "neuro_fuzzy_minus_nsga_knee": {
+        "accuracy": {
+          "low": 0.005555555555555536,
+          "high": 0.04444444444444451
+        },
+        "macro_f1": {
+          "low": 0.005143396701851092,
+          "high": 0.045128219074641956
+        }
+      }
+    }
+  }
+}

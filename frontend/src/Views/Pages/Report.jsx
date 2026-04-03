@@ -11,6 +11,7 @@ export default function Report() {
 
   const [totalComments, setTotalComments] = useState(0);
   const confidenceStats = sentimentData?.confidenceStats || null;
+  const uncertaintyStats = sentimentData?.uncertaintyStats || null;
   const confidenceIntervals = sentimentData?.confidenceIntervals || null;
   const aspectSentiment = sentimentData?.aspectSentiment || [];
   const analysisMeta = sentimentData?.analysisMeta || null;
@@ -40,10 +41,13 @@ export default function Report() {
     calibrationInfo?.maximum_calibration_error ??
     null;
   const calibrationBins = calibrationInfo?.bins ?? null;
+  const calibrationTemperature = calibrationInfo?.temperature ?? null;
+  const calibrationApplied = calibrationInfo?.applied ?? false;
   const hasCalibration =
     calibrationECE !== null ||
     calibrationBrier !== null ||
-    calibrationMCE !== null;
+    calibrationMCE !== null ||
+    calibrationTemperature !== null;
   const ensembleWeightSummary = ensembleWeights
     ? Object.entries(ensembleWeights)
         .map(([key, value]) => `${key}: ${value}`)
@@ -309,6 +313,10 @@ export default function Report() {
                             <td>{fuzzyInfo.base_models.join(", ")}</td>
                           </tr>
                         )}
+                        <tr>
+                          <td>Fuzzy Routing</td>
+                          <td>{fuzzyInfo.nf_gate_active ? "Neuro-Fuzzy Gate (ANFIS)" : "Static Fuzzy Inference"}</td>
+                        </tr>
                         {fuzzyInfo.mf_type && (
                           <tr>
                             <td>Fuzzy MF Type</td>
@@ -386,6 +394,15 @@ export default function Report() {
                         <td>{calibrationBins}</td>
                       </tr>
                     )}
+                    {calibrationTemperature !== null && (
+                      <tr>
+                        <td>Temperature Scaling (T)</td>
+                        <td>
+                          {calibrationTemperature?.toFixed(4)}{" "}
+                          {calibrationApplied ? "(applied)" : "(loaded, not applied)"}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </section>
@@ -446,6 +463,32 @@ export default function Report() {
                         <td>{confidenceStats.threshold}</td>
                       </tr>
                     )}
+                  </tbody>
+                </table>
+              </section>
+            )}
+
+            {uncertaintyStats && (
+              <section className="product-area mt-4">
+                <h6>Model Uncertainty (Shannon Entropy)</h6>
+                <table className="table table-hover">
+                  <tbody>
+                    <tr>
+                      <td>Mean Entropy</td>
+                      <td>{(uncertaintyStats.mean_entropy * 100).toFixed(1)}%</td>
+                    </tr>
+                    <tr>
+                      <td>Min Entropy</td>
+                      <td>{(uncertaintyStats.min_entropy * 100).toFixed(1)}%</td>
+                    </tr>
+                    <tr>
+                      <td>Max Entropy</td>
+                      <td>{(uncertaintyStats.max_entropy * 100).toFixed(1)}%</td>
+                    </tr>
+                    <tr>
+                      <td>High Uncertainty Ratio (&gt;50% entropy)</td>
+                      <td>{(uncertaintyStats.high_uncertainty_ratio * 100).toFixed(1)}%</td>
+                    </tr>
                   </tbody>
                 </table>
               </section>

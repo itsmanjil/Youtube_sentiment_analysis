@@ -9,7 +9,7 @@ Auto-generates publication-ready figures for thesis:
 - Cross-domain heatmaps
 - Ensemble weight visualizations
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis
 """
 

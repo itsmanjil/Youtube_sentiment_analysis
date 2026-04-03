@@ -25,7 +25,7 @@ Usage:
     >>> # Use like any other sentiment engine
     >>> result = fuzzy_engine.analyze("This video is amazing!")
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 import sys

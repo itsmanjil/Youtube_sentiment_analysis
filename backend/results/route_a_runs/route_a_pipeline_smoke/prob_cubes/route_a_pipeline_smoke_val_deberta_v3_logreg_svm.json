@@ -1,0 +1,39 @@
+{
+  "created_at": "2026-03-28T02:23:48Z",
+  "source_csv": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/route_a_transformer_smoke/val.csv",
+  "text_column": "text",
+  "text_columns_by_model": {
+    "deberta_v3": "text_transformer",
+    "logreg": "text_classical",
+    "svm": "text_classical"
+  },
+  "text_column_strategy": "per_model_auto",
+  "label_column": "label",
+  "sample_size": 60,
+  "models": [
+    "deberta_v3",
+    "logreg",
+    "svm"
+  ],
+  "labels": [
+    "Positive",
+    "Neutral",
+    "Negative"
+  ],
+  "calibration_profile": "auto",
+  "split_metadata_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/split_metadata.json",
+  "split_provenance": "group_seed42_train516886_val128854_test165110_text",
+  "sample_id_column": null,
+  "logit_models": [
+    "deberta_v3"
+  ],
+  "output_npz": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_val_deberta_v3_logreg_svm.npz",
+  "output_json": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_val_deberta_v3_logreg_svm.json",
+  "prob_cube_shape": [
+    3,
+    60,
+    3
+  ],
+  "contains_logits": true,
+  "texts_included": false
+}

@@ -108,3 +108,10 @@ Below is a prioritized checklist you can reuse in a "Threats to Validity" / "Lim
 - and a documented config.
 
 If a model (e.g., BERT fine-tuning) is not implemented end-to-end, either implement it or explicitly scope it out.
+
+**Current repo-specific guidance:**
+- Use `backend/results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.md` for full-test runtime claims.
+- Use `backend/results/runtime/route_a_live_v1/offline_vs_live_reconciliation.md` to explain why the historical offline `ensemble` row is no longer the right live headline.
+- Phrase the headline as either:
+  - best live macro-F1: `meta_learner`
+  - best live calibrated ensemble: `ensemble_nsga2`

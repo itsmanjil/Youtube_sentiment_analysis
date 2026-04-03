@@ -13,7 +13,7 @@ Reference:
     "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II".
     IEEE TEVC.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from typing import List, Tuple, Optional

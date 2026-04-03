@@ -8,7 +8,7 @@ sentiment analysis, enabling:
 3. Hyperparameter optimization
 4. Multi-objective optimization (accuracy vs speed)
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from typing import List, Dict, Tuple, Any, Optional, Callable

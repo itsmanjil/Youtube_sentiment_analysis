@@ -11,7 +11,7 @@ Features:
 - Cross-domain evaluation support
 - Stratified sampling
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis
 """
 

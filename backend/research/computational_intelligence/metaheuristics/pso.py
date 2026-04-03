@@ -14,7 +14,7 @@ Reference:
     Shi, Y., & Eberhart, R. (1998). "A modified particle swarm optimizer".
     IEEE ICEC.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from typing import List, Optional, Callable, Tuple

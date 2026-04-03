@@ -123,6 +123,8 @@ function Monitoring() {
       top_words_negative: analysis.top_words_negative,
       filtered: analysis.filtered,
       confidence_stats: analysis.confidence_stats,
+      uncertainty_stats: analysis.uncertainty_stats,
+      calibration: analysis.calibration,
     };
 
     const videoId = analysis.video?.id;
@@ -152,6 +154,7 @@ function Monitoring() {
             filtered: detail.filtered,
             sentiment_timeline: detail.sentiment_timeline,
             confidence_stats: detail.confidence_stats,
+            uncertainty_stats: (detail.analysis_meta || {}).uncertainty_stats,
             sentiment_confidence_intervals: detail.sentiment_confidence_intervals,
             aspect_sentiment: detail.aspect_sentiment,
             analysis_meta: detail.analysis_meta,
@@ -417,7 +420,7 @@ function Monitoring() {
                                 </div>
 
                                 {/* Sentiment Stats */}
-                                <div className="col-md-4">
+                                <div className="col-md-3">
                                   <p className="text-sm mb-2">
                                     <strong>Sentiment Breakdown:</strong>
                                   </p>
@@ -458,8 +461,42 @@ function Monitoring() {
                                     </span>
                                   </div>
                                   <p className="text-xs text-muted mt-2">
-                                    Total Comments: {analysis.total_comments_analyzed || total}
+                                    Total: {analysis.total_comments_analyzed || total}
                                   </p>
+                                </div>
+
+                                {/* Confidence & Uncertainty */}
+                                <div className="col-md-1" style={{ borderLeft: "1px solid #eee", paddingLeft: "12px" }}>
+                                  {analysis.confidence_stats && (
+                                    <div className="text-center mb-2">
+                                      <p className="text-xs text-muted mb-0">Confidence</p>
+                                      <p className="text-sm mb-0" style={{ fontWeight: "bold", color: "#3498db" }}>
+                                        {((analysis.confidence_stats.mean || 0) * 100).toFixed(0)}%
+                                      </p>
+                                    </div>
+                                  )}
+                                  {analysis.uncertainty_stats && (
+                                    <div className="text-center">
+                                      <p className="text-xs text-muted mb-0">Uncertainty</p>
+                                      <p
+                                        className="text-sm mb-0"
+                                        style={{
+                                          fontWeight: "bold",
+                                          color: analysis.uncertainty_stats.high_uncertainty_ratio > 0.3 ? "#e74c3c" : "#2ecc71",
+                                        }}
+                                      >
+                                        {((analysis.uncertainty_stats.high_uncertainty_ratio || 0) * 100).toFixed(0)}%
+                                      </p>
+                                      <p className="text-xs text-muted mb-0">high</p>
+                                    </div>
+                                  )}
+                                  {analysis.calibration?.applied && (
+                                    <div className="text-center mt-1">
+                                      <span style={{ fontSize: "10px", backgroundColor: "#17a2b8", color: "white", borderRadius: "4px", padding: "1px 4px" }}>
+                                        T={analysis.calibration.temperature?.toFixed(2)}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
 
                                 {/* Action Button */}

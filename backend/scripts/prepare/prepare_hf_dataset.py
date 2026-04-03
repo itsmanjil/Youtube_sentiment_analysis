@@ -211,6 +211,12 @@ def main() -> None:
         help="Output directory (default: backend/data).",
     )
     parser.add_argument("--random_seed", type=int, default=42)
+    parser.add_argument(
+        "--sample_rows",
+        type=int,
+        default=None,
+        help="Optional raw-row cap applied before preprocessing/splitting for faster benchmark builds.",
+    )
     parser.add_argument("--test_size", type=float, default=0.2)
     parser.add_argument("--val_size", type=float, default=0.2)
     parser.add_argument(
@@ -282,6 +288,18 @@ def main() -> None:
 
     df = df[df["label"].isin(VALID_LABELS)]
     df = df[df["text"].astype(bool)]
+
+    if args.sample_rows and args.sample_rows < len(df):
+        sample_rows = int(args.sample_rows)
+        stratify_labels = df["label"] if df["label"].nunique() > 1 else None
+        df, _ = train_test_split(
+            df,
+            train_size=sample_rows,
+            stratify=stratify_labels,
+            random_state=args.random_seed,
+        )
+        df = df.reset_index(drop=True)
+        print(f"Sampled {len(df):,}/{raw_rows:,} raw rows before preprocessing")
 
     primary_text_profile = args.primary_text_profile
     if primary_text_profile is None:
@@ -375,6 +393,13 @@ def main() -> None:
             "text_strip": True,
             "label_title_case": True,
             "valid_labels": sorted(VALID_LABELS),
+        },
+        "sampling": {
+            "enabled": bool(args.sample_rows),
+            "sample_rows": int(args.sample_rows) if args.sample_rows else None,
+            "rows_after_sampling": int(len(df)),
+            "random_state": int(args.random_seed),
+            "stratify_on_label": True,
         },
         "youtube_preprocess": {
             "enabled": bool(args.youtube_preprocess),

@@ -22,13 +22,13 @@ if str(BACKEND_ROOT) not in sys.path:
 from research.evaluation.calibration import compute_calibration_metrics
 from research.transformers.model_registry import get_encoder_spec, list_encoder_presets
 from research.transformers.train_encoder import (
+    LABELS as TRAINING_LABELS,
     load_split_frame,
     load_split_metadata,
     summarize_split_provenance,
 )
-from src.sentiment import coerce_sentiment_result, get_sentiment_engine
+from src.sentiment import coerce_sentiment_result, get_sentiment_engine, normalize_label
 from src.utils import (
-    SENTIMENT_LABELS,
     apply_temperature_to_logits,
     fit_temperature_from_logits,
     logits_to_probs,
@@ -36,7 +36,7 @@ from src.utils import (
 )
 from src.utils.config import Config
 
-LABELS = list(SENTIMENT_LABELS)
+LABELS = list(TRAINING_LABELS)
 LABEL_TO_ID = {label: index for index, label in enumerate(LABELS)}
 
 
@@ -81,6 +81,20 @@ def _collect_logits(engine, texts: List[str], batch_size: int) -> np.ndarray:
                 raise RuntimeError("Transformer runtime did not return raw logits for calibration.")
             rows.append([float(value) for value in logits])
     return np.asarray(rows, dtype=float)
+
+
+def resolve_model_label_order(engine) -> List[str]:
+    config = getattr(getattr(engine, "model", None), "config", None)
+    raw_id2label = getattr(config, "id2label", None)
+    if isinstance(raw_id2label, dict) and raw_id2label:
+        ordered = []
+        for index in sorted(raw_id2label):
+            label = normalize_label(raw_id2label[index])
+            if label not in ordered:
+                ordered.append(label)
+        if ordered and set(ordered) == set(TRAINING_LABELS):
+            return ordered
+    return list(TRAINING_LABELS)
 
 
 def main() -> None:
@@ -165,6 +179,12 @@ def main() -> None:
         model_name_or_path=model_name_or_path,
         calibration_profile="off",
     )
+    model_labels = resolve_model_label_order(engine)
+    if model_labels != LABELS:
+        raise RuntimeError(
+            f"Unexpected label order {model_labels}; expected {LABELS}. "
+            "Re-train the checkpoint or update calibration label handling."
+        )
 
     y_val = val_df["label"].tolist()
     y_test = test_df["label"].tolist()
@@ -189,6 +209,7 @@ def main() -> None:
             "hf_name": spec.hf_name,
             "model_name_or_path": model_name_or_path,
             "artifact_dir": str(Path(model_name_or_path)) if Path(model_name_or_path).exists() else None,
+            "label_order": model_labels,
         },
         "dataset": {
             "val_csv": str(args.val_csv),

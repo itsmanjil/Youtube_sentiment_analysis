@@ -19,6 +19,7 @@ function Search() {
   const [sentimentModel, setSentimentModel] = useState("logreg");
   const [showResearchOptions, setShowResearchOptions] = useState(false);
   const [ensembleModels, setEnsembleModels] = useState(["logreg", "svm", "tfidf"]);
+  const [ensembleWeightsOptimization, setEnsembleWeightsOptimization] = useState("pso");
   const [ensembleWeights, setEnsembleWeights] = useState("");
   const [metaLearnerModels, setMetaLearnerModels] = useState(["logreg", "svm", "tfidf"]);
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.6);
@@ -195,6 +196,7 @@ function Search() {
           sentiment_model: sentimentModel,
           ensemble_models: ensembleModels,
           ensemble_weights: ensembleWeights || null,
+          ensemble_weights_optimization: ensembleWeightsOptimization,
           meta_learner_models: metaLearnerModels,
           confidence_threshold: confidenceThreshold,
           bootstrap_samples: bootstrapSamples,
@@ -387,6 +389,7 @@ function Search() {
                       value={sentimentModel}
                       onChange={(e) => setSentimentModel(e.target.value)}
                     >
+                      <option value="hybrid_dl">Hybrid CNN-BiLSTM (deep learning)</option>
                       <option value="modernbert">ModernBERT (transformer)</option>
                       <option value="deberta_v3">DeBERTa-v3 (transformer)</option>
                       <option value="xlm_v">XLM-V (multilingual transformer)</option>
@@ -446,7 +449,22 @@ function Search() {
                             </p>
                           </div>
                           <div className="col-md-12 mt-3">
-                            <label className="labels" htmlFor="ensemble-weights">Ensemble Weights (JSON)</label>
+                            <label className="labels" htmlFor="weights-optimization">Weight Optimization</label>
+                            <select
+                              id="weights-optimization"
+                              className="form-control"
+                              value={ensembleWeightsOptimization}
+                              onChange={(e) => setEnsembleWeightsOptimization(e.target.value)}
+                            >
+                              <option value="pso">PSO — Best F1 (logreg:0.31, svm:0.69, tfidf:0.0)</option>
+                              <option value="nsga2">NSGA-II — Best Calibration (logreg:0.92, svm:0.003, tfidf:0.09)</option>
+                            </select>
+                            <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                              Auto-loaded research weights. Overridden if you provide custom JSON below.
+                            </p>
+                          </div>
+                          <div className="col-md-12 mt-3">
+                            <label className="labels" htmlFor="ensemble-weights">Custom Ensemble Weights (JSON, optional)</label>
                             <textarea
                               id="ensemble-weights"
                               className="form-control"

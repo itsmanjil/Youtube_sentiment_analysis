@@ -15,7 +15,7 @@ Reference:
     "Handling Multiple Objectives with Particle Swarm Optimization".
     IEEE TEVC.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from typing import List, Optional, Tuple

@@ -4,7 +4,7 @@ Thesis Experiment Runner
 Main orchestrator for running complete thesis experiments.
 Integrates fuzzy logic, PSO optimization, and benchmark evaluation.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 import sys

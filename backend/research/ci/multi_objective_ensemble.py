@@ -56,6 +56,7 @@ sys.path.insert(0, str(BACKEND_ROOT))
 
 from src.sentiment import coerce_sentiment_result, get_sentiment_engine, normalize_label
 from src.utils import SENTIMENT_LABELS, normalize_probs
+from research.transformers.prob_cube_io import load_probability_cube
 
 from research.computational_intelligence.metaheuristics.base import (
     ObjectiveType,
@@ -67,7 +68,16 @@ from research.evaluation.calibration import compute_calibration_metrics
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-MODELS = ["logreg", "svm", "tfidf"]
+DEFAULT_MODELS = ["logreg", "svm", "tfidf"]
+TRANSFORMER_MODELS = {
+    "bert",
+    "transformer",
+    "roberta",
+    "modernbert",
+    "deberta_v3",
+    "xlm_v",
+    "mdeberta_v3",
+}
 LABELS: List[str] = list(SENTIMENT_LABELS)  # ["Positive", "Neutral", "Negative"]
 
 
@@ -84,7 +94,23 @@ def load_df(path: str, sample: int | None, seed: int) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
-def precompute_probs(model_names: List[str], texts: List[str]) -> np.ndarray:
+def parse_model_names(raw_value: str) -> List[str]:
+    models = [item.strip().lower().replace("-", "_") for item in str(raw_value).split(",") if item.strip()]
+    return models or list(DEFAULT_MODELS)
+
+
+def _engine_kwargs(model_name: str, calibration_profile: str) -> dict:
+    if model_name in TRANSFORMER_MODELS:
+        return {"calibration_profile": calibration_profile}
+    return {}
+
+
+def precompute_probs(
+    model_names: List[str],
+    texts: List[str],
+    *,
+    calibration_profile: str = "auto",
+) -> np.ndarray:
     """
     Returns shape (n_models, n_samples, n_classes) float array.
     Axis ordering lets us compute weighted_probs = weights @ prob_cube quickly.
@@ -95,7 +121,7 @@ def precompute_probs(model_names: List[str], texts: List[str]) -> np.ndarray:
 
     for m_idx, name in enumerate(model_names):
         print(f"  Scoring {name} …", flush=True)
-        engine = get_sentiment_engine(name)
+        engine = get_sentiment_engine(name, **_engine_kwargs(name, calibration_profile))
         results = engine.batch_analyze(texts)
         for i, r in enumerate(results):
             p = normalize_probs(coerce_sentiment_result(r, name).probs)
@@ -326,12 +352,32 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Multi-Objective Ensemble Optimisation (NSGA-II)")
     parser.add_argument("--val", default="data/val.csv")
     parser.add_argument("--test", default="data/test.csv")
+    parser.add_argument(
+        "--models",
+        default="logreg,svm,tfidf",
+        help="Comma-separated model list when scoring directly from CSV.",
+    )
+    parser.add_argument(
+        "--val_cube",
+        default=None,
+        help="Optional validation probability cube (.npz) exported by research/transformers/export_prob_cube.py.",
+    )
+    parser.add_argument(
+        "--test_cube",
+        default=None,
+        help="Optional test probability cube (.npz) exported by research/transformers/export_prob_cube.py.",
+    )
     parser.add_argument("--sample", type=int, default=8000,
                         help="Max val samples (speed vs accuracy trade-off)")
     parser.add_argument("--pop", type=int, default=60, help="NSGA-II population size")
     parser.add_argument("--gen", type=int, default=80, help="NSGA-II generations")
     parser.add_argument("--confidence", type=float, default=0.70,
                         help="Confidence threshold for coverage objective")
+    parser.add_argument(
+        "--calibration_profile",
+        default="auto",
+        help="Transformer calibration mode when scoring directly from CSV.",
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", default="results/")
     parser.add_argument("--pso_val_f1", type=float, default=None,
@@ -345,34 +391,57 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 1. Load data
     # ------------------------------------------------------------------
-    print("Loading validation data …")
-    val_df = load_df(args.val, args.sample, args.seed)
-    y_val = val_df["label"].tolist()
-    texts_val = val_df["text"].tolist()
+    model_names = parse_model_names(args.models)
 
-    print("Loading test data …")
-    test_df = load_df(args.test, None, args.seed)
-    y_test = test_df["label"].tolist()
-    texts_test = test_df["text"].tolist()
+    if args.val_cube:
+        print("Loading validation probability cube …")
+        val_bundle = load_probability_cube(args.val_cube)
+        y_val = val_bundle.y_true
+        val_cube = np.asarray(val_bundle.prob_cube, dtype=np.float64)
+        model_names = val_bundle.model_names
+    else:
+        print("Loading validation data …")
+        val_df = load_df(args.val, args.sample, args.seed)
+        y_val = val_df["label"].tolist()
+        texts_val = val_df["text"].tolist()
+        print(f"\nPre-computing model scores on {len(texts_val):,} val samples …")
+        val_cube = precompute_probs(
+            model_names,
+            texts_val,
+            calibration_profile=args.calibration_profile,
+        )
+
+    if args.test_cube:
+        print("Loading test probability cube …")
+        test_bundle = load_probability_cube(args.test_cube)
+        if test_bundle.model_names != model_names:
+            raise SystemExit(
+                "Validation and test cubes use different model orderings. "
+                f"val={model_names} test={test_bundle.model_names}"
+            )
+        y_test = test_bundle.y_true
+        test_cube = np.asarray(test_bundle.prob_cube, dtype=np.float64)
+    else:
+        print("Loading test data …")
+        test_df = load_df(args.test, None, args.seed)
+        y_test = test_df["label"].tolist()
+        texts_test = test_df["text"].tolist()
+        print(f"\nPre-computing model scores on {len(texts_test):,} test samples …")
+        test_cube = precompute_probs(
+            model_names,
+            texts_test,
+            calibration_profile=args.calibration_profile,
+        )
 
     # ------------------------------------------------------------------
-    # 2. Pre-compute probability cubes
-    # ------------------------------------------------------------------
-    print(f"\nPre-computing model scores on {len(texts_val):,} val samples …")
-    val_cube = precompute_probs(MODELS, texts_val)
-
-    print(f"\nPre-computing model scores on {len(texts_test):,} test samples …")
-    test_cube = precompute_probs(MODELS, texts_test)
-
-    # ------------------------------------------------------------------
-    # 3. Define problem and run NSGA-II
+    # 2. Define problem and run NSGA-II
     # ------------------------------------------------------------------
     print("\nRunning NSGA-II …")
     problem = MultiObjectiveEnsembleProblem(
         prob_cube=val_cube,
         y_true=y_val,
         confidence_threshold=args.confidence,
-        model_names=MODELS,
+        model_names=model_names,
     )
 
     nsga2 = NSGA2(
@@ -390,7 +459,7 @@ def main() -> None:
     print(f"\nPareto front: {len(pareto)} non-dominated solutions")
 
     # ------------------------------------------------------------------
-    # 4. Knee-point selection
+    # 3. Knee-point selection
     # ------------------------------------------------------------------
     knee_idx = select_knee_point(pareto)
     knee_sol = pareto[knee_idx]
@@ -404,7 +473,7 @@ def main() -> None:
     )
 
     # ------------------------------------------------------------------
-    # 5. Determine PSO baseline F1 (auto-detect from saved JSON)
+    # 4. Determine PSO baseline F1 (auto-detect from saved JSON)
     # ------------------------------------------------------------------
     pso_val_f1 = args.pso_val_f1
     if pso_val_f1 is None:
@@ -417,7 +486,7 @@ def main() -> None:
                 print(f"  Auto-loaded PSO val F1 = {pso_val_f1:.4f} from pso_convergence.json")
 
     # ------------------------------------------------------------------
-    # 6. Build outputs
+    # 5. Build outputs
     # ------------------------------------------------------------------
     # JSON
     pareto_records = []
@@ -426,7 +495,7 @@ def main() -> None:
         w = w / (w.sum() + 1e-12)
         f = sol.fitness
         pareto_records.append({
-            "weights": {m: round(float(w[i]), 6) for i, m in enumerate(MODELS)},
+            "weights": {m: round(float(w[i]), 6) for i, m in enumerate(model_names)},
             "macro_f1": round(float(-f[0]), 6),
             "ece": round(float(f[1]), 6),
             "coverage": round(float(-f[2]), 6),
@@ -438,13 +507,16 @@ def main() -> None:
         "confidence_threshold": args.confidence,
         "population_size": args.pop,
         "generations": args.gen,
+        "models": model_names,
+        "val_cube": args.val_cube,
+        "test_cube": args.test_cube,
         "runtime_s": round(result.runtime, 2),
         "evaluations": result.evaluations,
         "pareto_front_size": len(pareto),
         "pareto_front": pareto_records,
         "knee_point": {
             "index": knee_idx,
-            "weights": {m: round(float(knee_weights[i]), 6) for i, m in enumerate(MODELS)},
+            "weights": {m: round(float(knee_weights[i]), 6) for i, m in enumerate(model_names)},
             "val": {
                 "macro_f1": round(float(-val_objectives[0]), 6),
                 "ece": round(float(val_objectives[1]), 6),
@@ -471,7 +543,7 @@ def main() -> None:
         knee_weights=knee_weights,
         val_objectives=val_objectives,
         test_objectives=test_objectives,
-        model_names=MODELS,
+        model_names=model_names,
         confidence_threshold=args.confidence,
         pso_val_f1=pso_val_f1,
     )
@@ -481,14 +553,14 @@ def main() -> None:
     print(f"Saved Markdown → {md_path}")
 
     # ------------------------------------------------------------------
-    # 7. Console summary
+    # 6. Console summary
     # ------------------------------------------------------------------
     print("\n" + "=" * 60)
     print("MULTI-OBJECTIVE NSGA-II RESULTS")
     print("=" * 60)
     print(f"Pareto front: {len(pareto)} solutions")
     print(f"\nKnee-point weights:")
-    for m, w in zip(MODELS, knee_weights):
+    for m, w in zip(model_names, knee_weights):
         print(f"  {m:>8s}: {w:.4f}")
     print(f"\nValidation  →  F1={-val_objectives[0]:.4f}  "
           f"ECE={val_objectives[1]:.4f}  "

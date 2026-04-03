@@ -161,6 +161,7 @@ class TransformerSentimentEngine(BaseSentimentEngine):
             self.model = AutoModelForSequenceClassification.from_pretrained(
                 model_name_or_path,
                 num_labels=num_labels,
+                use_safetensors=True,
             )
         except Exception as e:
             raise RuntimeError(

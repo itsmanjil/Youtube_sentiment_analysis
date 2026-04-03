@@ -9,7 +9,7 @@ sentiment analysis, including:
 - Neural Architecture Search: Evolutionary architecture optimization
 - Bio-Inspired Attention: Novel attention mechanisms
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis
 """
 

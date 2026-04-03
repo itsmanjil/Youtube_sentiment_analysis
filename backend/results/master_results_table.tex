@@ -1,0 +1,20 @@
+\begin{table}[h]
+\centering
+\caption{Cross-System Results Comparison}
+\label{tab:master_results}
+\begin{tabular}{llcccc}
+\hline
+System & Method & F1 & ECE & AUCA & Notes \\
+\hline
+Classical (165k) & logreg & 0.6943 & 0.0068 & — & Full test set \\
+Classical (165k) & svm & 0.6817 & 0.0126 & — & Full test set \\
+Classical (165k) & tfidf & 0.6579 & 0.0131 & — & Full test set \\
+Classical (165k) & ensemble & 0.6938 & 0.0216 & — & Full test set \\
+Classical (165k) & meta_learner & 0.6967 & 0.0203 & — & Full test set \\
+Classical (165k) & Neuro-fuzzy gate & 0.6955 & 0.0070 & — & Adaptive routing \\
+Classical (165k) & NSGA-II ensemble & 0.6940 & 0.0039 & — & Pareto knee-point \\
+Route A (450 train) & NF gate (DeBERTa+LogReg+SVM) & 0.7976 & 0.0853 & — & n=180 test, directional \\
+Route A (450 train) & Best AUCA (svm) & 0.7889 & — & 0.9122 & n=180 test \\
+\hline
+\end{tabular}
+\end{table}

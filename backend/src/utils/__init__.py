@@ -19,6 +19,13 @@ from .calibration import (
     load_temperature_artifact,
     save_temperature_artifact,
 )
+from .runtime_artifacts import (
+    get_runtime_artifact_metadata,
+    get_runtime_artifact_version,
+    load_runtime_artifact_json,
+    load_runtime_manifest,
+    resolve_runtime_artifact_path,
+)
 
 __all__ = [
     "SENTIMENT_LABELS",
@@ -35,4 +42,9 @@ __all__ = [
     "fit_temperature_from_logits",
     "load_temperature_artifact",
     "save_temperature_artifact",
+    "get_runtime_artifact_metadata",
+    "get_runtime_artifact_version",
+    "load_runtime_artifact_json",
+    "load_runtime_manifest",
+    "resolve_runtime_artifact_path",
 ]

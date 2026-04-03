@@ -30,6 +30,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from src.utils import normalize_probs
 from src.utils.config import get_model_path
+from src.utils.runtime_artifacts import load_runtime_artifact_json
 from src.sentiment.base import SentimentResult, BaseSentimentEngine
 
 
@@ -206,6 +207,19 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         # Label mapping
         self.idx2label = {0: "Negative", 1: "Neutral", 2: "Positive"}
 
+        # Temperature scaling (load from research results)
+        self.temperature = 1.0
+        self.calibration_applied = False
+        try:
+            _ts_data = load_runtime_artifact_json("temperature_scaling") or {}
+            for _entry in _ts_data.get("models", []):
+                if _entry.get("model") == "hybrid_dl":
+                    self.temperature = float(_entry["temperature"])
+                    self.calibration_applied = True
+                    break
+        except Exception:
+            pass
+
     def _tokenize(self, text: str) -> List[str]:
         """Tokenize text in a way that matches the training pipeline."""
         if text is None:
@@ -274,7 +288,7 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
                 logits, _attention = outputs
             else:
                 logits = outputs
-            probs = self.F.softmax(logits, dim=-1)
+            probs = self.F.softmax(logits / self.temperature, dim=-1)
 
         # Convert to results
         results = []

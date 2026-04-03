@@ -1,0 +1,178 @@
+{
+  "created_at": "2026-03-27T04:54:33Z",
+  "run_name": "deberta_v3_smoke_20260327",
+  "model": {
+    "preset": "deberta_v3",
+    "description": "DeBERTa-v3 English encoder baseline",
+    "hf_name": "microsoft/deberta-v3-base",
+    "resolved_model_name_or_path": "microsoft/deberta-v3-base",
+    "artifact_dir": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/models/transformers/deberta_v3",
+    "max_length": 128,
+    "multilingual": false
+  },
+  "dataset": {
+    "train_csv": "data/route_a_smoke/train.csv",
+    "val_csv": "data/route_a_smoke/val.csv",
+    "test_csv": "data/route_a_smoke/test.csv",
+    "text_columns": {
+      "train": "text",
+      "val": "text",
+      "test": "text"
+    },
+    "label_column": "label",
+    "split_metadata_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/split_metadata.json",
+    "split_id": "group_seed42_train516886_val128854_test165110_text",
+    "rows": {
+      "train": 180,
+      "val": 60,
+      "test": 60
+    },
+    "label_distribution": {
+      "train": {
+        "Negative": 60,
+        "Neutral": 60,
+        "Positive": 60
+      },
+      "val": {
+        "Negative": 20,
+        "Neutral": 20,
+        "Positive": 20
+      },
+      "test": {
+        "Negative": 20,
+        "Neutral": 20,
+        "Positive": 20
+      }
+    }
+  },
+  "training": {
+    "epochs": 1.0,
+    "batch_size": 4,
+    "eval_batch_size": 8,
+    "learning_rate": 2e-05,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "gradient_accumulation_steps": 1,
+    "early_stopping_patience": 1,
+    "seed": 42,
+    "fp16": false
+  },
+  "metrics": {
+    "train": {
+      "train_runtime": 278.7756,
+      "train_samples_per_second": 0.646,
+      "train_steps_per_second": 0.161,
+      "total_flos": 3788490040920.0,
+      "train_loss": 1.1075547218322754,
+      "epoch": 1.0
+    },
+    "val": {
+      "val_loss": 1.0995299816131592,
+      "val_accuracy": 0.3333333333333333,
+      "val_macro_f1": 0.16666666666666666,
+      "val_macro_precision": 0.1111111111111111,
+      "val_macro_recall": 0.3333333333333333,
+      "val_runtime": 10.3908,
+      "val_samples_per_second": 5.774,
+      "val_steps_per_second": 0.77,
+      "epoch": 1.0
+    },
+    "test": {
+      "test_loss": 1.0990066528320312,
+      "test_accuracy": 0.3333333333333333,
+      "test_macro_f1": 0.16666666666666666,
+      "test_macro_precision": 0.1111111111111111,
+      "test_macro_recall": 0.3333333333333333,
+      "test_runtime": 11.1766,
+      "test_samples_per_second": 5.368,
+      "test_steps_per_second": 0.716,
+      "epoch": 1.0
+    }
+  },
+  "split_metadata": {
+    "created_at": "2026-02-07T07:59:59Z",
+    "source": {
+      "uri": "hf://datasets/AmaanP314/youtube-comment-sentiment/youtube-comments-sentiment.csv",
+      "raw_rows": 1032225,
+      "raw_columns": [
+        "CommentID",
+        "VideoID",
+        "VideoTitle",
+        "AuthorName",
+        "AuthorChannelID",
+        "CommentText",
+        "Sentiment",
+        "Likes",
+        "Replies",
+        "PublishedAt",
+        "CountryCode",
+        "CategoryID"
+      ]
+    },
+    "schema": {
+      "text_col": "CommentText",
+      "label_col": "Sentiment",
+      "group_col": "VideoID"
+    },
+    "normalization": {
+      "text_whitespace_collapse": true,
+      "text_strip": true,
+      "label_title_case": true,
+      "valid_labels": [
+        "Negative",
+        "Neutral",
+        "Positive"
+      ]
+    },
+    "youtube_preprocess": {
+      "enabled": true,
+      "emoji_mode": "convert",
+      "min_words": 3,
+      "filter_spam": true,
+      "filter_language": true,
+      "chunk_size": 5000,
+      "filter_stats": {
+        "spam": 34266,
+        "language": 138590,
+        "too_short": 25221
+      }
+    },
+    "dedupe": {
+      "conflicting_texts_dropped": 1228,
+      "duplicate_text_rows_removed": 12679
+    },
+    "split": {
+      "strategy": "group",
+      "random_state": 42,
+      "test_size": 0.2,
+      "val_size": 0.2,
+      "paths": {
+        "train": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/train.csv",
+        "val": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/val.csv",
+        "test": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv"
+      },
+      "rows": {
+        "train": 516886,
+        "val": 128854,
+        "test": 165110
+      },
+      "label_distribution": {
+        "train": {
+          "Negative": 184266,
+          "Positive": 171876,
+          "Neutral": 160744
+        },
+        "val": {
+          "Negative": 47023,
+          "Positive": 42794,
+          "Neutral": 39037
+        },
+        "test": {
+          "Negative": 59614,
+          "Positive": 54956,
+          "Neutral": 50540
+        }
+      }
+    }
+  }
+}

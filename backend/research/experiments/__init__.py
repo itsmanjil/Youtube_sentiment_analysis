@@ -14,7 +14,7 @@ Features:
 Note:
 - Synthetic/mock execution is smoke-test only and should not be used in thesis claims.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis
 """
 

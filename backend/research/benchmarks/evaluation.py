@@ -11,7 +11,7 @@ Features:
 - LaTeX report generation
 - Comparison with baselines
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from typing import Dict, List, Tuple, Any, Optional, Callable

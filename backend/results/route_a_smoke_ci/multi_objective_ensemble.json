@@ -1,0 +1,112 @@
+{
+  "algorithm": "NSGA-II",
+  "objectives": [
+    "neg_macro_f1",
+    "ece",
+    "neg_coverage"
+  ],
+  "confidence_threshold": 0.7,
+  "population_size": 12,
+  "generations": 12,
+  "models": [
+    "deberta_v3",
+    "logreg",
+    "svm"
+  ],
+  "val_cube": "results/prob_cubes/route_a_smoke_val_deberta_logreg_svm.npz",
+  "test_cube": "results/prob_cubes/route_a_smoke_test_deberta_logreg_svm.npz",
+  "runtime_s": 0.52,
+  "evaluations": 156,
+  "pareto_front_size": 7,
+  "pareto_front": [
+    {
+      "weights": {
+        "deberta_v3": 0.018969,
+        "logreg": 0.010819,
+        "svm": 0.970212
+      },
+      "macro_f1": 0.767521,
+      "ece": 0.110721,
+      "coverage": 0.433333
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.008815,
+        "logreg": 0.626157,
+        "svm": 0.365028
+      },
+      "macro_f1": 0.766835,
+      "ece": 0.097899,
+      "coverage": 0.483333
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.020138,
+        "logreg": 0.178652,
+        "svm": 0.801209
+      },
+      "macro_f1": 0.751684,
+      "ece": 0.094262,
+      "coverage": 0.433333
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.005457,
+        "logreg": 0.226757,
+        "svm": 0.767786
+      },
+      "macro_f1": 0.733946,
+      "ece": 0.087857,
+      "coverage": 0.466667
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.004601,
+        "logreg": 0.25317,
+        "svm": 0.742229
+      },
+      "macro_f1": 0.733946,
+      "ece": 0.096403,
+      "coverage": 0.483333
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.020138,
+        "logreg": 0.178652,
+        "svm": 0.801209
+      },
+      "macro_f1": 0.751684,
+      "ece": 0.094262,
+      "coverage": 0.433333
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.020138,
+        "logreg": 0.178652,
+        "svm": 0.801209
+      },
+      "macro_f1": 0.751684,
+      "ece": 0.094262,
+      "coverage": 0.433333
+    }
+  ],
+  "knee_point": {
+    "index": 1,
+    "weights": {
+      "deberta_v3": 0.008815,
+      "logreg": 0.626157,
+      "svm": 0.365028
+    },
+    "val": {
+      "macro_f1": 0.766835,
+      "ece": 0.097899,
+      "coverage": 0.483333
+    },
+    "test": {
+      "macro_f1": 0.645845,
+      "ece": 0.151107,
+      "coverage": 0.55
+    }
+  },
+  "pso_baseline_val_f1": null
+}

@@ -83,9 +83,19 @@ from src.sentiment import coerce_sentiment_result, get_sentiment_engine, normali
 from src.utils import SENTIMENT_LABELS, normalize_probs
 from research.evaluation.calibration import compute_calibration_metrics
 from research.computational_intelligence.fuzzy.membership_functions import GaussianMF
+from research.transformers.prob_cube_io import load_probability_cube
 
 LABELS: List[str] = list(SENTIMENT_LABELS)
-MODELS = ["logreg", "svm", "tfidf"]
+DEFAULT_MODELS = ["logreg", "svm", "tfidf"]
+TRANSFORMER_MODELS = {
+    "bert",
+    "transformer",
+    "roberta",
+    "modernbert",
+    "deberta_v3",
+    "xlm_v",
+    "mdeberta_v3",
+}
 N_FUZZY_SETS = 3          # Low / Medium / High per model
 LOG_C = math.log(len(LABELS))
 
@@ -103,9 +113,25 @@ def load_df(path: str, sample: int | None, seed: int) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
-def score_model(name: str, texts: List[str]) -> np.ndarray:
+def parse_model_names(raw_value: str) -> List[str]:
+    models = [item.strip().lower().replace("-", "_") for item in str(raw_value).split(",") if item.strip()]
+    return models or list(DEFAULT_MODELS)
+
+
+def _engine_kwargs(model_name: str, calibration_profile: str) -> dict:
+    if model_name in TRANSFORMER_MODELS:
+        return {"calibration_profile": calibration_profile}
+    return {}
+
+
+def score_model(
+    name: str,
+    texts: List[str],
+    *,
+    calibration_profile: str = "auto",
+) -> np.ndarray:
     """Returns (n_samples, n_classes) probability matrix."""
-    engine = get_sentiment_engine(name)
+    engine = get_sentiment_engine(name, **_engine_kwargs(name, calibration_profile))
     results = engine.batch_analyze(texts)
     mat = np.zeros((len(texts), len(LABELS)))
     for i, r in enumerate(results):
@@ -417,10 +443,30 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Neuro-Fuzzy Confidence Gating")
     parser.add_argument("--val",  default="data/val.csv")
     parser.add_argument("--test", default="data/test.csv")
+    parser.add_argument(
+        "--models",
+        default="logreg,svm,tfidf",
+        help="Comma-separated model list when scoring directly from CSV.",
+    )
+    parser.add_argument(
+        "--val_cube",
+        default=None,
+        help="Optional validation probability cube (.npz) exported by research/transformers/export_prob_cube.py.",
+    )
+    parser.add_argument(
+        "--test_cube",
+        default=None,
+        help="Optional test probability cube (.npz) exported by research/transformers/export_prob_cube.py.",
+    )
     parser.add_argument("--sample_val",  type=int, default=10000)
     parser.add_argument("--sample_test", type=int, default=20000)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--maxiter", type=int, default=200)
+    parser.add_argument(
+        "--calibration_profile",
+        default="auto",
+        help="Transformer calibration mode when scoring directly from CSV.",
+    )
     parser.add_argument("--output", default="results/")
     args = parser.parse_args()
 
@@ -430,48 +476,71 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 1. Load data
     # ------------------------------------------------------------------
-    print(f"Loading val  ({args.sample_val:,} max) …")
-    val_df = load_df(args.val,  args.sample_val,  args.seed)
-    y_val  = val_df["label"].tolist()
-    texts_val = val_df["text"].tolist()
+    model_names = parse_model_names(args.models)
 
-    print(f"Loading test ({args.sample_test:,} max) …")
-    test_df = load_df(args.test, args.sample_test, args.seed)
-    y_test  = test_df["label"].tolist()
-    texts_test = test_df["text"].tolist()
+    if args.val_cube:
+        print("Loading validation probability cube …")
+        val_bundle = load_probability_cube(args.val_cube)
+        y_val = val_bundle.y_true
+        val_cube = np.asarray(val_bundle.prob_cube, dtype=np.float64)
+        model_names = val_bundle.model_names
+    else:
+        print(f"Loading val  ({args.sample_val:,} max) …")
+        val_df = load_df(args.val,  args.sample_val,  args.seed)
+        y_val  = val_df["label"].tolist()
+        texts_val = val_df["text"].tolist()
+        print(f"Val: {len(texts_val):,}", end="  ")
+        print("Scoring models (val) …")
+        val_cube = np.zeros((len(model_names), len(texts_val), len(LABELS)))
+        for m, name in enumerate(model_names):
+            print(f"  {name} …", flush=True)
+            val_cube[m] = score_model(
+                name,
+                texts_val,
+                calibration_profile=args.calibration_profile,
+            )
 
-    print(f"Val: {len(texts_val):,}  Test: {len(texts_test):,}\n")
-
-    # ------------------------------------------------------------------
-    # 2. Score all models → probability cubes
-    # ------------------------------------------------------------------
-    print("Scoring models (val) …")
-    val_cube = np.zeros((len(MODELS), len(texts_val), len(LABELS)))
-    for m, name in enumerate(MODELS):
-        print(f"  {name} …", flush=True)
-        val_cube[m] = score_model(name, texts_val)
-
-    print("Scoring models (test) …")
-    test_cube = np.zeros((len(MODELS), len(texts_test), len(LABELS)))
-    for m, name in enumerate(MODELS):
-        print(f"  {name} …", flush=True)
-        test_cube[m] = score_model(name, texts_test)
+    if args.test_cube:
+        print("Loading test probability cube …")
+        test_bundle = load_probability_cube(args.test_cube)
+        if test_bundle.model_names != model_names:
+            raise SystemExit(
+                "Validation and test cubes use different model orderings. "
+                f"val={model_names} test={test_bundle.model_names}"
+            )
+        y_test = test_bundle.y_true
+        test_cube = np.asarray(test_bundle.prob_cube, dtype=np.float64)
+    else:
+        print(f"Loading test ({args.sample_test:,} max) …")
+        test_df = load_df(args.test, args.sample_test, args.seed)
+        y_test  = test_df["label"].tolist()
+        texts_test = test_df["text"].tolist()
+        print(f"Test: {len(texts_test):,}\n")
+        print("Scoring models (test) …")
+        test_cube = np.zeros((len(model_names), len(texts_test), len(LABELS)))
+        for m, name in enumerate(model_names):
+            print(f"  {name} …", flush=True)
+            test_cube[m] = score_model(
+                name,
+                texts_test,
+                calibration_profile=args.calibration_profile,
+            )
 
     # ------------------------------------------------------------------
     # 3. Compute confidence vectors
     # ------------------------------------------------------------------
-    val_conf  = np.stack([model_confidence(val_cube[m])  for m in range(len(MODELS))], axis=1)
-    test_conf = np.stack([model_confidence(test_cube[m]) for m in range(len(MODELS))], axis=1)
+    val_conf  = np.stack([model_confidence(val_cube[m])  for m in range(len(model_names))], axis=1)
+    test_conf = np.stack([model_confidence(test_cube[m]) for m in range(len(model_names))], axis=1)
 
     print("\nVal confidence stats (mean per model):")
-    for m, name in enumerate(MODELS):
+    for m, name in enumerate(model_names):
         print(f"  {name}: mean={val_conf[:, m].mean():.3f}  "
               f"std={val_conf[:, m].std():.3f}")
 
     # ------------------------------------------------------------------
     # 4. Static ensemble baseline (uniform weights)
     # ------------------------------------------------------------------
-    uniform_w = np.ones(len(MODELS)) / len(MODELS)
+    uniform_w = np.ones(len(model_names)) / len(model_names)
     static_test_probs = static_ensemble_probs(test_cube, uniform_w)
     static_preds = [LABELS[i] for i in static_test_probs.argmax(axis=1)]
     static_f1  = f1_score(y_test, static_preds, average="macro", zero_division=0)
@@ -493,7 +562,7 @@ def main() -> None:
     # 5. Fit neuro-fuzzy gate on validation set
     # ------------------------------------------------------------------
     print("\nFitting neuro-fuzzy gate …")
-    gate = NeuroFuzzyGate(n_models=len(MODELS), n_sets=N_FUZZY_SETS)
+    gate = NeuroFuzzyGate(n_models=len(model_names), n_sets=N_FUZZY_SETS)
     fit_info = gate.fit(val_conf, val_cube, y_val, maxiter=args.maxiter)
 
     # Validation metrics (sanity check)
@@ -532,8 +601,8 @@ def main() -> None:
     # ------------------------------------------------------------------
     output_data = {
         "architecture": {
-            "n_models": len(MODELS),
-            "model_names": MODELS,
+            "n_models": len(model_names),
+            "model_names": model_names,
             "n_fuzzy_sets": N_FUZZY_SETS,
             "n_parameters": gate.n_params,
             "activation": "Gaussian MF",
@@ -541,7 +610,7 @@ def main() -> None:
             "reference": "ANFIS (Jang, 1993)",
         },
         "training": fit_info,
-        "learned_mfs": gate.describe_gates(MODELS),
+        "learned_mfs": gate.describe_gates(model_names),
         "val_metrics": val_metrics,
         "test_metrics": test_metrics,
         "static_ensemble_test_metrics": static_test_metrics,
@@ -550,6 +619,8 @@ def main() -> None:
             "ece": round(test_ece - static_ece, 6),
             "brier": round(test_brier - static_brier, 6),
         },
+        "val_cube": args.val_cube,
+        "test_cube": args.test_cube,
     }
 
     json_path = out_dir / "neuro_fuzzy_gate.json"
@@ -558,7 +629,7 @@ def main() -> None:
     print(f"\nSaved JSON → {json_path}")
 
     report = build_report(
-        gate, fit_info, MODELS, val_metrics, test_metrics, static_test_metrics
+        gate, fit_info, model_names, val_metrics, test_metrics, static_test_metrics
     )
     md_path = out_dir / "neuro_fuzzy_gate.md"
     with open(md_path, "w") as fh:
@@ -586,7 +657,7 @@ def main() -> None:
           f"{test_brier - static_brier:>+7.4f}")
     print("=" * 65)
     print("\nLearned MF parameters:")
-    for row in gate.describe_gates(MODELS):
+    for row in gate.describe_gates(model_names):
         print(f"  {row['model']:>12} / {row['fuzzy_set']:<6}  "
               f"center={row['center']:.3f}  width={row['width']:.3f}  "
               f"α={row['alpha']:+.3f}")

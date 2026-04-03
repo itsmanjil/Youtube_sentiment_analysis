@@ -27,6 +27,8 @@ from src.utils import (
     bootstrap_confidence_intervals,
     build_hourly_sentiment,
     confidence_from_probs,
+    entropy_from_probs,
+    get_runtime_artifact_metadata,
 )
 from src.sentiment import (
     coerce_sentiment_result,
@@ -162,6 +164,7 @@ def analyze_youtube_video(request):
     aspect_min_freq = int(request.data.get("aspect_min_freq", 3))
     confidence_threshold = float(request.data.get("confidence_threshold", 0.6))
     ensemble_models = _coerce_model_list(request.data.get("ensemble_models"))
+    ensemble_weights_optimization = request.data.get("ensemble_weights_optimization")
     ensemble_weights_input = request.data.get("ensemble_weights")
     meta_learner_path = request.data.get("meta_learner_path")
     meta_learner_models = _coerce_model_list(request.data.get("meta_learner_models"))
@@ -304,6 +307,7 @@ def analyze_youtube_video(request):
             engine_kwargs = {
                 "base_models": ensemble_models,
                 "weights": ensemble_weights,
+                "weights_optimization": ensemble_weights_optimization,
             }
         elif sentiment_model == "meta_learner":
             if meta_learner_path:
@@ -390,6 +394,18 @@ def analyze_youtube_video(request):
             confidences,
             threshold=confidence_threshold,
         )
+        entropies = [
+            entropy_from_probs(item.get('sentiment_probs', {}))
+            for item in processed_comments
+        ]
+        uncertainty_stats = {
+            "mean_entropy": round(sum(entropies) / len(entropies), 4) if entropies else 0.0,
+            "max_entropy": round(max(entropies), 4) if entropies else 0.0,
+            "min_entropy": round(min(entropies), 4) if entropies else 0.0,
+            "high_uncertainty_ratio": round(
+                sum(1 for e in entropies if e > 0.5) / len(entropies), 4
+            ) if entropies else 0.0,
+        }
         sentiment_cis = bootstrap_confidence_intervals(
             sentiments,
             n_boot=bootstrap_samples,
@@ -445,7 +461,9 @@ def analyze_youtube_video(request):
             "model_family": _get_model_family(sentiment_model),
             "model_artifact": getattr(engine, "model_artifact", None),
             "preprocessing_profile": processing_profile,
+            "runtime_artifacts": get_runtime_artifact_metadata(),
             "confidence_stats": confidence_stats,
+            "uncertainty_stats": uncertainty_stats,
             "sentiment_confidence_intervals": sentiment_cis,
             "aspect_sentiment": aspect_sentiment,
             "bootstrap_samples": bootstrap_samples,
@@ -468,7 +486,7 @@ def analyze_youtube_video(request):
                 "models": getattr(engine, "requested_models", ensemble_models),
                 "models_used": getattr(engine, "base_models", ensemble_models),
                 "weights": getattr(engine, "weights", ensemble_weights),
-                "weights_source": ensemble_weights_source,
+                "weights_source": getattr(engine, "weights_source", ensemble_weights_source),
                 "model_errors": getattr(engine, "model_errors", {}),
             }
         if sentiment_model == "meta_learner":
@@ -494,7 +512,14 @@ def analyze_youtube_video(request):
                 "alpha_cut": getattr(engine, "alpha_cut", fuzzy_alpha_cut),
                 "resolution": getattr(engine, "resolution", fuzzy_resolution),
                 "confidence_threshold": getattr(engine, "confidence_threshold", confidence_threshold),
+                "nf_gate_active": bool(getattr(engine, "_nf_mfs", {})),
                 "model_errors": getattr(engine, "model_errors", {}),
+            }
+        # Expose temperature calibration for any engine that has it
+        if hasattr(engine, "temperature"):
+            analysis_meta["calibration"] = {
+                "temperature": getattr(engine, "temperature", 1.0),
+                "applied": getattr(engine, "calibration_applied", False),
             }
         if isinstance(model_comparison, list):
             analysis_meta["model_comparison"] = model_comparison
@@ -556,6 +581,7 @@ def analyze_youtube_video(request):
             'top_words_positive': [{'word': w, 'count': c} for w, c in top_positive[:20]],
             'top_words_negative': [{'word': w, 'count': c} for w, c in top_negative[:20]],
             'confidence_stats': confidence_stats,
+            'uncertainty_stats': uncertainty_stats,
             'sentiment_confidence_intervals': sentiment_cis,
             'aspect_sentiment': aspect_sentiment,
             'sentiment_timeline': sentiment_timeline,
@@ -621,6 +647,8 @@ def get_youtube_analysis(request, video_id):
                     'short': analysis.filtered_short_count
                 },
                 'confidence_stats': (analysis.analysis_meta or {}).get('confidence_stats'),
+                'uncertainty_stats': (analysis.analysis_meta or {}).get('uncertainty_stats'),
+                'calibration': (analysis.analysis_meta or {}).get('calibration'),
                 'sentiment_confidence_intervals': (analysis.analysis_meta or {}).get(
                     'sentiment_confidence_intervals'
                 ),
@@ -673,6 +701,8 @@ def get_user_youtube_analyses(request):
                 'analysis_model': analysis.analysis_model,
                 'fetched_date': analysis.fetched_date,
                 'confidence_stats': (analysis.analysis_meta or {}).get('confidence_stats'),
+                'uncertainty_stats': (analysis.analysis_meta or {}).get('uncertainty_stats'),
+                'calibration': (analysis.analysis_meta or {}).get('calibration'),
             })
 
         return Response({'data': data})

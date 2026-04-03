@@ -4,7 +4,7 @@ Thesis Figure Generation
 Publication-ready visualizations for computational intelligence thesis.
 All figures follow academic standards with proper formatting.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 import numpy as np

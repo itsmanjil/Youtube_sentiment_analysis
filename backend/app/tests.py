@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
 import tempfile
 from pathlib import Path
@@ -27,10 +28,34 @@ from research.transformers.train_encoder import (
     resolve_text_column,
     summarize_split_provenance,
 )
+from research.transformers.export_prob_cube import (
+    parse_model_names,
+    prepare_scoring_frame,
+    resolve_text_column_for_model,
+)
+from research.route_a.run_encoder_sweep import (
+    _best_classical_model,
+    _find_mcnemar_row,
+)
+from research.transformers.calibrate_encoder import (
+    LABELS as CALIBRATION_LABELS,
+    resolve_model_label_order,
+)
+from research.transformers.prob_cube_io import (
+    load_probability_cube,
+    save_probability_cube,
+)
 from src.utils.calibration import (
     apply_temperature_to_logits,
     load_temperature_artifact,
     save_temperature_artifact,
+)
+from src.utils.config import Config
+from src.utils.runtime_artifacts import (
+    get_runtime_artifact_metadata,
+    get_runtime_artifact_version,
+    load_runtime_artifact_json,
+    resolve_runtime_artifact_path,
 )
 
 # Mock data for YouTube Fetcher/Scraper
@@ -88,14 +113,18 @@ class YouTubeAnalysisAPITests(APITestCase):
         # URLs
         self.analyze_url = reverse('app:youtube_analyze')
 
+    def _mock_fetcher_with_comments(self, mock_fetcher, comments=None):
+        mock_fetcher_instance = mock_fetcher.return_value
+        mock_fetcher_instance.extract_video_id.return_value = 'HLUamwXQ218'
+        mock_fetcher_instance.fetch_video_metadata.return_value = MOCK_VIDEO_METADATA
+        mock_fetcher_instance.fetch_comments.return_value = comments or MOCK_COMMENTS_RAW
+        return mock_fetcher_instance
+
     @patch('app.views.YouTubeFetcher')
     @patch('app.views.get_sentiment_engine')
     def test_analyze_video_success_api_mode(self, mock_get_engine, mock_fetcher):
         # Setup mocks
-        mock_fetcher_instance = mock_fetcher.return_value
-        mock_fetcher_instance.extract_video_id.return_value = 'HLUamwXQ218'
-        mock_fetcher_instance.fetch_video_metadata.return_value = MOCK_VIDEO_METADATA
-        mock_fetcher_instance.fetch_comments.return_value = MOCK_COMMENTS_RAW
+        self._mock_fetcher_with_comments(mock_fetcher)
 
         mock_get_engine.return_value = MockSentimentEngine()
 
@@ -125,14 +154,153 @@ class YouTubeAnalysisAPITests(APITestCase):
         # MockSentimentEngine marks "I did not like this." as Negative.
         self.assertEqual(analysis.sentiment_data['Negative'], 1)
         self.assertEqual(analysis.sentiment_data['Neutral'], 1)
+        self.assertEqual(
+            analysis.analysis_meta["runtime_artifacts"]["version"],
+            get_runtime_artifact_version(),
+        )
+
+    @patch('app.views.YouTubeFetcher')
+    @patch('app.views.get_sentiment_engine')
+    def test_analyze_video_exposes_uncertainty_stats_in_response_and_analysis_meta(
+        self,
+        mock_get_engine,
+        mock_fetcher,
+    ):
+        self._mock_fetcher_with_comments(mock_fetcher, comments=MOCK_COMMENTS_RAW[:3])
+        mock_get_engine.return_value = MockSentimentEngine()
+
+        response = self.client.post(
+            self.analyze_url,
+            {
+                "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+                "filter_spam": False,
+                "filter_language": False,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected = {
+            "mean_entropy": 0.0,
+            "max_entropy": 0.0,
+            "min_entropy": 0.0,
+            "high_uncertainty_ratio": 0.0,
+        }
+        self.assertEqual(response.data["uncertainty_stats"], expected)
+        self.assertEqual(response.data["analysis_meta"]["uncertainty_stats"], expected)
+
+    @patch('app.views.YouTubeFetcher')
+    @patch('app.views.get_sentiment_engine')
+    def test_analyze_video_exposes_calibration_metadata_for_live_engine(
+        self,
+        mock_get_engine,
+        mock_fetcher,
+    ):
+        self._mock_fetcher_with_comments(mock_fetcher, comments=MOCK_COMMENTS_RAW[:3])
+        mock_engine = MockSentimentEngine()
+        mock_engine.temperature = 0.9348
+        mock_engine.calibration_applied = True
+        mock_get_engine.return_value = mock_engine
+
+        response = self.client.post(
+            self.analyze_url,
+            {
+                "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+                "sentiment_model": "logreg",
+                "filter_spam": False,
+                "filter_language": False,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["analysis_meta"]["calibration"],
+            {"temperature": 0.9348, "applied": True},
+        )
+
+    @patch('app.views.YouTubeFetcher')
+    @patch('app.views.get_sentiment_engine')
+    def test_analyze_video_persists_ensemble_weights_source(
+        self,
+        mock_get_engine,
+        mock_fetcher,
+    ):
+        self._mock_fetcher_with_comments(mock_fetcher, comments=MOCK_COMMENTS_RAW[:3])
+        mock_engine = MockSentimentEngine()
+        mock_engine.requested_models = ["logreg", "svm", "tfidf"]
+        mock_engine.base_models = ["logreg", "svm", "tfidf"]
+        mock_engine.weights = {"logreg": 0.916, "svm": 0.003, "tfidf": 0.081}
+        mock_engine.weights_source = "nsga2"
+        mock_engine.model_errors = {}
+        mock_engine.temperature = 0.9348
+        mock_engine.calibration_applied = True
+        mock_get_engine.return_value = mock_engine
+
+        response = self.client.post(
+            self.analyze_url,
+            {
+                "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+                "sentiment_model": "ensemble",
+                "ensemble_weights_optimization": "nsga2",
+                "filter_spam": False,
+                "filter_language": False,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["analysis_meta"]["ensemble"]["weights_source"],
+            "nsga2",
+        )
+        mock_get_engine.assert_called_with(
+            "ensemble",
+            base_models=["logreg", "svm", "tfidf"],
+            weights=None,
+            weights_optimization="nsga2",
+        )
+
+    @patch('app.views.YouTubeFetcher')
+    @patch('app.views.get_sentiment_engine')
+    def test_analyze_video_exposes_neuro_fuzzy_gate_activation(
+        self,
+        mock_get_engine,
+        mock_fetcher,
+    ):
+        self._mock_fetcher_with_comments(mock_fetcher, comments=MOCK_COMMENTS_RAW[:3])
+        mock_engine = MockSentimentEngine()
+        mock_engine.requested_models = ["logreg", "svm", "tfidf"]
+        mock_engine.base_models = ["logreg", "svm", "tfidf"]
+        mock_engine.mf_type = "gaussian"
+        mock_engine.defuzz_method = "centroid"
+        mock_engine.t_norm = "min"
+        mock_engine.t_conorm = "max"
+        mock_engine.alpha_cut = 0.0
+        mock_engine.resolution = 100
+        mock_engine.confidence_threshold = 0.6
+        mock_engine.model_errors = {}
+        mock_engine._nf_mfs = {"logreg": [{"center": 0.8, "width": 0.1, "alpha": 1.0}]}
+        mock_get_engine.return_value = mock_engine
+
+        response = self.client.post(
+            self.analyze_url,
+            {
+                "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+                "sentiment_model": "fuzzy_ensemble",
+                "filter_spam": False,
+                "filter_language": False,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["analysis_meta"]["fuzzy"]["nf_gate_active"])
 
     @patch('app.views.YouTubeFetcher')
     @patch('app.views.get_sentiment_engine')
     def test_analyze_video_uses_transformer_preprocessing_for_encoder_models(self, mock_get_engine, mock_fetcher):
-        mock_fetcher_instance = mock_fetcher.return_value
-        mock_fetcher_instance.extract_video_id.return_value = 'HLUamwXQ218'
-        mock_fetcher_instance.fetch_video_metadata.return_value = MOCK_VIDEO_METADATA
-        mock_fetcher_instance.fetch_comments.return_value = MOCK_COMMENTS_RAW[:3]
+        self._mock_fetcher_with_comments(mock_fetcher, comments=MOCK_COMMENTS_RAW[:3])
 
         mock_engine = MockSentimentEngine()
         mock_engine.model_preset = "modernbert"
@@ -260,6 +428,42 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['data']['video']['id'], 'v1')
         self.assertEqual(response.data['data']['model_used'], 'LOGREG')
+
+    def test_get_single_analysis_exposes_uncertainty_and_calibration_metadata(self):
+        video = YouTubeVideo.objects.create(
+            video_id='v2',
+            title='Video 2',
+            channel_name='Channel 2',
+            published_at='2026-01-01T00:00:00Z',
+        )
+        uncertainty_stats = {
+            "mean_entropy": 0.1234,
+            "max_entropy": 0.4567,
+            "min_entropy": 0.0123,
+            "high_uncertainty_ratio": 0.25,
+        }
+        calibration = {
+            "temperature": 0.9348,
+            "applied": True,
+        }
+        YouTubeAnalysis.objects.create(
+            user=self.user,
+            video=video,
+            sentiment_data={'Positive': 4, 'Neutral': 3, 'Negative': 3},
+            total_comments_analyzed=10,
+            analysis_model='ENSEMBLE',
+            analysis_meta={
+                "uncertainty_stats": uncertainty_stats,
+                "calibration": calibration,
+            },
+        )
+
+        url = reverse('app:get_youtube_analysis', kwargs={'video_id': 'v2'})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['data']['uncertainty_stats'], uncertainty_stats)
+        self.assertEqual(response.data['data']['calibration'], calibration)
 
     def test_get_single_analysis_is_scoped_to_authenticated_user(self):
         video = YouTubeVideo.objects.create(
@@ -412,6 +616,130 @@ class CalibrationUtilsTests(SimpleTestCase):
             self.assertEqual(loaded["temperature"], 1.42)
             self.assertEqual(loaded["method"], "temperature_scaling")
 
+    def test_resolve_model_label_order_uses_checkpoint_config(self):
+        engine = SimpleNamespace(
+            model=SimpleNamespace(
+                config=SimpleNamespace(
+                    id2label={0: "Negative", 1: "Neutral", 2: "Positive"}
+                )
+            )
+        )
+
+        self.assertEqual(resolve_model_label_order(engine), CALIBRATION_LABELS)
+
+    def test_resolve_model_label_order_falls_back_on_invalid_config(self):
+        engine = SimpleNamespace(
+            model=SimpleNamespace(
+                config=SimpleNamespace(
+                    id2label={0: "Positive", 1: "Neutral", 2: "Spam"}
+                )
+            )
+        )
+
+        self.assertEqual(resolve_model_label_order(engine), CALIBRATION_LABELS)
+
+
+class ProbabilityCubeIOTests(SimpleTestCase):
+    def test_parse_model_names_normalizes_encoder_aliases(self):
+        self.assertEqual(
+            parse_model_names("modernbert, deberta-v3, logreg"),
+            ["modernbert", "deberta_v3", "logreg"],
+        )
+
+    def test_resolve_text_column_for_model_uses_family_specific_defaults(self):
+        columns = ["text", "text_classical", "text_transformer", "label"]
+        self.assertEqual(
+            resolve_text_column_for_model(columns, "logreg"),
+            "text_classical",
+        )
+        self.assertEqual(
+            resolve_text_column_for_model(columns, "deberta_v3"),
+            "text_transformer",
+        )
+
+    def test_prepare_scoring_frame_tracks_model_specific_columns(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            csv_path = Path(temp_dir) / "split.csv"
+            csv_path.write_text(
+                "text,label,text_classical,text_transformer\n"
+                "Hello!!!,Positive,hello,Hello!!!\n"
+                "Bad :-(,Negative,bad,Bad :-(\n",
+                encoding="utf-8",
+            )
+
+            df, canonical, model_columns = prepare_scoring_frame(
+                csv_path,
+                model_names=["deberta_v3", "logreg"],
+            )
+
+            self.assertEqual(canonical, "text")
+            self.assertEqual(model_columns["deberta_v3"], "text_transformer")
+            self.assertEqual(model_columns["logreg"], "text_classical")
+            self.assertEqual(len(df), 2)
+
+
+class RouteASweepHelpersTests(SimpleTestCase):
+    def test_best_classical_model_prefers_highest_macro_f1(self):
+        metrics = {
+            "logreg": {"macro_f1": 0.71},
+            "svm": {"macro_f1": 0.73},
+            "deberta_v3": {"macro_f1": 0.69},
+        }
+
+        self.assertEqual(_best_classical_model(metrics, ["logreg", "svm"]), "svm")
+
+    def test_find_mcnemar_row_handles_reverse_pair(self):
+        rows = [
+            {"model_a": "svm", "model_b": "neuro_fuzzy", "n01": 7, "n10": 4, "significant": False},
+        ]
+
+        row = _find_mcnemar_row(rows, "neuro_fuzzy", "svm")
+
+        self.assertEqual(row["model_a"], "neuro_fuzzy")
+        self.assertEqual(row["model_b"], "svm")
+        self.assertEqual(row["n01"], 4)
+        self.assertEqual(row["n10"], 7)
+
+    def test_probability_cube_roundtrip(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            artifact_path = Path(temp_dir) / "cube.npz"
+            prob_cube = np.array(
+                [
+                    [[0.7, 0.2, 0.1], [0.1, 0.2, 0.7]],
+                    [[0.6, 0.3, 0.1], [0.2, 0.3, 0.5]],
+                ],
+                dtype=np.float32,
+            )
+            logits_cube = np.array(
+                [
+                    [[3.0, 1.0, 0.2], [0.1, 1.0, 2.4]],
+                    [[2.5, 1.4, 0.1], [0.4, 1.1, 1.8]],
+                ],
+                dtype=np.float32,
+            )
+
+            save_probability_cube(
+                artifact_path,
+                prob_cube=prob_cube,
+                logits_cube=logits_cube,
+                model_names=["modernbert", "deberta_v3"],
+                labels=["Positive", "Neutral", "Negative"],
+                y_true=["Positive", "Negative"],
+                texts=["great video", "terrible upload"],
+                sample_ids=["c1", "c2"],
+                metadata={"split": "test", "calibration_profile": "auto"},
+            )
+            bundle = load_probability_cube(artifact_path)
+
+            self.assertEqual(bundle.model_names, ["modernbert", "deberta_v3"])
+            self.assertEqual(bundle.labels, ["Positive", "Neutral", "Negative"])
+            self.assertEqual(bundle.y_true, ["Positive", "Negative"])
+            self.assertEqual(bundle.texts, ["great video", "terrible upload"])
+            self.assertEqual(bundle.sample_ids, ["c1", "c2"])
+            self.assertEqual(bundle.metadata["split"], "test")
+            self.assertTrue(np.allclose(bundle.prob_cube, prob_cube))
+            self.assertTrue(np.allclose(bundle.logits_cube, logits_cube))
+
 
 class SettingsResolutionTests(SimpleTestCase):
     def test_resolve_runtime_settings_uses_local_defaults_for_development(self):
@@ -429,6 +757,52 @@ class SettingsResolutionTests(SimpleTestCase):
             settings_data["cors_allowed_origins"],
             ["http://localhost:3000", "http://127.0.0.1:3000"],
         )
+
+
+class RuntimeArtifactResolverTests(SimpleTestCase):
+    def test_runtime_artifact_manifest_resolves_pinned_files(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            runtime_root = Path(temp_dir)
+            version = "thesis_live_v1"
+            artifact_dir = runtime_root / version
+            artifact_dir.mkdir(parents=True, exist_ok=True)
+
+            temperature_path = artifact_dir / "temperature_scaling.json"
+            temperature_payload = {
+                "models": [
+                    {"model": "logreg", "temperature": 1.1111},
+                ]
+            }
+            temperature_path.write_text(json.dumps(temperature_payload))
+
+            manifest_path = artifact_dir / "manifest.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "version": version,
+                        "artifacts": {
+                            "temperature_scaling": {
+                                "path": "temperature_scaling.json",
+                                "sha256": "dummy",
+                            }
+                        },
+                    }
+                )
+            )
+
+            with patch.object(Config, "RUNTIME_ARTIFACTS_DIR", runtime_root), patch.object(
+                Config,
+                "DEFAULT_RUNTIME_ARTIFACT_VERSION",
+                version,
+            ):
+                resolved = resolve_runtime_artifact_path("temperature_scaling")
+                metadata = get_runtime_artifact_metadata()
+                payload = load_runtime_artifact_json("temperature_scaling")
+
+            self.assertEqual(resolved, temperature_path.resolve())
+            self.assertEqual(metadata["version"], version)
+            self.assertEqual(metadata["artifacts"]["temperature_scaling"]["sha256"], "dummy")
+            self.assertEqual(payload["models"][0]["temperature"], 1.1111)
 
     def test_resolve_runtime_settings_requires_secret_key_in_production(self):
         with self.assertRaisesMessage(

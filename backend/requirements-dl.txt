@@ -20,6 +20,6 @@ numpy<2
 pandas<3
 scikit-learn==1.8.0
 torch==2.2.2
-transformers
+transformers<5
 accelerate
 sentencepiece

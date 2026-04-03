@@ -46,7 +46,7 @@ Reference:
     - Mamdani (1974): Fuzzy Inference Systems
     - Cambria et al. (2020): Fuzzy Sentiment Analysis
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis
 """
 

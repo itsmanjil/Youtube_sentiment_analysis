@@ -4,7 +4,7 @@ Results Aggregation and Thesis Report Generation
 Provides tools for aggregating experiment results and generating
 publication-ready LaTeX tables and figures.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from typing import Dict, List, Any, Optional

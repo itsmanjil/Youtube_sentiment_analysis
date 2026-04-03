@@ -21,7 +21,7 @@ Reference:
     synthesis with a fuzzy logic controller". International Journal of
     Man-Machine Studies, 7(1), 1-13.
 
-Author: [Your Name]
+Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from typing import Dict, List, Optional, Tuple, Union, Callable

@@ -1,0 +1,7 @@
+{
+  "key": "deberta_v3",
+  "hf_name": "microsoft/deberta-v3-base",
+  "description": "DeBERTa-v3 English encoder baseline",
+  "default_max_length": 256,
+  "multilingual": false
+}
