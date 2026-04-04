@@ -1,7 +1,7 @@
 {
   "created_at": "2026-03-27T06:01:20Z",
   "source": {
-    "uri": "data/source/youtube-comments-sentiment.csv",
+    "uri": "hf://datasets/AmaanP314/youtube-comment-sentiment/youtube-comments-sentiment.csv",
     "raw_rows": 1032225,
     "raw_columns": [
       "CommentID",

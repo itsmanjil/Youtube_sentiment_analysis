@@ -22,6 +22,8 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media/
+backend/data/source/youtube-comments-sentiment.csv
+backend/models/transformers/**/checkpoint-*/
 
 # Environment variables
 .env
