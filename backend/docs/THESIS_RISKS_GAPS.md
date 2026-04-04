@@ -115,3 +115,21 @@ If a model (e.g., BERT fine-tuning) is not implemented end-to-end, either implem
 - Phrase the headline as either:
   - best live macro-F1: `meta_learner`
   - best live calibrated ensemble: `ensemble_nsga2`
+
+## 9) Scope Discipline for Aspect Analysis and Hybrid DL
+
+**Risk:** The repo contains implemented features that are easy to overstate in a
+thesis if they are described too broadly.
+
+**Current repo reality:**
+- `backend/app/aspect_mining.py` provides a keyword-level aspect proxy, not full
+  aspect-based sentiment analysis.
+- `backend/src/sentiment/engines/hybrid_dl_engine.py` supports the runtime
+  model, but it only marks calibration as applied when a pinned `hybrid_dl`
+  temperature row exists. The current pinned runtime does not contain one.
+
+**Safe thesis wording:**
+- Describe the current aspect feature as exploratory aspect extraction /
+  aspect-level proxy reporting, not ABSA.
+- Describe `hybrid_dl` as wired into the runtime, but not calibrated in the
+  current pinned thesis configuration.

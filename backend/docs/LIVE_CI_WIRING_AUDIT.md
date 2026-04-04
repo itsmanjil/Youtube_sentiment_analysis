@@ -1,24 +1,26 @@
 # Live CI Wiring Audit
 
-Date: 2026-04-02
+Date: 2026-04-04
 
 ## Scope
 
 This audit checks whether the offline computational-intelligence artifacts
 (temperature scaling, optimized ensemble weights, neuro-fuzzy gating, and
-uncertainty reporting) are actually connected to the live inference path and
-surfaced to the frontend.
+uncertainty reporting) are connected to the live inference path, surfaced to
+the frontend/API payloads, and backed by direct backend regression tests.
 
 ## Verified Wiring
 
-### Backend request → inference path
+### Backend request -> inference path
 
 - `app/views.py`
   - Accepts `ensemble_weights_optimization`
   - Passes optimized ensemble settings into the live engine
   - Computes per-analysis entropy statistics
-  - Persists confidence, uncertainty, calibration, transformer, ensemble,
-    meta-learner, and fuzzy metadata into `analysis_meta`
+  - Persists confidence, uncertainty, calibration, transformer, ensemble, and
+    fuzzy metadata into `analysis_meta`
+  - Persists both `weights_source` and
+    `weights_optimization_requested` for ensemble runs
   - Returns `uncertainty_stats` and `calibration` in the analysis detail API
 
 ### Runtime artifact loading
@@ -31,7 +33,9 @@ surfaced to the frontend.
 - `src/sentiment/engines/ensemble_engine.py`
 - `src/sentiment/engines/fuzzy_engine.py`
 
-These engines now read runtime research artifacts from `backend/results/`.
+These engines load thesis-facing runtime artifacts through the pinned runtime
+artifact resolver, with `route_a_live_v1` as the current default artifact
+version.
 
 ### Frontend surfacing
 
@@ -55,74 +59,60 @@ These engines now read runtime research artifacts from `backend/results/`.
 
 ### Confirmed
 
-- Backend tests pass: `31/31`
+- Backend tests pass: `40/40`
 - Live API code persists uncertainty and calibration metadata
-- Ensemble runtime can switch between PSO and NSGA-II artifact weights
-- Fuzzy runtime loads learned ANFIS membership functions when model sets match
+- Live API code persists ensemble `weights_source` and
+  `weights_optimization_requested`
+- Ensemble runtime switches between PSO and NSGA-II artifact weights through
+  direct backend regression tests
+- `hybrid_dl` remains uncalibrated (`T=1.0`,
+  `calibration_applied=false`) when no runtime artifact row exists
+- Fuzzy runtime only activates the learned neuro-fuzzy gate when the requested
+  base-model set matches the trained gate model set
+- The live runtime benchmark, manifest, and offline-vs-live reconciliation are
+  present under `backend/results/runtime/route_a_live_v1/`
 
 ### Not yet validated end-to-end
 
-- Frontend automated tests were not run in this environment because `node` is
-  unavailable
-- No audited live benchmark table has been regenerated from the runtime path
-- No artifact version locking exists between thesis results and deployed runtime
+- Frontend automated tests were not run in this environment because `node` and
+  `npm` are unavailable
+- Raw prediction-level live-vs-offline equivalence on the held-out split is
+  still not proven; the current reconciliation is benchmark-level, not
+  per-sample
+- Gold-set evaluation and domain-shift evaluation remain outside the scope of
+  this wiring audit
 
-## Material Gaps
+## Remaining Material Gaps
 
-### 1. Runtime uses mutable root result artifacts
+### 1. Prediction-level live-vs-offline comparison is still missing
 
-Live engines load from shared root files such as:
-
-- `backend/results/temperature_scaling.json`
-- `backend/results/pso_ensemble_weights.json`
-- `backend/results/multi_objective_ensemble.json`
-- `backend/results/neuro_fuzzy_gate.json`
-
-This is practical, but weak for thesis reproducibility. A later research run can
-silently change live behavior without changing code.
+The refreshed reconciliation artifact confirms that benchmark rows remain
+numerically aligned, but it does not prove that the live runtime produces the
+same per-sample predictions as the offline artifact path.
 
 ### 2. `hybrid_dl` calibration is wired, but no artifact entry exists
 
-`hybrid_dl_engine.py` looks for a `hybrid_dl` row inside
-`backend/results/temperature_scaling.json`. The current artifact has no such
-entry, so runtime falls back to `T=1.0` and `calibration_applied=false`.
+`hybrid_dl_engine.py` looks for a `hybrid_dl` row inside the pinned
+temperature-scaling artifact. The current artifact has no such entry, so
+runtime falls back to `T=1.0` and `calibration_applied=false`.
 
-### 3. Some loaded calibration artifacts are not obviously beneficial
+### 3. Calibration claims must remain model-specific
 
-Current root `temperature_scaling.json` reports:
+The runtime supports calibration-aware inference, but the thesis should not say
+that calibration improved every model. The safe claim is narrower: calibration
+metadata is wired into the runtime, and the strongest deployment-oriented
+calibration result in the pinned benchmark is currently `ensemble_nsga2`.
 
-- `logreg`: ECE `0.006789 -> 0.00741`
-- `svm`: ECE `0.012565 -> 0.016255`
-- `tfidf`: ECE `0.01308 -> 0.017405`
-- `meta_learner`: ECE `0.02029 -> 0.022973`
-- `ensemble`: ECE `0.021617 -> 0.011672`
-
-So live calibration clearly helps `ensemble`, but the stored artifact appears to
-worsen ECE for several other models. This needs an explicit thesis decision:
-disable those temperatures, or regenerate them.
-
-### 4. Requested optimization mode is not explicitly persisted
-
-The API accepts `ensemble_weights_optimization`, and the ensemble engine uses it,
-but `analysis_meta["ensemble"]` persists `weights_source`, not the original
-request parameter. That is enough to explain what was applied, but not enough to
-fully reconstruct the request.
-
-### 5. Test coverage does not directly lock this live wiring
-
-Backend tests cover parts of the transformer/calibration pipeline, but there is
-no explicit regression test that asserts:
-
-- `analysis_meta["calibration"]` is returned for calibrated live models
-- `analysis_meta["uncertainty_stats"]` is present and shaped correctly
-- `analysis_meta["ensemble"]["weights_source"]` is preserved
-- `analysis_meta["fuzzy"]["nf_gate_active"]` is exposed when the ANFIS gate is active
-
-### 6. Neuro-fuzzy gate activation is exact-match dependent
+### 4. Neuro-fuzzy gate activation is exact-match dependent
 
 `fuzzy_engine.py` activates the learned gate only when the requested base-model
 set matches the artifact model set. Any different combination falls back to the
 static fuzzy path.
+
+### 5. Frontend verification is still blocked in this environment
+
+The UI components appear wired from code inspection, but `vitest` and snapshot
+checks still need a machine with `node` and `npm`.
 
 ## Thesis-Ready Validation Checklist
 
@@ -136,15 +126,16 @@ static fuzzy path.
 ### Backend verification
 
 - [x] Add API tests for `uncertainty_stats`, `calibration`, `weights_source`,
-      and `nf_gate_active`
-- [ ] Add one test that verifies NSGA-II vs PSO changes `weights_source`
-- [ ] Add one test that proves `hybrid_dl` remains uncalibrated when no artifact
+      `weights_optimization_requested`, and `nf_gate_active`
+- [x] Add one test that verifies NSGA-II vs PSO changes `weights_source`
+- [x] Add one test that proves `hybrid_dl` remains uncalibrated when no artifact
       row exists
-- [ ] Add one test that proves fuzzy gate activation requires matching base models
+- [x] Add one test that proves fuzzy gate activation requires matching base
+      models
 
 ### Frontend verification
 
-- [ ] Run `vitest` once `node` is available
+- [ ] Run `vitest` once `node`/`npm` are available
 - [ ] Snapshot-check Search, Dashboard, Report, and Monitoring for calibration
       and uncertainty rendering
 - [ ] Verify empty-state behavior when calibration metadata is absent
@@ -154,24 +145,25 @@ static fuzzy path.
 
 - [x] Regenerate one benchmark table using the live runtime path, not only the
       offline research scripts
+- [x] Refresh benchmark-level offline-vs-live reconciliation under the pinned
+      runtime directory
 - [ ] Compare live runtime predictions against offline artifact predictions on
       the same held-out split
-- [x] Recompute calibration metrics after live wiring
-- [ ] Confirm that the live configuration used in the thesis matches the final
-      stored artifacts
+- [x] Confirm that the live configuration used in the thesis matches the pinned
+      manifest and benchmark artifacts
 
 ### Claim discipline
 
-- [ ] Claim runtime support for calibrated uncertainty-aware inference
-- [ ] Do not claim all models are improved by calibration unless the stored
-      calibration artifacts show that
-- [ ] Do not claim `hybrid_dl` is calibrated until a real artifact row exists
-- [ ] Do not claim full reproducibility until artifact versions are pinned
+- [x] Claim runtime support for calibrated uncertainty-aware inference
+- [x] Limit calibration claims to models/artifacts supported by stored runtime
+      evidence
+- [x] State clearly that `hybrid_dl` is not calibrated until a real artifact row
+      exists
+- [x] Cite the exact pinned runtime version for thesis-facing results
 
 ## Recommended Order
 
-1. Freeze and version the runtime artifacts
-2. Add backend regression tests for live metadata exposure
-3. Run frontend `vitest`
-4. Generate one live benchmark table from the deployed stack
-5. Update thesis wording to match the frozen runtime artifacts
+1. Add a prediction-level live-vs-offline comparison on the held-out split.
+2. Run frontend `vitest` and snapshot checks once `node` is available.
+3. Add gold-set and domain-shift evidence for thesis credibility.
+4. Keep the final thesis wording tied to `route_a_live_v1`.

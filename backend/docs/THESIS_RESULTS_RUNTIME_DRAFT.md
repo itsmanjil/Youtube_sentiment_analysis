@@ -43,13 +43,16 @@ full-test headline metrics in the current pinned runtime configuration
 ### Runtime Interpretation Paragraph
 
 These findings indicate that the current deployed system is best described as a
-calibrated classical/ensemble pipeline with strong runtime reproducibility. The
-meta-learner provides the best overall macro-F1, while the NSGA-II ensemble
-provides the strongest accuracy-calibration trade-off for deployment-oriented
-use. Therefore, when the thesis emphasizes classification effectiveness, the
-meta-learner should be cited as the main runtime headline; when the emphasis is
-reliability under probabilistic decision-making, the NSGA-II ensemble is the
-more appropriate focal model.
+calibration-aware classical/ensemble pipeline with strong runtime
+reproducibility. The meta-learner provides the best overall macro-F1, while the
+NSGA-II ensemble provides the strongest accuracy-calibration trade-off for
+deployment-oriented use. However, the thesis should not claim that calibration
+improved every runtime model equally, and `hybrid_dl` should not be described
+as calibrated unless a dedicated runtime artifact row is added. Therefore, when
+the thesis emphasizes classification effectiveness, the meta-learner should be
+cited as the main runtime headline; when the emphasis is reliability under
+probabilistic decision-making, the NSGA-II ensemble is the more appropriate
+focal model.
 
 ### Offline vs Live Reconciliation Paragraph
 
@@ -100,9 +103,14 @@ incomplete. Second, the full-test significance analysis has not yet been rerun
 for the pinned live `ensemble_nsga2` variant, which limits inferential claims
 about its superiority over the meta-learner. Third, the fuzzy ensemble is
 implemented and active in the runtime path, but it does not currently improve
-the full-test headline metrics. Finally, although runtime artifact pinning now
-substantially improves reproducibility, any new thesis claim should continue to
-cite the exact artifact version (`route_a_live_v1`) and associated manifest.
+the full-test headline metrics. Fourth, the wired `hybrid_dl` runtime is not
+currently calibrated because the pinned temperature artifact contains no
+`hybrid_dl` row, so it must be treated as an uncalibrated model in the thesis.
+Fifth, the current aspect-analysis feature is a keyword-level aspect proxy
+rather than full aspect-based sentiment analysis. Finally, although runtime
+artifact pinning now substantially improves reproducibility, any new thesis
+claim should continue to cite the exact artifact version (`route_a_live_v1`)
+and associated manifest.
 
 ## Conclusion Draft
 
@@ -134,3 +142,5 @@ Avoid these:
 - “The system is state-of-the-art.”
 - “The fuzzy system is the best overall model.”
 - “All models improved after calibration.”
+- “The current project delivers full ABSA.”
+- “`hybrid_dl` is calibrated in the pinned live runtime.”

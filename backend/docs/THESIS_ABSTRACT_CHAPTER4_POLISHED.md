@@ -81,7 +81,9 @@ This distinction is methodologically important. A single headline number is not
 sufficient to characterize the quality of a deployed sentiment analysis system,
 particularly when probabilistic outputs are intended to support confidence-aware
 decision-making. For that reason, both macro-F1 and calibration quality should
-be reported together when presenting the final system.
+be reported together when presenting the final system. At the same time, the
+thesis should avoid implying that calibration improved every model equally or
+that every available runtime model is calibrated in the pinned configuration.
 
 ### 4.4 Reconciliation of Historical Offline and Live Runtime Results
 
@@ -144,9 +146,12 @@ unfinished. The fuzzy ensemble is active in the runtime path, but it does not
 currently improve the full-test headline metrics. In addition, the live NSGA-II
 ensemble has not yet been subjected to a dedicated paired significance test
 against the live meta-learner, which constrains inferential claims. Finally,
-although artifact pinning substantially improves reproducibility, future thesis
-updates must continue to cite the exact runtime artifact version used to produce
-each benchmark table.
+the current `hybrid_dl` runtime is not calibrated because no pinned temperature
+row exists for that model, and the current aspect-analysis feature should be
+described as a keyword-level aspect proxy rather than full ABSA. Although
+artifact pinning substantially improves reproducibility, future thesis updates
+must continue to cite the exact runtime artifact version used to produce each
+benchmark table.
 
 ### 4.8 Chapter Summary
 

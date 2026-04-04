@@ -487,6 +487,7 @@ def analyze_youtube_video(request):
                 "models_used": getattr(engine, "base_models", ensemble_models),
                 "weights": getattr(engine, "weights", ensemble_weights),
                 "weights_source": getattr(engine, "weights_source", ensemble_weights_source),
+                "weights_optimization_requested": ensemble_weights_optimization,
                 "model_errors": getattr(engine, "model_errors", {}),
             }
         if sentiment_model == "meta_learner":

@@ -1,5 +1,7 @@
 import json
-from types import SimpleNamespace
+import pickle
+import sys
+from types import ModuleType, SimpleNamespace
 from unittest.mock import patch, MagicMock
 import tempfile
 from pathlib import Path
@@ -252,6 +254,10 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.data["analysis_meta"]["ensemble"]["weights_source"],
+            "nsga2",
+        )
+        self.assertEqual(
+            response.data["analysis_meta"]["ensemble"]["weights_optimization_requested"],
             "nsga2",
         )
         mock_get_engine.assert_called_with(
@@ -528,6 +534,160 @@ class AnalysisUtilsTests(APITestCase):
             intervals["Positive"]["lower"],
             intervals["Positive"]["upper"],
         )
+
+
+class LiveWiringEngineTests(SimpleTestCase):
+    def test_ensemble_runtime_switches_between_pso_and_nsga2_weights(self):
+        from src.sentiment.engines.ensemble_engine import EnsembleSentimentEngine
+
+        def _artifact_loader(name):
+            artifacts = {
+                "temperature_scaling": {"models": []},
+                "pso_ensemble_weights": {
+                    "weights": {"logreg": 0.2, "svm": 0.3, "tfidf": 0.5}
+                },
+                "multi_objective_ensemble": {
+                    "knee_point": {
+                        "weights": {"logreg": 0.7, "svm": 0.2, "tfidf": 0.1}
+                    }
+                },
+            }
+            return artifacts.get(name, {})
+
+        with patch(
+            "src.sentiment.factory.get_base_engine",
+            return_value=MagicMock(),
+        ), patch(
+            "src.sentiment.engines.ensemble_engine.load_runtime_artifact_json",
+            side_effect=_artifact_loader,
+        ):
+            pso_engine = EnsembleSentimentEngine(weights_optimization="pso")
+            nsga2_engine = EnsembleSentimentEngine(weights_optimization="nsga2")
+
+        self.assertEqual(pso_engine.weights_source, "pso")
+        self.assertEqual(nsga2_engine.weights_source, "nsga2")
+        self.assertAlmostEqual(pso_engine.weights["tfidf"], 0.5)
+        self.assertAlmostEqual(nsga2_engine.weights["logreg"], 0.7)
+
+    def test_hybrid_dl_runtime_remains_uncalibrated_without_artifact_row(self):
+        from src.sentiment.engines.hybrid_dl_engine import HybridDLSentimentEngine
+
+        fake_torch = ModuleType("torch")
+        fake_torch.__path__ = []
+        fake_torch.long = "long"
+        fake_torch.cuda = SimpleNamespace(is_available=lambda: False)
+        fake_torch.backends = SimpleNamespace(
+            mps=SimpleNamespace(is_available=lambda: False)
+        )
+        fake_torch.device = lambda name: name
+        fake_torch.load = lambda path, map_location=None: {
+            "model_state_dict": {"weights": [1.0]}
+        }
+
+        fake_torch_nn = ModuleType("torch.nn")
+        fake_torch_nn.__path__ = []
+        fake_torch_nn_functional = ModuleType("torch.nn.functional")
+
+        fake_hybrid_module = ModuleType(
+            "research.architectures.hybrid_cnn_bilstm"
+        )
+
+        class FakeHybridCNNBiLSTM:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+
+            def load_state_dict(self, state_dict):
+                self.state_dict = state_dict
+
+            def to(self, device):
+                self.device = device
+                return self
+
+            def eval(self):
+                self.was_evaluated = True
+
+        fake_hybrid_module.HybridCNNBiLSTM = FakeHybridCNNBiLSTM
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            model_path = temp_path / "hybrid.pt"
+            vocab_path = temp_path / "vocab.pkl"
+            model_path.write_bytes(b"stub")
+            with open(vocab_path, "wb") as handle:
+                pickle.dump(
+                    {"word2idx": {"<PAD>": 0, "<UNK>": 1, "hello": 2}},
+                    handle,
+                )
+
+            with patch.dict(
+                sys.modules,
+                {
+                    "torch": fake_torch,
+                    "torch.nn": fake_torch_nn,
+                    "torch.nn.functional": fake_torch_nn_functional,
+                    "research.architectures.hybrid_cnn_bilstm": fake_hybrid_module,
+                },
+            ), patch(
+                "src.sentiment.engines.hybrid_dl_engine.load_runtime_artifact_json",
+                return_value={"models": [{"model": "logreg", "temperature": 0.9}]},
+            ):
+                engine = HybridDLSentimentEngine(
+                    model_path=model_path,
+                    vocab_path=vocab_path,
+                    device="cpu",
+                )
+
+        self.assertEqual(engine.temperature, 1.0)
+        self.assertFalse(engine.calibration_applied)
+
+    def test_fuzzy_runtime_only_activates_nf_gate_for_matching_model_set(self):
+        from src.sentiment.engines.fuzzy_engine import FuzzyEnsembleSentimentEngine
+
+        fake_fuzzy_module = ModuleType(
+            "research.computational_intelligence.fuzzy.engine_integration"
+        )
+
+        class FakeFuzzySentimentEngine:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+
+        fake_fuzzy_module.FuzzySentimentEngine = FakeFuzzySentimentEngine
+
+        nf_artifact = {
+            "architecture": {"model_names": ["logreg", "svm", "tfidf"]},
+            "learned_mfs": [
+                {
+                    "model": "logreg",
+                    "center": 0.8,
+                    "width": 0.1,
+                    "alpha": 1.0,
+                }
+            ],
+        }
+
+        with patch.dict(
+            sys.modules,
+            {
+                "research.computational_intelligence.fuzzy.engine_integration": (
+                    fake_fuzzy_module
+                )
+            },
+        ), patch(
+            "src.sentiment.factory.get_base_engine",
+            return_value=MagicMock(),
+        ), patch(
+            "src.sentiment.engines.fuzzy_engine.load_runtime_artifact_json",
+            return_value=nf_artifact,
+        ):
+            matching_engine = FuzzyEnsembleSentimentEngine(
+                base_models=["logreg", "svm", "tfidf"]
+            )
+            partial_engine = FuzzyEnsembleSentimentEngine(
+                base_models=["logreg", "svm"]
+            )
+
+        self.assertTrue(bool(matching_engine._nf_mfs))
+        self.assertFalse(bool(partial_engine._nf_mfs))
 
 
 class YouTubePreprocessorTests(SimpleTestCase):
