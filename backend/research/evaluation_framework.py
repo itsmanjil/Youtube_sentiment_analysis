@@ -15,6 +15,7 @@ from scipy import stats
 from typing import Dict, List, Tuple, Any
 import json
 from datetime import datetime
+from pathlib import Path
 from research.evaluation.calibration import compute_calibration_metrics
 
 
@@ -415,7 +416,7 @@ class ThesisEvaluationFramework:
         return (f"{better_model} achieves {significance}ly higher F1 scores than {worse_model} "
                f"(p={p_value:.4f}, mean diff={abs(mean_diff):.4f}).")
 
-    def generate_thesis_report(self, output_path: str = "evaluation_report.json"):
+    def generate_thesis_report(self, output_path: str = "results/evaluation_report.json"):
         """
         Generate comprehensive thesis-quality evaluation report
 
@@ -460,11 +461,14 @@ class ThesisEvaluationFramework:
                 }
 
         # Save to file
-        with open(output_path, 'w') as f:
+        output_file = Path(output_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        with output_file.open('w', encoding='utf-8') as f:
             json.dump(report, f, indent=2)
 
         print(f"\n{'='*80}")
-        print(f"Thesis Evaluation Report saved to: {output_path}")
+        print(f"Thesis Evaluation Report saved to: {output_file}")
         print(f"{'='*80}\n")
 
         # Print summary table
@@ -551,6 +555,6 @@ if __name__ == "__main__":
     )
 
     # Generate thesis report
-    evaluator.generate_thesis_report(output_path="thesis_evaluation_report.json")
+    evaluator.generate_thesis_report(output_path="results/thesis_evaluation_report.json")
 
-    print("\n✅ Evaluation complete! Check 'thesis_evaluation_report.json' for full results.")
+    print("\n✅ Evaluation complete! Check 'results/thesis_evaluation_report.json' for full results.")

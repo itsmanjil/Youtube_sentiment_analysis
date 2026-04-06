@@ -11,6 +11,8 @@ A full-stack app for analyzing YouTube video comments with Django REST Framework
 
 ## Repository Layout
 
+The first tree below is historical. Use the canonical layout section that follows for the current repository structure.
+
 ```text
 .
 ├── backend/
@@ -34,6 +36,35 @@ A full-stack app for analyzing YouTube video comments with Django REST Framework
 └── .github/workflows/ci.yml
 ```
 
+Canonical layout:
+
+```text
+.
+|- backend/
+|  |- app/                  # Analysis API, models, persistence
+|  |- app_api/              # JWT serializer/view extensions
+|  |- core/                 # Django settings and URL configuration
+|  |- data/                 # Datasets and split artifacts
+|  |- docs/                 # Thesis and project documentation
+|  |- figures/              # Generated plots and figures
+|  |- models/               # Trained model artifacts
+|  |- research/             # Thesis and experiment code
+|  |- results/              # Generated reports and benchmark outputs
+|  |- scripts/              # Data-prep utilities
+|  |- src/                  # Reusable preprocessing and sentiment engines
+|  |- tests/                # Backend test suites
+|  `- users/                # Registration, profile, JWT alias/logout endpoints
+|- frontend/
+|  |- public/
+|  |- src/
+|  |- package.json
+|  `- vite.config.mjs
+|- .github/workflows/ci.yml
+`- README.md
+```
+
+The repo root is intentionally thin. Backend Python manifests live in `backend/`, and frontend Node manifests live in `frontend/`.
+
 ## Quick Start
 
 ### Prerequisites
@@ -45,10 +76,10 @@ A full-stack app for analyzing YouTube video comments with Django REST Framework
 
 ```bash
 cd backend
-python3 -m venv venv
-source venv/bin/activate
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
+copy .env.example .env
 python -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('punkt')"
 python manage.py migrate
 python manage.py runserver
@@ -86,7 +117,7 @@ Backend env vars live in `backend/.env`.
 | `CSRF_TRUSTED_ORIGINS` | recommended | Usually mirrors `CORS_ALLOWED_ORIGINS`. |
 | `YOUTUBE_API_KEY` | optional | Enables the official YouTube Data API path. |
 
-The checked-in template is [backend/.env.example](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/.env.example).
+The checked-in template is `backend/.env.example`.
 
 ## Main API Routes
 
@@ -145,7 +176,7 @@ Important constraints:
 
 ## Frontend Routes
 
-Primary routes defined in [frontend/src/App.jsx](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/frontend/src/App.jsx):
+Primary routes defined in `frontend/src/App.jsx`:
 
 - Public: `/`, `/signin`, `/register`
 - Protected: `/search`, `/dashboard`, `/monitoring`, `/profile`, `/report/:name`
@@ -157,8 +188,8 @@ Primary routes defined in [frontend/src/App.jsx](/Users/deadshot/Documents/GitHu
 
 ```bash
 cd backend
-./venv/bin/python manage.py check
-./venv/bin/python manage.py test app app_api users
+python manage.py check
+python manage.py test app app_api users
 ```
 
 ### Frontend
@@ -168,11 +199,11 @@ cd frontend
 npm test -- --run
 ```
 
-Additional frontend testing notes live in [frontend/TESTING_GUIDE.md](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/frontend/TESTING_GUIDE.md).
+Additional frontend testing notes live in `frontend/TESTING_GUIDE.md`.
 
 ## CI
 
-GitHub Actions is configured in [ci.yml](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/.github/workflows/ci.yml) and runs:
+GitHub Actions is configured in `.github/workflows/ci.yml` and runs:
 
 - `python manage.py check`
 - `python manage.py test app app_api users`
@@ -190,10 +221,13 @@ on every `push` and `pull_request`.
 
 ## Related Docs
 
-- [backend/docs/ARCHITECTURE.md](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/docs/ARCHITECTURE.md)
-- [backend/docs/ROUTE_A_IMPLEMENTATION_ROADMAP.md](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/docs/ROUTE_A_IMPLEMENTATION_ROADMAP.md)
-- [backend/docs/THESIS_RISKS_GAPS.md](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/docs/THESIS_RISKS_GAPS.md)
-- [frontend/TESTING_GUIDE.md](/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/frontend/TESTING_GUIDE.md)
+- `backend/docs/ARCHITECTURE.md`
+- `backend/docs/ROUTE_A_IMPLEMENTATION_ROADMAP.md`
+- `backend/docs/THESIS_EXPERIMENT_GUIDE.md`
+- `backend/docs/THESIS_RISKS_GAPS.md`
+- `backend/README_THESIS.md`
+- `backend/results/thesis_evaluation_report.json`
+- `frontend/TESTING_GUIDE.md`
 
 ## License
 
