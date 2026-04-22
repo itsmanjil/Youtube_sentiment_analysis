@@ -4,14 +4,41 @@ Neuro-Fuzzy Confidence Gating System
 
 Architecture
 ------------
-This module implements an Adaptive Neuro-Fuzzy Inference System (ANFIS-lite)
-that dynamically routes each sample to the most appropriate model based on
-per-model confidence signals.
+This module implements a **simplified neuro-fuzzy gating mechanism** inspired
+by Adaptive Neuro-Fuzzy Inference Systems (ANFIS) that dynamically routes
+each sample to the most appropriate model based on per-model confidence
+signals.
 
 Unlike the fixed fuzzy grid search (backend/docs/FUZZY_THEORETICAL_GROUNDING.md),
 which applies the same static weights to every sample, the neuro-fuzzy gate
 *adapts per-sample*: it reads each model's confidence for that input and
 produces a soft routing weight learned from the validation set.
+
+Relationship to ANFIS
+~~~~~~~~~~~~~~~~~~~~~
+A full ANFIS (Jang, 1993) with M models and K fuzzy sets per model would
+instantiate K^M = 3^3 = 27 rules using product t-norm across all model
+dimensions.  This module deliberately employs a **simplified single-model
+rule base** where each model's gate is computed independently:
+
+    gate_m = Σ_k  α_{m,k} · μ_{m,k}(c_m)
+
+This simplification reduces the rule base from 27 (combinatorial) to
+3 × 3 = 9 independent activations, which is more appropriate for our
+problem because:
+
+1. **Overfitting avoidance**: 27 rules with only 3 base models risks
+   overfitting the validation set (the curse of dimensionality in the
+   rule space).
+2. **Interpretability**: per-model gates are directly interpretable —
+   the α_{m,k} consequent weights reveal which confidence regions
+   increase or decrease each model's influence.
+3. **Computational efficiency**: L-BFGS-B converges reliably with 27
+   parameters (9 per model × 3 params each).
+
+The simplification preserves the key ANFIS principles of learned membership
+functions and gradient-based parameter fitting while avoiding the
+combinatorial rule explosion.
 
 System design
 ~~~~~~~~~~~~~
@@ -22,11 +49,11 @@ System design
     Fuzzification: three Gaussian MFs per model — Low / Medium / High
                   μ_{m,k}(c_m) = exp(−0.5 · ((c_m − center_{m,k}) / width_{m,k})²)
 
-    Rule activation: each of the 3^3 = 27 rules fires proportionally
-                  (product t-norm across models)
-                  In practice we use a *simplified* single-model rule base:
-                  gate_m = softmax(Σ_k  α_{m,k} · μ_{m,k}(c_m))
+    Rule activation (simplified per-model):
+                  gate_m = Σ_k  α_{m,k} · μ_{m,k}(c_m)
                   where α_{m,k} are learned consequent weights.
+                  NOTE: this is a per-model linear combination of MF
+                  activations, NOT a product t-norm across models.
 
     Defuzzification: gate weights g = softmax(raw_gate)
                   Final probs = Σ_m g_m · P_m
@@ -45,10 +72,14 @@ Comparison baseline
     PSO ensemble    —  also static, optimised globally
     Neuro-fuzzy     —  per-sample adaptive weights (this module)
 
-Reference
----------
+References
+----------
     Jang, J.-S. R. (1993). ANFIS: Adaptive-network-based fuzzy inference
     system. IEEE Transactions on Systems, Man, and Cybernetics, 23(3), 665–685.
+
+    Takagi, T. & Sugeno, M. (1985). Fuzzy identification of systems and its
+    applications to modeling and control. IEEE Transactions on Systems, Man,
+    and Cybernetics, SMC-15(1), 116–132.
 
 Usage
 -----
@@ -160,6 +191,11 @@ class NeuroFuzzyGate:
     """
     Per-sample adaptive ensemble router using learned Gaussian MFs.
 
+    This implements a *simplified* neuro-fuzzy gating mechanism where each
+    model's gate value is computed independently (per-model rule base),
+    rather than the full combinatorial ANFIS rule base.  See module
+    docstring for justification.
+
     Parameters (flattened vector θ, length = n_models × n_sets × 3)
     ---------------------------------------------------------------
     For model m, fuzzy set k:
@@ -195,6 +231,9 @@ class NeuroFuzzyGate:
     ) -> np.ndarray:
         """
         Compute per-sample, per-model aggregated fuzzy gate strength.
+
+        Each model's gate is the weighted sum of its Gaussian MF activations
+        (simplified per-model rule base, not cross-model product t-norm).
 
         Returns shape (n_samples, n_models) — raw (pre-softmax) gate values.
         """
@@ -366,7 +405,7 @@ def build_report(
         "# Neuro-Fuzzy Confidence Gating System\n",
         "## Architecture\n",
         "Per-sample adaptive ensemble router using learned Gaussian membership "
-        "functions (ANFIS-lite).\n",
+        "functions (simplified neuro-fuzzy gating inspired by ANFIS).\n",
         "- **Input**: confidence vector c = [c_logreg, c_svm, c_tfidf]",
         "- **Fuzzification**: 3 Gaussian MFs per model (Low / Medium / High)",
         "- **Gate weights**: softmax(Σ_k α_{m,k} · μ_{m,k}(c_m))",

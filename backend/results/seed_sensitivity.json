@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "data": "/sessions/funny-wizardly-einstein/mnt/Youtube_sentiment_analysis/backend/data/train.csv",
+    "n_per_class": 8000,
+    "seeds": [
+      0,
+      7,
+      13,
+      42,
+      123
+    ],
+    "pipeline": "TF-IDF(1,2, 50k) + LogReg(balanced)",
+    "note": "Seed sensitivity analysis. Each seed re-draws the stratified subsample AND re-splits train/val AND re-seeds the model, so this captures the full variance stack, not just model init."
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "n_train": 19200,
+      "n_val": 4800,
+      "accuracy": 0.64375,
+      "f1_macro": 0.6439406077075983,
+      "cohen_kappa": 0.46562499999999996,
+      "vocab_size": 48112
+    },
+    {
+      "seed": 7,
+      "n_train": 19200,
+      "n_val": 4800,
+      "accuracy": 0.6522916666666667,
+      "f1_macro": 0.6530047199934764,
+      "cohen_kappa": 0.47843749999999996,
+      "vocab_size": 47694
+    },
+    {
+      "seed": 13,
+      "n_train": 19200,
+      "n_val": 4800,
+      "accuracy": 0.6489583333333333,
+      "f1_macro": 0.649891733095886,
+      "cohen_kappa": 0.47343750000000007,
+      "vocab_size": 47887
+    },
+    {
+      "seed": 42,
+      "n_train": 19200,
+      "n_val": 4800,
+      "accuracy": 0.650625,
+      "f1_macro": 0.6510443372322343,
+      "cohen_kappa": 0.4759375,
+      "vocab_size": 48045
+    },
+    {
+      "seed": 123,
+      "n_train": 19200,
+      "n_val": 4800,
+      "accuracy": 0.640625,
+      "f1_macro": 0.6412587937399095,
+      "cohen_kappa": 0.4609375,
+      "vocab_size": 48241
+    }
+  ],
+  "aggregate": {
+    "accuracy": {
+      "mean": 0.64725,
+      "std": 0.00437876821847322,
+      "min": 0.640625,
+      "max": 0.6522916666666667,
+      "range": 0.011666666666666714
+    },
+    "f1_macro": {
+      "mean": 0.6478280383538209,
+      "std": 0.004464718111788293,
+      "min": 0.6412587937399095,
+      "max": 0.6530047199934764,
+      "range": 0.011745926253566963
+    },
+    "cohen_kappa": {
+      "mean": 0.47087500000000004,
+      "std": 0.0065681523277098305,
+      "min": 0.4609375,
+      "max": 0.47843749999999996,
+      "range": 0.01749999999999996
+    }
+  }
+}

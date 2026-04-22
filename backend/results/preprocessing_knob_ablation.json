@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "data": "/sessions/funny-wizardly-einstein/mnt/Youtube_sentiment_analysis/backend/data/train.csv",
+    "n_train": 14400,
+    "n_val": 3600,
+    "seed": 42,
+    "pipeline": "TF-IDF(1,2, max_feat=30k) + LogReg(C=1.0, balanced)",
+    "note": "Knob-level ablation of ClassicalPreprocessConfig. Complements thesis_preprocess_ablation.md, which compares dataset-level cleaning stages rather than preprocessing knobs."
+  },
+  "baseline": {
+    "expand_negation_contractions": false,
+    "negation_tag": false,
+    "remove_stopwords": false,
+    "vocab_size": 30000,
+    "accuracy": 0.6338888888888888,
+    "f1_macro": 0.6349021665781877
+  },
+  "best": {
+    "expand_negation_contractions": true,
+    "negation_tag": false,
+    "remove_stopwords": true,
+    "vocab_size": 26595,
+    "accuracy": 0.6361111111111111,
+    "f1_macro": 0.6366624073452485
+  },
+  "delta_f1_best_vs_baseline": 0.0017602407670608278,
+  "records": [
+    {
+      "expand_negation_contractions": false,
+      "negation_tag": false,
+      "remove_stopwords": false,
+      "vocab_size": 30000,
+      "accuracy": 0.6338888888888888,
+      "f1_macro": 0.6349021665781877
+    },
+    {
+      "expand_negation_contractions": false,
+      "negation_tag": false,
+      "remove_stopwords": true,
+      "vocab_size": 26605,
+      "accuracy": 0.635,
+      "f1_macro": 0.6355090661705342
+    },
+    {
+      "expand_negation_contractions": false,
+      "negation_tag": true,
+      "remove_stopwords": false,
+      "vocab_size": 30000,
+      "accuracy": 0.6286111111111111,
+      "f1_macro": 0.6299901023952116
+    },
+    {
+      "expand_negation_contractions": false,
+      "negation_tag": true,
+      "remove_stopwords": true,
+      "vocab_size": 26217,
+      "accuracy": 0.6255555555555555,
+      "f1_macro": 0.6264284718794509
+    },
+    {
+      "expand_negation_contractions": true,
+      "negation_tag": false,
+      "remove_stopwords": false,
+      "vocab_size": 30000,
+      "accuracy": 0.6336111111111111,
+      "f1_macro": 0.6345648611347007
+    },
+    {
+      "expand_negation_contractions": true,
+      "negation_tag": false,
+      "remove_stopwords": true,
+      "vocab_size": 26595,
+      "accuracy": 0.6361111111111111,
+      "f1_macro": 0.6366624073452485
+    },
+    {
+      "expand_negation_contractions": true,
+      "negation_tag": true,
+      "remove_stopwords": false,
+      "vocab_size": 30000,
+      "accuracy": 0.6316666666666667,
+      "f1_macro": 0.6329386382056903
+    },
+    {
+      "expand_negation_contractions": true,
+      "negation_tag": true,
+      "remove_stopwords": true,
+      "vocab_size": 26275,
+      "accuracy": 0.6258333333333334,
+      "f1_macro": 0.6267760139521933
+    }
+  ]
+}

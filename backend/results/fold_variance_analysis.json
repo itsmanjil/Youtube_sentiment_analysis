@@ -1,0 +1,584 @@
+{
+  "metadata": {
+    "data": "/sessions/funny-wizardly-einstein/mnt/Youtube_sentiment_analysis/backend/data/train.csv",
+    "n_samples": 30000,
+    "n_folds": 10,
+    "seed": 42,
+    "model": "TF-IDF(1,2) + LogReg(C=1.0, class_weight=balanced)",
+    "note": "This replaces the synthetic `make_classification` demo run that was previously stored as `thesis_evaluation_report.json` (now renamed to `DEMO_synthetic_evaluation_report.json`). All numbers here are computed on a stratified subsample of the real YouTube training data."
+  },
+  "aggregate": {
+    "accuracy_mean": 0.6509666666666666,
+    "accuracy_std": 0.009847108994804286,
+    "f1_macro_mean": 0.6512700916053509,
+    "f1_macro_std": 0.0098415656207272,
+    "cohen_kappa_mean": 0.47644999999999993,
+    "cohen_kappa_std": 0.014770663492206446
+  },
+  "fold_z_scores_f1": {
+    "1": -0.22280714351237427,
+    "2": 0.5899456700132373,
+    "3": -0.5807593206602079,
+    "4": -1.9019870909811507,
+    "5": 0.7884410076822785,
+    "6": 1.0746224141506877,
+    "7": -1.0852289023528163,
+    "8": 1.569241351704913,
+    "9": 0.20364300844562877,
+    "10": -0.43511099449013974
+  },
+  "best_fold": 8,
+  "worst_fold": 4,
+  "folds": [
+    {
+      "fold": 1,
+      "metrics": {
+        "accuracy": 0.6486666666666666,
+        "f1_macro": 0.6490773204814843,
+        "cohen_kappa": 0.473
+      },
+      "confusion_matrix": [
+        [
+          672,
+          232,
+          96
+        ],
+        [
+          269,
+          580,
+          151
+        ],
+        [
+          160,
+          146,
+          694
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 20.746666666666666,
+          "median": 15.0,
+          "std": 22.32775154127457,
+          "p10": 5.0,
+          "p90": 41.09999999999991
+        },
+        "char_length": {
+          "mean": 115.22566666666667,
+          "median": 80.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.8015064244572442
+    },
+    {
+      "fold": 2,
+      "metrics": {
+        "accuracy": 0.6563333333333333,
+        "f1_macro": 0.65707608063004,
+        "cohen_kappa": 0.48450000000000004
+      },
+      "confusion_matrix": [
+        [
+          677,
+          219,
+          104
+        ],
+        [
+          258,
+          607,
+          135
+        ],
+        [
+          146,
+          169,
+          685
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 20.185333333333332,
+          "median": 14.0,
+          "std": 21.62574819258027,
+          "p10": 6.0,
+          "p90": 41.0
+        },
+        "char_length": {
+          "mean": 111.63333333333334,
+          "median": 78.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.8071733753091972
+    },
+    {
+      "fold": 3,
+      "metrics": {
+        "accuracy": 0.6446666666666667,
+        "f1_macro": 0.6455545106406437,
+        "cohen_kappa": 0.46699999999999997
+      },
+      "confusion_matrix": [
+        [
+          661,
+          236,
+          103
+        ],
+        [
+          288,
+          580,
+          132
+        ],
+        [
+          144,
+          163,
+          693
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 21.771,
+          "median": 14.0,
+          "std": 29.235045618800278,
+          "p10": 6.0,
+          "p90": 42.0
+        },
+        "char_length": {
+          "mean": 120.24233333333333,
+          "median": 79.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.7996317556590491
+    },
+    {
+      "fold": 4,
+      "metrics": {
+        "accuracy": 0.6323333333333333,
+        "f1_macro": 0.6325515608377819,
+        "cohen_kappa": 0.4485
+      },
+      "confusion_matrix": [
+        [
+          656,
+          242,
+          102
+        ],
+        [
+          299,
+          548,
+          153
+        ],
+        [
+          165,
+          142,
+          693
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 21.52166666666667,
+          "median": 15.0,
+          "std": 25.861558290679667,
+          "p10": 6.0,
+          "p90": 42.0
+        },
+        "char_length": {
+          "mean": 118.88733333333333,
+          "median": 80.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.797068891741549
+    },
+    {
+      "fold": 5,
+      "metrics": {
+        "accuracy": 0.659,
+        "f1_macro": 0.6590295855213167,
+        "cohen_kappa": 0.48850000000000005
+      },
+      "confusion_matrix": [
+        [
+          696,
+          208,
+          96
+        ],
+        [
+          281,
+          577,
+          142
+        ],
+        [
+          143,
+          153,
+          704
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 20.638333333333332,
+          "median": 14.0,
+          "std": 26.251391021345054,
+          "p10": 6.0,
+          "p90": 40.0
+        },
+        "char_length": {
+          "mean": 114.603,
+          "median": 75.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.7959609263527604
+    },
+    {
+      "fold": 6,
+      "metrics": {
+        "accuracy": 0.6613333333333333,
+        "f1_macro": 0.6618460586127938,
+        "cohen_kappa": 0.492
+      },
+      "confusion_matrix": [
+        [
+          697,
+          216,
+          87
+        ],
+        [
+          250,
+          603,
+          147
+        ],
+        [
+          152,
+          164,
+          684
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 21.641,
+          "median": 15.0,
+          "std": 27.39567092930317,
+          "p10": 6.0,
+          "p90": 42.0
+        },
+        "char_length": {
+          "mean": 119.67233333333333,
+          "median": 79.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.8039473684210526
+    },
+    {
+      "fold": 7,
+      "metrics": {
+        "accuracy": 0.6406666666666667,
+        "f1_macro": 0.6405897401482507,
+        "cohen_kappa": 0.46099999999999997
+      },
+      "confusion_matrix": [
+        [
+          682,
+          204,
+          114
+        ],
+        [
+          276,
+          569,
+          155
+        ],
+        [
+          155,
+          174,
+          671
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 21.055333333333333,
+          "median": 14.0,
+          "std": 23.965856370168698,
+          "p10": 6.0,
+          "p90": 40.0
+        },
+        "char_length": {
+          "mean": 116.326,
+          "median": 79.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.7987041511091588
+    },
+    {
+      "fold": 8,
+      "metrics": {
+        "accuracy": 0.6666666666666666,
+        "f1_macro": 0.6667138833444827,
+        "cohen_kappa": 0.5
+      },
+      "confusion_matrix": [
+        [
+          706,
+          206,
+          88
+        ],
+        [
+          267,
+          588,
+          145
+        ],
+        [
+          159,
+          135,
+          706
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 20.973666666666666,
+          "median": 14.0,
+          "std": 23.025630064970837,
+          "p10": 5.0,
+          "p90": 42.0
+        },
+        "char_length": {
+          "mean": 116.12933333333334,
+          "median": 78.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.7942265795206972
+    },
+    {
+      "fold": 9,
+      "metrics": {
+        "accuracy": 0.6533333333333333,
+        "f1_macro": 0.6532742576363745,
+        "cohen_kappa": 0.48
+      },
+      "confusion_matrix": [
+        [
+          677,
+          233,
+          90
+        ],
+        [
+          261,
+          574,
+          165
+        ],
+        [
+          146,
+          145,
+          709
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 21.023,
+          "median": 14.0,
+          "std": 25.624008358048382,
+          "p10": 5.0,
+          "p90": 41.0
+        },
+        "char_length": {
+          "mean": 116.26366666666667,
+          "median": 78.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.800622360524561
+    },
+    {
+      "fold": 10,
+      "metrics": {
+        "accuracy": 0.6466666666666666,
+        "f1_macro": 0.6469879182003412,
+        "cohen_kappa": 0.47
+      },
+      "confusion_matrix": [
+        [
+          661,
+          252,
+          87
+        ],
+        [
+          273,
+          569,
+          158
+        ],
+        [
+          159,
+          131,
+          710
+        ]
+      ],
+      "descriptive": {
+        "n": 3000,
+        "class_counts": {
+          "Negative": 1000,
+          "Neutral": 1000,
+          "Positive": 1000
+        },
+        "class_fractions": {
+          "Negative": 0.3333333333333333,
+          "Neutral": 0.3333333333333333,
+          "Positive": 0.3333333333333333
+        },
+        "token_length": {
+          "mean": 21.787333333333333,
+          "median": 14.0,
+          "std": 30.90260139355405,
+          "p10": 6.0,
+          "p90": 44.0
+        },
+        "char_length": {
+          "mean": 121.60033333333334,
+          "median": 78.0
+        }
+      },
+      "class_skew_vs_global": {
+        "Negative": 0.0,
+        "Neutral": 0.0,
+        "Positive": 0.0
+      },
+      "vocab_overlap_with_train": 0.7871481678173128
+    }
+  ]
+}

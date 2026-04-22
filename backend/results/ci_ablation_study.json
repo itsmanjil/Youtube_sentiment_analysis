@@ -1,0 +1,89 @@
+{
+  "study": "CI Ablation Study",
+  "description": "Component-wise contribution analysis for Computational Intelligence methods",
+  "baseline": {
+    "model": "Logistic Regression",
+    "macro_f1": 0.6943,
+    "ece": 0.0068
+  },
+  "ablation_steps": [
+    {
+      "step": 1,
+      "component": "Baseline",
+      "description": "Best single model (Logistic Regression)",
+      "macro_f1": 0.6943,
+      "delta_f1": 0.0,
+      "ece": 0.0068,
+      "delta_ece": 0.0,
+      "notes": "TFIDF+SVM baseline: 0.6817"
+    },
+    {
+      "step": 2,
+      "component": "+ Ensemble",
+      "description": "Uniform weighted ensemble (logreg+svm+tfidf)",
+      "macro_f1": 0.6938,
+      "delta_f1": -0.000500000000000056,
+      "ece": 0.026014,
+      "delta_ece": 0.019214,
+      "notes": "Simple voting with equal weights"
+    },
+    {
+      "step": 3,
+      "component": "+ Meta-learner",
+      "description": "Stacking: logistic regression meta-model",
+      "macro_f1": 0.6967,
+      "delta_f1": 0.0029000000000000137,
+      "ece": 0.02029,
+      "delta_ece": -0.005724,
+      "notes": "Learns optimal combination weights"
+    },
+    {
+      "step": 4,
+      "component": "+ PSO",
+      "description": "Particle Swarm Optimization for weights",
+      "macro_f1": 0.6951,
+      "delta_f1": -0.0015999999999999348,
+      "ece": 0.025,
+      "delta_ece": 0.004710000000000002,
+      "notes": "Single-objective optimization (F1)"
+    },
+    {
+      "step": 5,
+      "component": "+ NSGA-II",
+      "description": "Multi-objective optimization (F1, ECE, Coverage)",
+      "macro_f1": 0.6949,
+      "delta_f1": -0.000200000000000089,
+      "ece": 0.081712,
+      "delta_ece": 0.056712000000000005,
+      "notes": "Pareto-optimized for three objectives"
+    },
+    {
+      "step": 6,
+      "component": "+ Temperature Scaling",
+      "description": "Calibration via temperature scaling",
+      "macro_f1": 0.6967,
+      "delta_f1": 0.0,
+      "ece": 0.022973,
+      "delta_ece": 0.0026830000000000014,
+      "notes": "Improves ECE without affecting F1"
+    },
+    {
+      "step": 7,
+      "component": "+ Neuro-Fuzzy Gating",
+      "description": "ANFIS-based ensemble gating mechanism",
+      "macro_f1": 0.6955,
+      "delta_f1": -0.0011999999999999789,
+      "ece": 0.007004,
+      "delta_ece": -0.015969,
+      "notes": "Learned gating: ECE reduced 73% vs static ensemble"
+    }
+  ],
+  "summary": {
+    "total_steps": 7,
+    "final_macro_f1": 0.6955,
+    "total_f1_delta": -0.0006000000000000449,
+    "final_ece": 0.007004,
+    "total_ece_delta": 0.061626000000000014,
+    "ece_reduction_pct": -3.000000000000003
+  }
+}
