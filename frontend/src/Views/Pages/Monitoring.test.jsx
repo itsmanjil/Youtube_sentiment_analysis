@@ -58,6 +58,16 @@ describe('Monitoring Component', () => {
       total_comments_analyzed: 200,
       analysis_model: 'LOGREG',
       fetched_date: '2024-01-01T10:00:00',
+      confidence_stats: {
+        mean: 0.82,
+      },
+      uncertainty_stats: {
+        high_uncertainty_ratio: 0.18,
+      },
+      calibration: {
+        applied: true,
+        temperature: 1.0311,
+      },
     },
     {
       id: 2,
@@ -266,6 +276,8 @@ describe('Monitoring Component', () => {
               video: mockAnalyses[0].video,
               total_comments: mockAnalyses[0].total_comments_analyzed,
               model_used: mockAnalyses[0].analysis_model,
+              uncertainty_stats: mockAnalyses[0].uncertainty_stats,
+              calibration: mockAnalyses[0].calibration,
               fetched_date: mockAnalyses[0].fetched_date,
             },
           },
@@ -292,6 +304,8 @@ describe('Monitoring Component', () => {
         expect.objectContaining({
           state: expect.objectContaining({
             sentiment_data: mockAnalyses[0].sentiment_data,
+            uncertainty_stats: mockAnalyses[0].uncertainty_stats,
+            calibration: mockAnalyses[0].calibration,
           }),
         })
       );
@@ -325,6 +339,18 @@ describe('Monitoring Component', () => {
     await waitFor(() => {
       const totalComments = screen.getAllByText('Total Comments: 200');
       expect(totalComments.length).toBe(2);
+    });
+  });
+
+  test('displays confidence, uncertainty, and calibration badges when available', async () => {
+    renderWithAuth(<Monitoring />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Confidence')).toBeInTheDocument();
+      expect(screen.getByText('Uncertainty')).toBeInTheDocument();
+      expect(screen.getByText('82%')).toBeInTheDocument();
+      expect(screen.getByText('18%')).toBeInTheDocument();
+      expect(screen.getByText('T=1.03')).toBeInTheDocument();
     });
   });
 

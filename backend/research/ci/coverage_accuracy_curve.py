@@ -170,7 +170,7 @@ def auc(sweep: List[dict], metric: str = "accuracy") -> float:
     """Area under the coverage-metric curve via trapezoidal rule."""
     cov = [r["coverage"] for r in sweep]
     val = [r[metric]     for r in sweep]
-    return float(np.trapz(val, cov))
+    return float(np.trapezoid(val, cov))
 
 
 # ---------------------------------------------------------------------------
@@ -370,15 +370,15 @@ def main() -> None:
         },
     }
     json_path = out_dir / "coverage_accuracy_curve.json"
-    with open(json_path, "w") as fh:
+    with open(json_path, "w", encoding="utf-8") as fh:
         json.dump(output_data, fh, indent=2)
-    print(f"\nSaved JSON → {json_path}")
+    print(f"\nSaved JSON -> {json_path}")
 
     report = build_report(results, summary)
     md_path = out_dir / "coverage_accuracy_curve.md"
-    with open(md_path, "w") as fh:
+    with open(md_path, "w", encoding="utf-8") as fh:
         fh.write(report)
-    print(f"Saved Markdown → {md_path}")
+    print(f"Saved Markdown -> {md_path}")
 
     # ------------------------------------------------------------------
     # 6. Console summary table

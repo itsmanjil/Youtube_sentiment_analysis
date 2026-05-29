@@ -24,9 +24,9 @@ import argparse
 import json
 import sys
 from collections import Counter
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Sequence, Tuple
 
 try:
     import pandas as pd
@@ -55,7 +55,7 @@ def _backend_dir() -> Path:
 
 
 def _utcnow() -> str:
-    return datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _normalize_text(series: pd.Series) -> pd.Series:
@@ -82,6 +82,7 @@ def _apply_youtube_preprocessing(
     min_words: int,
     chunk_size: int,
     primary_text_profile: str,
+    metadata_columns: Sequence[str] = (),
 ) -> Tuple[pd.DataFrame, Dict[str, int]]:
     """
     Apply the API's `YouTubePreprocessor` to the text column.
@@ -110,6 +111,11 @@ def _apply_youtube_preprocessing(
     if "__group__" in df.columns:
         group_col = "__group__"
         group_vals = df[group_col].astype(str).tolist()
+    metadata_values = {
+        column: df[column].astype(str).tolist()
+        for column in metadata_columns
+        if column in df.columns
+    }
 
     out_texts = []
     out_labels = []
@@ -117,10 +123,16 @@ def _apply_youtube_preprocessing(
     out_classical_texts = []
     out_transformer_texts = []
     out_groups = [] if group_vals is not None else None
+    out_metadata = {column: [] for column in metadata_values}
 
     stats = Counter()
 
-    def handle_one(raw_text: str, label: str, group_value: Optional[str]) -> None:
+    def handle_one(
+        raw_text: str,
+        label: str,
+        group_value: Optional[str],
+        row_metadata: Dict[str, str],
+    ) -> None:
         selected_profile = (
             "transformer"
             if primary_text_profile == "normalized"
@@ -169,6 +181,8 @@ def _apply_youtube_preprocessing(
         out_transformer_texts.append(transformer_text or processed)
         if out_groups is not None and group_value is not None:
             out_groups.append(group_value)
+        for column, value in row_metadata.items():
+            out_metadata[column].append(value)
 
     n = len(texts)
     if chunk_size <= 0:
@@ -177,7 +191,12 @@ def _apply_youtube_preprocessing(
     for start in range(0, n, chunk_size):
         end = min(start + chunk_size, n)
         for idx in range(start, end):
-            handle_one(texts[idx], labels[idx], group_vals[idx] if group_vals is not None else None)
+            handle_one(
+                texts[idx],
+                labels[idx],
+                group_vals[idx] if group_vals is not None else None,
+                {column: values[idx] for column, values in metadata_values.items()},
+            )
 
         # Minimal progress signal for long runs.
         if n >= 50000:
@@ -194,6 +213,8 @@ def _apply_youtube_preprocessing(
     )
     if out_groups is not None:
         out[group_col] = out_groups
+    for column, values in out_metadata.items():
+        out[column] = values
 
     return out, {k: int(v) for k, v in stats.items()}
 
@@ -261,6 +282,15 @@ def main() -> None:
             "Defaults to `classical` when --youtube_preprocess is enabled, otherwise `normalized`."
         ),
     )
+    parser.add_argument(
+        "--metadata_columns",
+        default="",
+        help=(
+            "Comma-separated source metadata columns to retain in exported splits, "
+            "or 'all' to keep all non-text/non-label source columns. Useful for "
+            "domain-shift evaluation by VideoID, PublishedAt, CountryCode, or CategoryID."
+        ),
+    )
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir) if args.output_dir else (_backend_dir() / "data")
@@ -272,9 +302,22 @@ def main() -> None:
     raw_columns = list(df.columns)
 
     text_col, label_col, group_col = _resolve_schema(df)
+    requested_metadata = [item.strip() for item in str(args.metadata_columns).split(",") if item.strip()]
+    if requested_metadata == ["all"]:
+        metadata_columns = [
+            column for column in raw_columns if column not in {text_col, label_col}
+        ]
+    else:
+        missing_metadata = [column for column in requested_metadata if column not in raw_columns]
+        if missing_metadata:
+            raise SystemExit(
+                "Requested metadata columns not found in source: "
+                f"{missing_metadata}. Available columns: {raw_columns}"
+            )
+        metadata_columns = requested_metadata
 
     # Reduce memory footprint early.
-    use_cols = [text_col, label_col] + ([group_col] if group_col else [])
+    use_cols = list(dict.fromkeys([text_col, label_col] + ([group_col] if group_col else []) + metadata_columns))
     df = df[use_cols].copy()
 
     # Normalize + validate
@@ -282,6 +325,8 @@ def main() -> None:
     df = df.rename(columns={text_col: "text", label_col: "label"})
     if group_col:
         df = df.rename(columns={group_col: "__group__"})
+        if group_col in metadata_columns:
+            df[group_col] = df["__group__"]
 
     df["text"] = _normalize_text(df["text"])
     df["label"] = df["label"].astype(str).str.title().str.strip()
@@ -315,6 +360,7 @@ def main() -> None:
             min_words=int(args.min_words),
             chunk_size=int(args.chunk_size),
             primary_text_profile=primary_text_profile,
+            metadata_columns=metadata_columns,
         )
 
     # Drop conflicting labels by (final) text.
@@ -379,6 +425,9 @@ def main() -> None:
     for extra_column in ("text_raw", "text_classical", "text_transformer"):
         if extra_column in final_train.columns:
             export_columns.append(extra_column)
+    for metadata_column in metadata_columns:
+        if metadata_column in final_train.columns and metadata_column not in export_columns:
+            export_columns.append(metadata_column)
 
     final_train[export_columns].to_csv(train_path, index=False)
     val_df[export_columns].to_csv(val_path, index=False)
@@ -411,6 +460,7 @@ def main() -> None:
             "chunk_size": int(args.chunk_size),
             "filter_stats": youtube_stats,
             "export_columns": export_columns,
+            "metadata_columns": metadata_columns,
         },
         "dedupe": {
             "conflicting_texts_dropped": conflicting_count,

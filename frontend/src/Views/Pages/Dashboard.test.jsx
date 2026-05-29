@@ -181,6 +181,33 @@ describe('Dashboard Component', () => {
     expect(screen.getByText('15.0%')).toBeInTheDocument(); // Low confidence ratio
   });
 
+  test('displays direct calibration metadata when analysis_meta is absent', async () => {
+    const analysisData = {
+      sentiment_data: {
+        Positive: 100,
+        Negative: 50,
+        Neutral: 50,
+      },
+      video: { title: 'Test Video' },
+      confidence_stats: {
+        mean: 0.85,
+        median: 0.90,
+        low_confidence_ratio: 0.15,
+      },
+      calibration: {
+        applied: true,
+        temperature: 1.0311,
+      },
+    };
+
+    renderWithContext(<Dashboard />, analysisData);
+
+    await waitFor(() => {
+      expect(screen.getByText('Calibrated')).toBeInTheDocument();
+      expect(screen.getByText(/Temperature T=1\.0311/)).toBeInTheDocument();
+    });
+  });
+
   test('displays ensemble model information', async () => {
     const analysisData = {
       sentiment_data: {

@@ -61,12 +61,12 @@ def main():
 
     # Load source labels for agreement check
     source_labels = {}
-    with open(LABELED) as f:
+    with open(LABELED, encoding="utf-8-sig", newline="") as f:
         for row in csv.DictReader(f):
             source_labels[row["text"].strip()] = row["label"].strip()
 
     # Load template
-    with open(TEMPLATE) as f:
+    with open(TEMPLATE, encoding="utf-8-sig", newline="") as f:
         rows = list(csv.DictReader(f))
 
     print(f"Labeling {len(rows)} rows...")
@@ -94,7 +94,7 @@ def main():
     # Write output
     fieldnames = ["text", "silver_label", "silver_confidence", "silver_probs",
                   "source_label", "agreement"]
-    with open(OUT, "w", newline="") as f:
+    with open(OUT, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
@@ -111,8 +111,9 @@ def main():
     print(f"Silver label distribution: {dict(label_dist)}")
     print(f"\nDisagreements ({len(disagree_rows)}):")
     for r in disagree_rows[:10]:
+        preview = r["text"][:70].encode("ascii", "backslashreplace").decode("ascii")
         print(f"  source={r['source_label']:8s} silver={r['silver_label']:8s} "
-              f"conf={r['silver_confidence']} | {r['text'][:70]}")
+              f"conf={r['silver_confidence']} | {preview}")
     if len(disagree_rows) > 10:
         print(f"  ... and {len(disagree_rows) - 10} more")
 

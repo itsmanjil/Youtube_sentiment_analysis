@@ -154,7 +154,10 @@ function Monitoring() {
             filtered: detail.filtered,
             sentiment_timeline: detail.sentiment_timeline,
             confidence_stats: detail.confidence_stats,
-            uncertainty_stats: (detail.analysis_meta || {}).uncertainty_stats,
+            uncertainty_stats:
+              detail.uncertainty_stats || (detail.analysis_meta || {}).uncertainty_stats,
+            calibration:
+              detail.calibration || (detail.analysis_meta || {}).calibration,
             sentiment_confidence_intervals: detail.sentiment_confidence_intervals,
             aspect_sentiment: detail.aspect_sentiment,
             analysis_meta: detail.analysis_meta,
@@ -461,7 +464,7 @@ function Monitoring() {
                                     </span>
                                   </div>
                                   <p className="text-xs text-muted mt-2">
-                                    Total: {analysis.total_comments_analyzed || total}
+                                    Total Comments: {analysis.total_comments_analyzed || total}
                                   </p>
                                 </div>
 

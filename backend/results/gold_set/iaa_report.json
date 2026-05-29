@@ -1,0 +1,47 @@
+{
+  "n_items": 300,
+  "n_annotators": 2,
+  "annotator_names": [
+    "annotator_1",
+    "annotator_2"
+  ],
+  "categories": [
+    "Negative",
+    "Neutral",
+    "Positive"
+  ],
+  "fully_annotated_items": 300,
+  "disputed_items": 9,
+  "metrics": {
+    "percent_agreement": 0.97,
+    "krippendorff_alpha": 0.954717,
+    "fleiss_kappa": 0.954641,
+    "cohen_kappa_pairwise": {
+      "annotator_1_vs_annotator_2": 0.954649
+    }
+  },
+  "gold_label_distribution": {
+    "Neutral": 108,
+    "Positive": 104,
+    "Negative": 79
+  },
+  "per_annotator_distribution": {
+    "annotator_1": {
+      "Neutral": 113,
+      "Positive": 107,
+      "Negative": 80
+    },
+    "annotator_2": {
+      "Neutral": 110,
+      "Positive": 105,
+      "Negative": 85
+    }
+  },
+  "interpretation": "strong agreement (alpha >= 0.80)",
+  "generated_at_utc": "2026-05-29T04:35:01.540022+00:00",
+  "annotator_files": [
+    "data\\gold_set_annotator_1.csv",
+    "data\\gold_set_annotator_2.csv"
+  ],
+  "text_overlap_mode": "intersection"
+}

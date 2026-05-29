@@ -1,0 +1,113 @@
+{
+  "created_at": "2026-05-18T01:46:33Z",
+  "source": {
+    "uri": "https://huggingface.co/datasets/AmaanP314/youtube-comment-sentiment/resolve/main/youtube-comments-sentiment.csv",
+    "raw_rows": 1032225,
+    "raw_columns": [
+      "CommentID",
+      "VideoID",
+      "VideoTitle",
+      "AuthorName",
+      "AuthorChannelID",
+      "CommentText",
+      "Sentiment",
+      "Likes",
+      "Replies",
+      "PublishedAt",
+      "CountryCode",
+      "CategoryID"
+    ]
+  },
+  "schema": {
+    "text_col": "CommentText",
+    "label_col": "Sentiment",
+    "group_col": "VideoID"
+  },
+  "normalization": {
+    "text_whitespace_collapse": true,
+    "text_strip": true,
+    "label_title_case": true,
+    "valid_labels": [
+      "Negative",
+      "Neutral",
+      "Positive"
+    ]
+  },
+  "sampling": {
+    "enabled": true,
+    "sample_rows": 10000,
+    "rows_after_sampling": 8090,
+    "random_state": 42,
+    "stratify_on_label": true
+  },
+  "youtube_preprocess": {
+    "enabled": true,
+    "primary_text_profile": "transformer",
+    "emoji_mode": "convert",
+    "min_words": 3,
+    "filter_spam": true,
+    "filter_language": true,
+    "chunk_size": 5000,
+    "filter_stats": {
+      "language": 1367,
+      "spam": 350,
+      "too_short": 158
+    },
+    "export_columns": [
+      "text",
+      "label",
+      "text_raw",
+      "text_classical",
+      "text_transformer",
+      "VideoID",
+      "VideoTitle",
+      "PublishedAt",
+      "CountryCode",
+      "CategoryID"
+    ],
+    "metadata_columns": [
+      "VideoID",
+      "VideoTitle",
+      "PublishedAt",
+      "CountryCode",
+      "CategoryID"
+    ]
+  },
+  "dedupe": {
+    "conflicting_texts_dropped": 6,
+    "duplicate_text_rows_removed": 16
+  },
+  "split": {
+    "strategy": "group",
+    "random_state": 42,
+    "test_size": 0.2,
+    "val_size": 0.2,
+    "paths": {
+      "train": "data\\route_a_domain_10k\\train.csv",
+      "val": "data\\route_a_domain_10k\\val.csv",
+      "test": "data\\route_a_domain_10k\\test.csv"
+    },
+    "rows": {
+      "train": 5140,
+      "val": 1309,
+      "test": 1641
+    },
+    "label_distribution": {
+      "train": {
+        "Negative": 1804,
+        "Positive": 1724,
+        "Neutral": 1612
+      },
+      "val": {
+        "Negative": 499,
+        "Positive": 434,
+        "Neutral": 376
+      },
+      "test": {
+        "Negative": 581,
+        "Positive": 532,
+        "Neutral": 528
+      }
+    }
+  }
+}

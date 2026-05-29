@@ -1,6 +1,6 @@
 # Thesis Final Checklist
 
-Status date: 2026-04-04
+Status date: 2026-05-18
 
 This checklist ranks the remaining work by thesis impact, not engineering
 convenience. Completed items below are limited to work that is now backed by
@@ -31,14 +31,18 @@ core of a defensible final submission.
   fuzzy exact-match gate activation. The backend suite passes with `40/40`
   tests.
 
-- [ ] Verify frontend surfacing for uncertainty and calibration.
-  Still blocked here because `node` and `npm` are unavailable, so `vitest`
-  and UI snapshot checks were not run.
+- [x] Verify frontend surfacing for uncertainty and calibration.
+  Frontend dependencies install with `npm ci`; `npm test -- --run` now passes
+  with `81/81` tests. Monitoring and Dashboard tests cover confidence,
+  uncertainty, and calibration surfacing/fallback behavior.
 
-- [ ] Compare live runtime predictions against offline artifact predictions on
+- [x] Compare live runtime predictions against offline artifact predictions on
   the same held-out split.
-  The benchmark-level reconciliation artifact was refreshed, but per-sample
-  prediction equality is still not proven.
+  `backend/research/ci/prediction_level_reconciliation.py` writes
+  `backend/results/runtime/route_a_live_v1/prediction_level_reconciliation.*`.
+  The current artifact shows 100% label-level agreement for `logreg` and `svm`
+  against the offline benchmark CPU probability cube, with probability drift
+  reported separately.
 
 - [x] Decide the calibration policy model-by-model.
   The safe policy is now documented: do not claim universal calibration gains;
@@ -55,10 +59,20 @@ core of a defensible final submission.
 ## P1 - Strongly Recommended For Thesis Credibility
 
 - [ ] Build a small human-labeled gold set.
-  This still requires human annotation even though repo support scripts exist.
+  This still requires real human annotation. The tooling and evaluator are now
+  runnable: `scripts/annotate.py`, `scripts/prepare/merge_annotations.py`, and
+  `research/ci/gold_set_evaluation.py`. The exact command path is documented in
+  `backend/docs/THESIS_CLAIM_ARTIFACT_AUDIT.md`. Current regenerated results are
+  still source/silver-label evidence, not human IAA evidence.
 
-- [ ] Add a cross-domain or domain-shift evaluation.
-  This still needs a chosen evaluation set or selected target channels/videos.
+- [x] Add a cross-domain or domain-shift evaluation utility.
+  `research/evaluation/domain_shift.py` now writes metadata-backed reports.
+  The source dataset metadata is retained in `data/route_a_domain_10k/`, and
+  the current thesis-facing artifacts are
+  `results/domain_shift/category_domain_shift.*` and
+  `results/domain_shift/country_domain_shift.*`. Exact per-video and
+  per-timestamp slices are still too sparse in the 10k sample, so CategoryID
+  and CountryCode are the defensible domain slices.
 
 - [x] Write a clean "Threats to Validity" section.
   See `backend/docs/THESIS_RISKS_GAPS.md`.
@@ -71,34 +85,39 @@ core of a defensible final submission.
   Thesis-facing docs now treat the current feature as a keyword-level aspect
   proxy rather than full ABSA.
 
-- [ ] Ensure every thesis claim maps to a runnable script or stored artifact.
-  This is improved, but still not fully closed until the final written thesis is
-  checked claim-by-claim against the repo artifacts.
+- [x] Ensure every thesis claim maps to a runnable script or stored artifact.
+  `backend/docs/THESIS_CLAIM_ARTIFACT_AUDIT.md` now maps supported claims to
+  concrete artifacts and commands, and explicitly marks unsupported claims as
+  blocked or future work.
 
 ## P2 - Good To Finish If Time Allows
 
-- [ ] Add a near-duplicate leakage audit.
-  Exact dedupe already exists, but near-duplicate spam/paraphrase leakage can
-  still inflate results.
+- [x] Add a near-duplicate leakage audit.
+  `scripts/prepare/near_duplicate_audit.py` writes
+  `results/leakage/near_duplicate_audit.*`. The current benchmark CPU audit
+  found no exact cross-split duplicates and 9 near-duplicate candidates for
+  review, mostly repeated emoji-heavy comments.
 
-- [ ] Promote key provenance metrics to a more stable schema if needed.
-  Useful if dashboard querying becomes part of the final thesis story.
+- [x] Promote key provenance metrics to a more stable schema if needed.
+  `backend/docs/PROVENANCE_SCHEMA.md` now defines the lightweight result
+  provenance contract used by thesis-facing artifacts.
 
-- [ ] Expand thesis-grade validation around selective prediction / abstention.
-  Useful if you want the uncertainty-aware story to be stronger than confidence
-  reporting alone.
+- [x] Expand thesis-grade validation around selective prediction / abstention.
+  `research/ci/coverage_accuracy_curve.py` and
+  `research/ci/entropy_gated_prediction.py` now regenerate
+  `results/route_a_benchmark_cpu_ci/coverage_accuracy_curve.*` and
+  `results/route_a_benchmark_cpu_ci/entropy_gated_prediction.*`.
 
-- [ ] Tighten the encoder-first thesis narrative.
-  The roadmap still recommends an encoder-centered Route A contribution, but the
-  current thesis headline remains classical/ensemble-first.
+- [x] Tighten the encoder-first thesis narrative.
+  `backend/docs/ROUTE_A_ENCODER_POSITION.md` now states that Route A encoder
+  work is implemented but should remain future work unless rerun with
+  `transformers`, `torch`, and suitable compute.
 
 ## Suggested Finish Order
 
-1. Add the missing prediction-level live-vs-offline comparison.
-2. Run frontend `vitest` and snapshot checks on a machine with `node`.
-3. Add gold-set and domain-shift evidence.
-4. Do a final thesis-text pass against the pinned runtime artifacts.
-5. Treat Route A encoder-first work as future work unless stronger evidence is added.
+1. Add human gold-set evidence.
+2. Do a final thesis-text pass against the pinned runtime artifacts.
+3. Treat Route A encoder-first work as future work unless stronger evidence is added.
 
 ## Do Not Overclaim
 

@@ -1,0 +1,371 @@
+{
+  "title": "Domain-Shift / Robustness Slice Evaluation",
+  "created_at": "2026-05-18T01:47:02Z",
+  "dataset_path": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\data\\route_a_domain_10k\\test.csv",
+  "text_column": "text",
+  "label_column": "label",
+  "slice_column": "CountryCode",
+  "slice_source": "metadata",
+  "n_samples": 1641,
+  "min_slice_size": 30,
+  "models": [
+    "logreg",
+    "svm",
+    "tfidf",
+    "ensemble_nsga2",
+    "meta_learner"
+  ],
+  "results": {
+    "logreg": {
+      "overall": {
+        "n_samples": 1641,
+        "accuracy": 0.736746,
+        "macro_f1": 0.736832
+      },
+      "slices": [
+        {
+          "slice": "IE",
+          "n_samples": 109,
+          "accuracy": 0.678899,
+          "macro_f1": 0.667823
+        },
+        {
+          "slice": "AU",
+          "n_samples": 248,
+          "accuracy": 0.697581,
+          "macro_f1": 0.695733
+        },
+        {
+          "slice": "GB",
+          "n_samples": 193,
+          "accuracy": 0.720207,
+          "macro_f1": 0.716402
+        },
+        {
+          "slice": "CA",
+          "n_samples": 226,
+          "accuracy": 0.743363,
+          "macro_f1": 0.730337
+        },
+        {
+          "slice": "US",
+          "n_samples": 496,
+          "accuracy": 0.739919,
+          "macro_f1": 0.740585
+        },
+        {
+          "slice": "DE",
+          "n_samples": 83,
+          "accuracy": 0.759036,
+          "macro_f1": 0.760361
+        },
+        {
+          "slice": "IN",
+          "n_samples": 163,
+          "accuracy": 0.797546,
+          "macro_f1": 0.774974
+        },
+        {
+          "slice": "NZ",
+          "n_samples": 113,
+          "accuracy": 0.778761,
+          "macro_f1": 0.78253
+        }
+      ],
+      "worst_slice": {
+        "slice": "IE",
+        "n_samples": 109,
+        "accuracy": 0.678899,
+        "macro_f1": 0.667823
+      },
+      "best_slice": {
+        "slice": "NZ",
+        "n_samples": 113,
+        "accuracy": 0.778761,
+        "macro_f1": 0.78253
+      },
+      "macro_f1_spread": 0.114707
+    },
+    "svm": {
+      "overall": {
+        "n_samples": 1641,
+        "accuracy": 0.736137,
+        "macro_f1": 0.735756
+      },
+      "slices": [
+        {
+          "slice": "IE",
+          "n_samples": 109,
+          "accuracy": 0.697248,
+          "macro_f1": 0.68913
+        },
+        {
+          "slice": "CA",
+          "n_samples": 226,
+          "accuracy": 0.716814,
+          "macro_f1": 0.69852
+        },
+        {
+          "slice": "AU",
+          "n_samples": 248,
+          "accuracy": 0.725806,
+          "macro_f1": 0.720179
+        },
+        {
+          "slice": "GB",
+          "n_samples": 193,
+          "accuracy": 0.73057,
+          "macro_f1": 0.727002
+        },
+        {
+          "slice": "US",
+          "n_samples": 496,
+          "accuracy": 0.735887,
+          "macro_f1": 0.736488
+        },
+        {
+          "slice": "DE",
+          "n_samples": 83,
+          "accuracy": 0.73494,
+          "macro_f1": 0.736497
+        },
+        {
+          "slice": "IN",
+          "n_samples": 163,
+          "accuracy": 0.785276,
+          "macro_f1": 0.763219
+        },
+        {
+          "slice": "NZ",
+          "n_samples": 113,
+          "accuracy": 0.761062,
+          "macro_f1": 0.764815
+        }
+      ],
+      "worst_slice": {
+        "slice": "IE",
+        "n_samples": 109,
+        "accuracy": 0.697248,
+        "macro_f1": 0.68913
+      },
+      "best_slice": {
+        "slice": "NZ",
+        "n_samples": 113,
+        "accuracy": 0.761062,
+        "macro_f1": 0.764815
+      },
+      "macro_f1_spread": 0.075685
+    },
+    "tfidf": {
+      "overall": {
+        "n_samples": 1641,
+        "accuracy": 0.678245,
+        "macro_f1": 0.676433
+      },
+      "slices": [
+        {
+          "slice": "IN",
+          "n_samples": 163,
+          "accuracy": 0.674847,
+          "macro_f1": 0.628792
+        },
+        {
+          "slice": "AU",
+          "n_samples": 248,
+          "accuracy": 0.657258,
+          "macro_f1": 0.650851
+        },
+        {
+          "slice": "GB",
+          "n_samples": 193,
+          "accuracy": 0.668394,
+          "macro_f1": 0.662602
+        },
+        {
+          "slice": "US",
+          "n_samples": 496,
+          "accuracy": 0.667339,
+          "macro_f1": 0.666818
+        },
+        {
+          "slice": "IE",
+          "n_samples": 109,
+          "accuracy": 0.678899,
+          "macro_f1": 0.669285
+        },
+        {
+          "slice": "CA",
+          "n_samples": 226,
+          "accuracy": 0.707965,
+          "macro_f1": 0.678084
+        },
+        {
+          "slice": "DE",
+          "n_samples": 83,
+          "accuracy": 0.710843,
+          "macro_f1": 0.719807
+        },
+        {
+          "slice": "NZ",
+          "n_samples": 113,
+          "accuracy": 0.725664,
+          "macro_f1": 0.723504
+        }
+      ],
+      "worst_slice": {
+        "slice": "IN",
+        "n_samples": 163,
+        "accuracy": 0.674847,
+        "macro_f1": 0.628792
+      },
+      "best_slice": {
+        "slice": "NZ",
+        "n_samples": 113,
+        "accuracy": 0.725664,
+        "macro_f1": 0.723504
+      },
+      "macro_f1_spread": 0.094712
+    },
+    "ensemble_nsga2": {
+      "overall": {
+        "n_samples": 1641,
+        "accuracy": 0.735527,
+        "macro_f1": 0.73549
+      },
+      "slices": [
+        {
+          "slice": "IE",
+          "n_samples": 109,
+          "accuracy": 0.688073,
+          "macro_f1": 0.677481
+        },
+        {
+          "slice": "AU",
+          "n_samples": 248,
+          "accuracy": 0.705645,
+          "macro_f1": 0.70392
+        },
+        {
+          "slice": "GB",
+          "n_samples": 193,
+          "accuracy": 0.715026,
+          "macro_f1": 0.710237
+        },
+        {
+          "slice": "CA",
+          "n_samples": 226,
+          "accuracy": 0.743363,
+          "macro_f1": 0.726445
+        },
+        {
+          "slice": "US",
+          "n_samples": 496,
+          "accuracy": 0.737903,
+          "macro_f1": 0.738442
+        },
+        {
+          "slice": "IN",
+          "n_samples": 163,
+          "accuracy": 0.785276,
+          "macro_f1": 0.756694
+        },
+        {
+          "slice": "DE",
+          "n_samples": 83,
+          "accuracy": 0.759036,
+          "macro_f1": 0.760361
+        },
+        {
+          "slice": "NZ",
+          "n_samples": 113,
+          "accuracy": 0.769912,
+          "macro_f1": 0.77332
+        }
+      ],
+      "worst_slice": {
+        "slice": "IE",
+        "n_samples": 109,
+        "accuracy": 0.688073,
+        "macro_f1": 0.677481
+      },
+      "best_slice": {
+        "slice": "NZ",
+        "n_samples": 113,
+        "accuracy": 0.769912,
+        "macro_f1": 0.77332
+      },
+      "macro_f1_spread": 0.095839
+    },
+    "meta_learner": {
+      "overall": {
+        "n_samples": 1641,
+        "accuracy": 0.731261,
+        "macro_f1": 0.732183
+      },
+      "slices": [
+        {
+          "slice": "IE",
+          "n_samples": 109,
+          "accuracy": 0.669725,
+          "macro_f1": 0.664289
+        },
+        {
+          "slice": "AU",
+          "n_samples": 248,
+          "accuracy": 0.697581,
+          "macro_f1": 0.696491
+        },
+        {
+          "slice": "GB",
+          "n_samples": 193,
+          "accuracy": 0.720207,
+          "macro_f1": 0.718183
+        },
+        {
+          "slice": "IN",
+          "n_samples": 163,
+          "accuracy": 0.760736,
+          "macro_f1": 0.71913
+        },
+        {
+          "slice": "US",
+          "n_samples": 496,
+          "accuracy": 0.733871,
+          "macro_f1": 0.73481
+        },
+        {
+          "slice": "DE",
+          "n_samples": 83,
+          "accuracy": 0.746988,
+          "macro_f1": 0.747932
+        },
+        {
+          "slice": "CA",
+          "n_samples": 226,
+          "accuracy": 0.761062,
+          "macro_f1": 0.749744
+        },
+        {
+          "slice": "NZ",
+          "n_samples": 113,
+          "accuracy": 0.761062,
+          "macro_f1": 0.764245
+        }
+      ],
+      "worst_slice": {
+        "slice": "IE",
+        "n_samples": 109,
+        "accuracy": 0.669725,
+        "macro_f1": 0.664289
+      },
+      "best_slice": {
+        "slice": "NZ",
+        "n_samples": 113,
+        "accuracy": 0.761062,
+        "macro_f1": 0.764245
+      },
+      "macro_f1_spread": 0.099956
+    }
+  },
+  "interpretation": "This is a metadata-backed domain-slice evaluation."
+}

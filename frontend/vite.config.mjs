@@ -3,6 +3,35 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return undefined;
+          }
+          if (id.includes('d3-')) {
+            return 'd3';
+          }
+          if (id.includes('recharts')) {
+            return 'recharts';
+          }
+          if (id.includes('@react-pdf')) {
+            return 'pdf';
+          }
+          if (
+            id.includes('react') ||
+            id.includes('scheduler') ||
+            id.includes('react-router')
+          ) {
+            return 'react-vendor';
+          }
+          return undefined;
+        },
+      },
+    },
+  },
   server: {
     port: 3000,
     strictPort: true,

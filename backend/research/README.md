@@ -137,6 +137,69 @@ Notes:
 - Writes `offline_vs_live_reconciliation.json` and `.md` into `backend/results/runtime/<version>/`.
 - This is the thesis-facing artifact to cite when explaining differences between historical offline tables and current live runtime behavior.
 
+## Compare offline and live predictions sample-by-sample
+
+```bash
+cd backend
+python research/ci/prediction_level_reconciliation.py --models logreg,svm
+```
+
+Notes:
+- Loads an offline probability cube, reconstructs the same scored rows, and reruns the live runtime engines.
+- Writes `prediction_level_reconciliation.json` and `.md` into `backend/results/runtime/<version>/`.
+- The current pinned artifact confirms 100% label-level agreement for `logreg` and `svm` on the benchmark CPU probability-cube sample, while reporting confidence/probability drift separately.
+
+## Evaluate domain or robustness slices
+
+```bash
+cd backend
+python research/evaluation/domain_shift.py --sample 3000
+```
+
+Notes:
+- Uses channel/topic/time metadata when those columns exist.
+- Falls back to text-length robustness slices when the selected CSV only has `text` and `label`.
+- Writes `results/domain_shift/domain_shift_evaluation.json` and `.md`.
+- To regenerate the metadata-backed domain sample used for the thesis-facing reports:
+  `python scripts/prepare/prepare_hf_dataset.py --source https://huggingface.co/datasets/AmaanP314/youtube-comment-sentiment/resolve/main/youtube-comments-sentiment.csv --output_dir data/route_a_domain_10k --sample_rows 10000 --youtube_preprocess --filter_spam --filter_language --primary_text_profile transformer --metadata_columns VideoID,VideoTitle,PublishedAt,CountryCode,CategoryID`
+- Current metadata-backed reports:
+  - `python research/evaluation/domain_shift.py --data data/route_a_domain_10k/test.csv --slice_column CategoryID --output_json results/domain_shift/category_domain_shift.json --output_md results/domain_shift/category_domain_shift.md`
+  - `python research/evaluation/domain_shift.py --data data/route_a_domain_10k/test.csv --slice_column CountryCode --output_json results/domain_shift/country_domain_shift.json --output_md results/domain_shift/country_domain_shift.md`
+
+## Audit near-duplicate leakage
+
+```bash
+cd backend
+python scripts/prepare/near_duplicate_audit.py --split_dir data/route_a_benchmark_cpu
+```
+
+Notes:
+- Uses SimHash over token shingles to flag cross-split near duplicates.
+- Writes `results/leakage/near_duplicate_audit.json` and `.md`.
+- Add `--fail_on_findings` if you want the script to exit non-zero when candidates are found.
+
+## Validate selective prediction and abstention
+
+```bash
+cd backend
+python research/ci/coverage_accuracy_curve.py \
+  --test data/route_a_benchmark_cpu/test.csv \
+  --sample 180 \
+  --points 20 \
+  --output results/route_a_benchmark_cpu_ci
+
+python research/ci/entropy_gated_prediction.py \
+  --test data/route_a_benchmark_cpu/test.csv \
+  --sample 180 \
+  --thresholds 20 \
+  --output results/route_a_benchmark_cpu_ci \
+  --weights_json results/route_a_benchmark_cpu_ci/multi_objective_ensemble.json
+```
+
+Notes:
+- Writes `coverage_accuracy_curve.*` and `entropy_gated_prediction.*` under `results/route_a_benchmark_cpu_ci/`.
+- If the NSGA-II weights reference an encoder and the local environment lacks `transformers`/`torch`, the entropy-gated script skips the unavailable encoder and renormalizes the remaining available weights.
+
 ## Create a CPU-feasible benchmark subset
 
 ```bash

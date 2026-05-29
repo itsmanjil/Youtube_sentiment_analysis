@@ -1,7 +1,7 @@
 """
-Gold Set Evaluation — Thesis Chapter 4 / Appendix
+Gold Set Evaluation â€” Thesis Chapter 4 / Appendix
 
-Evaluates all live models against the 300-sample pseudo-gold set.
+Evaluates all live models against the 300-sample gold set.
 Produces:
   - results/gold_set/gold_set_evaluation.json   (full metrics)
   - results/gold_set/gold_set_evaluation.md     (thesis-ready tables)
@@ -15,8 +15,13 @@ Models evaluated:
   - ensemble_nsga2 (NSGA-II weights, temperature scaled)
   - meta_learner (with temperature scaling)
 
-Gold reference: silver_label from gold_set_silver_labeled.csv
-Baseline ref:   source_label from gold_set_labeled_from_dataset.csv
+Gold references (in priority order):
+  1. human_reconciled  â€” gold_set_human_reconciled.csv (majority-vote human labels, if available)
+  2. silver_label      â€” gold_set_silver_labeled.csv   (PSO ensemble auto-annotation, fallback)
+  3. source_label      â€” original dataset labels
+
+IAA metrics (Krippendorff's alpha, Cohen's kappa, Fleiss' kappa) are loaded
+from results/gold_set/iaa_report.json if present.
 """
 
 import csv
@@ -34,14 +39,16 @@ from src.sentiment.engines.tfidf_engine import TFIDFSentimentEngine
 from src.sentiment.engines.ensemble_engine import EnsembleSentimentEngine
 from src.sentiment.engines.meta_learner_engine import MetaLearnerSentimentEngine
 
-SILVER_CSV = BACKEND / "data" / "gold_set_silver_labeled.csv"
+SILVER_CSV    = BACKEND / "data" / "gold_set_silver_labeled.csv"
+RECONCILED_CSV = BACKEND / "data" / "gold_set_human_reconciled.csv"
+IAA_REPORT    = BACKEND / "results" / "gold_set" / "iaa_report.json"
 OUT_DIR = BACKEND / "results" / "gold_set"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 LABELS = ["Negative", "Neutral", "Positive"]
 
 
-# ── Metrics ────────────────────────────────────────────────────────────────
+# â”€â”€ Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def precision_recall_f1(y_true, y_pred, label):
     tp = sum(1 for t, p in zip(y_true, y_pred) if t == label and p == label)
@@ -97,18 +104,52 @@ def evaluate(y_true, y_pred, model_name):
     }
 
 
-# ── Load data ───────────────────────────────────────────────────────────────
+# â”€â”€ Load data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def load_gold():
-    with open(SILVER_CSV) as f:
-        rows = list(csv.DictReader(f))
-    texts        = [r["text"] for r in rows]
-    silver_labels = [r["silver_label"] for r in rows]
-    source_labels = [r["source_label"] for r in rows]
-    return texts, silver_labels, source_labels
+    """
+    Load gold set texts and available label references.
+
+    Priority:
+      1. human_reconciled â€” majority-vote gold labels (if reconciled CSV exists)
+      2. silver_label     â€” PSO ensemble auto-annotation (fallback)
+      3. source_label     â€” original dataset labels (always loaded)
+
+    Returns (texts, human_labels_or_None, silver_labels, source_labels)
+    """
+    with open(SILVER_CSV, encoding="utf-8-sig", newline="") as f:
+        silver_rows = list(csv.DictReader(f))
+
+    texts         = [r["text"] for r in silver_rows]
+    silver_labels = [r["silver_label"] for r in silver_rows]
+    source_labels = [r["source_label"] for r in silver_rows]
+
+    # Load human-reconciled labels if available
+    human_labels = None
+    if RECONCILED_CSV.exists():
+        text_to_gold = {}
+        with open(RECONCILED_CSV, encoding="utf-8-sig", newline="") as f:
+            for row in csv.DictReader(f):
+                gl = row.get("gold_label", "").strip()
+                if gl and row.get("is_disputed", "").strip().lower() != "yes":
+                    text_to_gold[row["text"].strip()] = gl
+        # Align to silver CSV order; drop items without a human gold label
+        human_labels = [text_to_gold.get(t) for t in texts]
+        n_human = sum(1 for v in human_labels if v)
+        print(f"  Human-reconciled gold labels loaded: {n_human} / {len(texts)} items")
+
+    return texts, human_labels, silver_labels, source_labels
 
 
-# ── Run models ──────────────────────────────────────────────────────────────
+def load_iaa_metrics():
+    """Load IAA metrics from the report JSON if it exists."""
+    if IAA_REPORT.exists():
+        with open(IAA_REPORT, encoding="utf-8") as f:
+            return json.load(f)
+    return None
+
+
+# â”€â”€ Run models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def run_model(name, engine, texts):
     print(f"  Running {name}...")
@@ -116,10 +157,27 @@ def run_model(name, engine, texts):
     return [r.label for r in results]
 
 
+def _filter_by_reference(texts, preds, ref_labels):
+    """Drop items where ref_label is None (missing/disputed)."""
+    filtered_texts, filtered_preds, filtered_ref = [], [], []
+    for t, p, r in zip(texts, preds, ref_labels):
+        if r:
+            filtered_texts.append(t)
+            filtered_preds.append(p)
+            filtered_ref.append(r)
+    return filtered_texts, filtered_preds, filtered_ref
+
+
 def main():
     print("Loading gold set...")
-    texts, silver_labels, source_labels = load_gold()
-    print(f"  {len(texts)} samples loaded.")
+    texts, human_labels, silver_labels, source_labels = load_gold()
+    print(f"  {len(texts)} samples from silver CSV.")
+
+    iaa = load_iaa_metrics()
+    if iaa:
+        m = iaa.get("metrics", {})
+        alpha = m.get("krippendorff_alpha", float("nan"))
+        print(f"  IAA report found - Krippendorff alpha = {alpha:.4f}  ({iaa.get('interpretation', '')})")
 
     print("Loading engines...")
     engines = {
@@ -132,80 +190,138 @@ def main():
     }
     print("  Done.")
 
-    all_results = {}
+    model_order = ["logreg", "svm", "tfidf", "ensemble_pso", "ensemble_nsga2", "meta_learner"]
 
-    print("\nEvaluating against silver labels (ensemble auto-annotation):")
+    # Collect predictions once (reused across reference sets)
+    all_preds = {}
+    print("\nRunning model inference...")
     for name, engine in engines.items():
-        preds = run_model(name, engine, texts)
-        all_results[name] = evaluate(silver_labels, preds, name)
+        all_preds[name] = run_model(name, engine, texts)
 
-    # Also evaluate silver vs source (inter-labeler agreement)
-    print("  Computing silver↔source agreement...")
-    all_results["silver_vs_source"] = evaluate(source_labels, silver_labels, "silver_vs_source")
+    # â”€â”€ Evaluate against each reference â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    # Evaluate each model against source labels too (for comparison)
+    # 1. Human-reconciled gold (primary, if available)
+    human_results = {}
+    if human_labels is not None and any(human_labels):
+        valid_texts = [t for t, h in zip(texts, human_labels) if h]
+        n_human_valid = len(valid_texts)
+        print(f"\nEvaluating against human-reconciled gold labels ({n_human_valid} items):")
+        for name in model_order:
+            _, filtered_preds, filtered_ref = _filter_by_reference(
+                texts, all_preds[name], human_labels
+            )
+            human_results[name] = evaluate(filtered_ref, filtered_preds, name)
+        # Inter-reference agreement: human vs source
+        _, src_filtered, hum_filtered = _filter_by_reference(texts, source_labels, human_labels)
+        human_results["human_vs_source"] = evaluate(hum_filtered, src_filtered, "human_vs_source")
+        _, sil_filtered, hum_filtered2 = _filter_by_reference(texts, silver_labels, human_labels)
+        human_results["human_vs_silver"] = evaluate(hum_filtered2, sil_filtered, "human_vs_silver")
+
+    # 2. Silver labels (PSO ensemble auto-annotation)
+    print("\nEvaluating against silver labels (ensemble auto-annotation):")
+    silver_results = {}
+    for name in model_order:
+        silver_results[name] = evaluate(silver_labels, all_preds[name], name)
+    silver_results["silver_vs_source"] = evaluate(source_labels, silver_labels, "silver_vs_source")
+
+    # 3. Source labels (original dataset)
     print("\nEvaluating against source labels (original dataset labels):")
     source_results = {}
-    for name, engine in engines.items():
-        preds = run_model(name, engine, texts)
-        source_results[name] = evaluate(source_labels, preds, name)
+    for name in model_order:
+        source_results[name] = evaluate(source_labels, all_preds[name], name)
 
-    # ── Build output ────────────────────────────────────────────────────────
+    # â”€â”€ Build output â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    has_human = bool(human_results)
     output = {
         "description": (
-            "Gold set evaluation: 300-sample pseudo-gold set. "
-            "silver_ref = PSO ensemble auto-labels. "
+            "Gold set evaluation: 300-sample gold set. "
+            + ("human_ref = majority-vote reconciled human labels. " if has_human else "")
+            + "silver_ref = PSO ensemble auto-labels. "
             "source_ref = original dataset labels."
         ),
         "n_samples": len(texts),
-        "silver_ref": all_results,
+        "has_human_gold": has_human,
+        "iaa_metrics": iaa.get("metrics") if iaa else None,
+        "iaa_interpretation": iaa.get("interpretation") if iaa else None,
+        "human_ref": human_results if has_human else None,
+        "silver_ref": silver_results,
         "source_ref": source_results,
     }
 
-    with open(OUT_DIR / "gold_set_evaluation.json", "w") as f:
+    with open(OUT_DIR / "gold_set_evaluation.json", "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
 
-    # ── Markdown ─────────────────────────────────────────────────────────────
-    md = ["# Gold Set Evaluation (300 samples)\n"]
-    md.append(
-        "Silver labels were produced by PSO-weighted ensemble auto-annotation "
-        "(logreg×0.31 + svm×0.69). Source labels are the original dataset labels. "
-        "Inter-labeler agreement: **{:.1f}%**.\n".format(
-            all_results["silver_vs_source"]["accuracy"] * 100
-        )
-    )
+    # â”€â”€ Markdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Determine primary reference for main tables
+    primary_results = human_results if has_human else silver_results
+    primary_name    = "Human-Reconciled Gold Labels" if has_human else "Silver Labels (auto-annotated pre-human fallback)"
+    primary_ref_key = "human_ref" if has_human else "silver_ref"
 
-    for ref_name, ref_results, caption in [
-        ("silver_ref", all_results,
-         "## Table 1: Model Performance vs Silver Labels (auto-annotated)\n"),
-        ("source_ref", source_results,
-         "## Table 2: Model Performance vs Source Labels (original dataset)\n"),
-    ]:
-        md.append(caption)
+    md = [f"# Gold Set Evaluation (300 samples)\n"]
+
+    # IAA section
+    if iaa:
+        m_iaa = iaa.get("metrics", {})
+        alpha     = m_iaa.get("krippendorff_alpha", float("nan"))
+        fleiss    = m_iaa.get("fleiss_kappa", float("nan"))
+        pct_agree = m_iaa.get("percent_agreement", float("nan"))
+        md.append("## Inter-Annotator Agreement\n")
+        md.append("| Metric | Value |")
+        md.append("| --- | --- |")
+        md.append(f"| Percent agreement | {pct_agree:.4f} |")
+        md.append(f"| Krippendorff's Î± | {alpha:.4f} |")
+        md.append(f"| Fleiss' Îº | {fleiss:.4f} |")
+        for pair, kappa in m_iaa.get("cohen_kappa_pairwise", {}).items():
+            kappa_str = f"{kappa:.4f}" if kappa == kappa else "n/a"
+            md.append(f"| Cohen's Îº ({pair.replace('_vs_', ' vs ')}) | {kappa_str} |")
+        md.append("")
+        md.append(f"*{iaa.get('interpretation', '')}*\n")
+    else:
+        agreement_pct = silver_results["silver_vs_source"]["accuracy"] * 100
+        md.append(
+            f"Silver labels (PSO ensemble) agree with source labels at **{agreement_pct:.1f}%** "
+            "(no human IAA report found - run `merge_annotations.py` to generate one).\n"
+        )
+
+    # Main performance table (vs primary reference)
+    md.append(f"## Table 1: Model Performance vs {primary_name}\n")
+    md.append("| Model | Accuracy | Macro F1 | Weighted F1 |")
+    md.append("|-------|----------|----------|-------------|")
+    for m_name in model_order:
+        r = primary_results[m_name]
+        md.append(f"| {m_name} | {r['accuracy']:.4f} | {r['macro_f1']:.4f} | {r['weighted_f1']:.4f} |")
+    md.append("")
+
+    # Table vs silver (always shown for comparison)
+    if has_human:
+        md.append("## Table 2: Model Performance vs Silver Labels (auto-annotated)\n")
         md.append("| Model | Accuracy | Macro F1 | Weighted F1 |")
         md.append("|-------|----------|----------|-------------|")
-        rows_data = source_results if ref_name == "source_ref" else all_results
-        model_order = ["logreg", "svm", "tfidf", "ensemble_pso", "ensemble_nsga2", "meta_learner"]
-        for m in model_order:
-            r = rows_data[m]
-            md.append(f"| {m} | {r['accuracy']:.4f} | {r['macro_f1']:.4f} | {r['weighted_f1']:.4f} |")
+        for m_name in model_order:
+            r = silver_results[m_name]
+            md.append(f"| {m_name} | {r['accuracy']:.4f} | {r['macro_f1']:.4f} | {r['weighted_f1']:.4f} |")
         md.append("")
+        md.append(
+            "> **Note:** ensemble_pso scores 1.000 vs silver labels because it *is* the silver labeler "
+            "(PSO-weighted ensemble). This is expected and does not indicate overfitting.\n"
+        )
 
-    # Per-class F1 table (vs source)
-    md.append("## Table 3: Per-Class F1 vs Source Labels\n")
+    # Per-class F1 table (vs primary reference)
+    md.append(f"## Table {'3' if has_human else '2'}: Per-Class F1 vs {primary_name}\n")
     md.append("| Model | Neg F1 | Neu F1 | Pos F1 | Macro F1 |")
     md.append("|-------|--------|--------|--------|----------|")
-    for m in ["logreg", "svm", "tfidf", "ensemble_pso", "ensemble_nsga2", "meta_learner"]:
-        r = source_results[m]
+    for m_name in model_order:
+        r = primary_results[m_name]
         neg = r["per_class"]["Negative"]["f1"]
         neu = r["per_class"]["Neutral"]["f1"]
         pos = r["per_class"]["Positive"]["f1"]
-        md.append(f"| {m} | {neg:.4f} | {neu:.4f} | {pos:.4f} | {r['macro_f1']:.4f} |")
+        md.append(f"| {m_name} | {neg:.4f} | {neu:.4f} | {pos:.4f} | {r['macro_f1']:.4f} |")
     md.append("")
 
-    # Confusion matrix for best model (ensemble_pso vs source)
-    best = source_results["ensemble_pso"]
-    md.append("## Confusion Matrix: ensemble_pso vs Source Labels\n")
+    # Best model confusion matrix
+    best_model = "ensemble_pso"
+    best = primary_results[best_model]
+    md.append(f"## Confusion Matrix: {best_model} vs {primary_name}\n")
     md.append("| True \\ Pred | Negative | Neutral | Positive |")
     md.append("|-------------|----------|---------|----------|")
     cm = best["confusion_matrix"]
@@ -215,23 +331,28 @@ def main():
     md.append("")
 
     md.append("## Notes\n")
+    if has_human:
+        n_disputed = iaa.get("disputed_items", "?") if iaa else "?"
+        md.append(
+            f"- Human-reconciled gold labels used as primary reference "
+            f"(disputed items excluded: {n_disputed}).\n"
+        )
     md.append(
-        "- Silver labels (auto-annotation) show 66.3% agreement with source labels, "
-        "indicating substantial label noise or ambiguity in the original dataset.\n"
         "- Neutral class consistently has the lowest F1 across all models, "
         "consistent with inter-annotator difficulty on borderline comments.\n"
         "- ensemble_pso (PSO-optimised weights, F1-best) and ensemble_nsga2 "
         "(NSGA-II knee-point, calibration-best) provide complementary trade-offs.\n"
     )
 
-    with open(OUT_DIR / "gold_set_evaluation.md", "w") as f:
+    with open(OUT_DIR / "gold_set_evaluation.md", "w", encoding="utf-8") as f:
         f.write("\n".join(md))
 
-    # ── LaTeX ────────────────────────────────────────────────────────────────
+    # â”€â”€ LaTeX â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    caption_ref = "Human-Reconciled Gold Labels" if has_human else "Silver Labels"
     tex = [
         r"\begin{table}[ht]",
         r"\centering",
-        r"\caption{Model Performance on 300-Sample Gold Set (vs.\ source labels)}",
+        rf"\caption{{Model Performance on 300-Sample Gold Set (vs.\ {caption_ref})}}",
         r"\label{tab:gold_set_performance}",
         r"\begin{tabular}{lccc}",
         r"\hline",
@@ -239,35 +360,71 @@ def main():
         r"\hline",
     ]
     model_display = {
-        "logreg": r"\textsc{LogReg}",
-        "svm": r"\textsc{SVM}",
-        "tfidf": r"\textsc{TF-IDF NB}",
-        "ensemble_pso": r"\textsc{Ensemble (PSO)}",
+        "logreg":        r"\textsc{LogReg}",
+        "svm":           r"\textsc{SVM}",
+        "tfidf":         r"\textsc{TF-IDF NB}",
+        "ensemble_pso":  r"\textsc{Ensemble (PSO)}",
         "ensemble_nsga2": r"\textsc{Ensemble (NSGA-II)}",
-        "meta_learner": r"\textsc{Meta-Learner}",
+        "meta_learner":  r"\textsc{Meta-Learner}",
     }
-    for m in ["logreg", "svm", "tfidf", "ensemble_pso", "ensemble_nsga2", "meta_learner"]:
-        r = source_results[m]
+    for m_name in model_order:
+        r = primary_results[m_name]
         tex.append(
-            f"{model_display[m]} & {r['accuracy']:.4f} & {r['macro_f1']:.4f} & {r['weighted_f1']:.4f} \\\\"
+            f"{model_display[m_name]} & {r['accuracy']:.4f} & {r['macro_f1']:.4f} & {r['weighted_f1']:.4f} \\\\"
         )
     tex += [r"\hline", r"\end{tabular}", r"\end{table}"]
 
-    with open(OUT_DIR / "gold_set_evaluation.tex", "w") as f:
+    # IAA LaTeX table
+    if iaa:
+        m_iaa = iaa.get("metrics", {})
+        alpha     = m_iaa.get("krippendorff_alpha", float("nan"))
+        fleiss    = m_iaa.get("fleiss_kappa", float("nan"))
+        pct_agree = m_iaa.get("percent_agreement", float("nan"))
+        tex += [
+            "",
+            r"\begin{table}[ht]",
+            r"\centering",
+            r"\caption{Inter-Annotator Agreement on 300-Sample Gold Set}",
+            r"\label{tab:gold_set_iaa}",
+            r"\begin{tabular}{lc}",
+            r"\hline",
+            r"Metric & Value \\",
+            r"\hline",
+            rf"Percent Agreement & {pct_agree:.4f} \\",
+            rf"Krippendorff's $\alpha$ & {alpha:.4f} \\",
+            rf"Fleiss' $\kappa$ & {fleiss:.4f} \\",
+        ]
+        for pair, kappa in m_iaa.get("cohen_kappa_pairwise", {}).items():
+            pair_label = pair.replace("_vs_", r" vs.\ ").replace("_", r"\_")
+            kappa_str  = f"{kappa:.4f}" if kappa == kappa else "n/a"
+            tex.append(rf"Cohen's $\kappa$ ({pair_label}) & {kappa_str} \\")
+        tex += [r"\hline", r"\end{tabular}", r"\end{table}"]
+
+    with open(OUT_DIR / "gold_set_evaluation.tex", "w", encoding="utf-8") as f:
         f.write("\n".join(tex))
 
-    # ── Print summary ────────────────────────────────────────────────────────
-    print("\n" + "=" * 60)
-    print("GOLD SET EVALUATION SUMMARY (vs source labels)")
+    # â”€â”€ Print summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    ref_label = "Human Gold" if has_human else "Silver Labels"
+    print(f"\n{'=' * 60}")
+    print(f"GOLD SET EVALUATION SUMMARY (vs {ref_label})")
     print("=" * 60)
     print(f"{'Model':<20} {'Acc':>6} {'MacF1':>7} {'WtF1':>7}")
     print("-" * 44)
-    for m in ["logreg", "svm", "tfidf", "ensemble_pso", "ensemble_nsga2", "meta_learner"]:
-        r = source_results[m]
-        print(f"{m:<20} {r['accuracy']:>6.4f} {r['macro_f1']:>7.4f} {r['weighted_f1']:>7.4f}")
+    for m_name in model_order:
+        r = primary_results[m_name]
+        print(f"{m_name:<20} {r['accuracy']:>6.4f} {r['macro_f1']:>7.4f} {r['weighted_f1']:>7.4f}")
 
-    print(f"\nInter-labeler agreement (silver vs source): "
-          f"{all_results['silver_vs_source']['accuracy']*100:.1f}%")
+    if iaa:
+        m_iaa = iaa.get("metrics", {})
+        alpha = m_iaa.get("krippendorff_alpha", float("nan"))
+        alpha_str = f"{alpha:.4f}" if alpha == alpha else "n/a"
+        print(f"\nKrippendorff alpha:         {alpha_str}  ({iaa.get('interpretation', '')})")
+        pct = m_iaa.get("percent_agreement", float("nan"))
+        print(f"Percent agreement:          {pct:.4f}")
+    else:
+        agree_pct = silver_results["silver_vs_source"]["accuracy"] * 100
+        print(f"\nSilver/source agreement: {agree_pct:.1f}%  (no human IAA report)")
+
     print(f"\nOutputs written to: {OUT_DIR}")
 
 

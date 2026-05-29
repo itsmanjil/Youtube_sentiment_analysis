@@ -92,6 +92,39 @@ def score_model(name: str, texts: List[str]) -> np.ndarray:
     return mat
 
 
+def filter_available_weights(weights: dict, texts: List[str]) -> Tuple[dict, dict[str, np.ndarray]]:
+    """Score available weighted models and drop optional models missing runtime deps."""
+    available_weights = {}
+    prob_matrices: dict[str, np.ndarray] = {}
+    skipped = {}
+
+    for name, weight in weights.items():
+        print(f"  {name} ...", flush=True)
+        try:
+            prob_matrices[name] = score_model(name, texts)
+            available_weights[name] = float(weight)
+        except (ImportError, RuntimeError) as exc:
+            skipped[name] = str(exc)
+            print(f"    skipped: {exc}")
+
+    if not available_weights:
+        raise RuntimeError("No weighted stage-1 models were available for entropy-gated prediction.")
+
+    total = sum(max(0.0, value) for value in available_weights.values())
+    if total <= 0:
+        raise RuntimeError("Available stage-1 model weights sum to zero.")
+
+    available_weights = {
+        name: max(0.0, value) / total
+        for name, value in available_weights.items()
+    }
+    if skipped:
+        print(f"  Skipped unavailable models: {', '.join(sorted(skipped))}")
+        print(f"  Renormalized available weights: {available_weights}")
+
+    return available_weights, prob_matrices
+
+
 def ensemble_probs(prob_matrices: dict, weights: dict) -> np.ndarray:
     """Weighted average of model probability matrices."""
     n = next(iter(prob_matrices.values())).shape[0]
@@ -180,7 +213,7 @@ def compute_aurc(sweep: List[dict]) -> float:
     valid.sort(key=lambda x: x[0])
     cov = [v[0] for v in valid]
     risk = [v[1] for v in valid]
-    return float(np.trapz(risk, cov))
+    return float(np.trapezoid(risk, cov))
 
 
 # ---------------------------------------------------------------------------
@@ -347,14 +380,13 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 3. Score models
     # ------------------------------------------------------------------
-    model_names = list(weights.keys())
     stage2_name = "logreg"   # Stage-2: fastest reliable model
 
     print("\nScoring models …")
-    prob_matrices: dict = {}
-    for name in model_names:
-        print(f"  {name} …", flush=True)
-        prob_matrices[name] = score_model(name, texts)
+    weights, prob_matrices = filter_available_weights(weights, texts)
+    if stage2_name not in prob_matrices:
+        print(f"  Scoring stage-2 model {stage2_name} ...", flush=True)
+        prob_matrices[stage2_name] = score_model(stage2_name, texts)
 
     # ------------------------------------------------------------------
     # 4. Ensemble probs, entropy, predictions
@@ -366,7 +398,7 @@ def main() -> None:
 
     full_acc = accuracy_score(y_true, ens_preds)
     full_f1 = f1_score(y_true, ens_preds, average="macro", zero_division=0)
-    print(f"\nFull ensemble  →  Accuracy={full_acc:.4f}  Macro-F1={full_f1:.4f}")
+    print(f"\nFull ensemble  ->  Accuracy={full_acc:.4f}  Macro-F1={full_f1:.4f}")
     print(f"Entropy stats: mean={entropy.mean():.4f}  "
           f"p25={np.percentile(entropy, 25):.4f}  "
           f"p75={np.percentile(entropy, 75):.4f}  "
@@ -392,7 +424,7 @@ def main() -> None:
 
     print("\nCascade results:")
     for r in cascade_results:
-        print(f"  τ={r['tau']:.2f}  ens={r['ensemble_coverage']:.3f}  "
+        print(f"  tau={r['tau']:.2f}  ens={r['ensemble_coverage']:.3f}  "
               f"stage2={r['stage2_coverage']:.3f}  "
               f"F1={r['macro_f1']:.4f}")
 
@@ -421,16 +453,16 @@ def main() -> None:
     }
 
     json_path = out_dir / "entropy_gated_prediction.json"
-    with open(json_path, "w") as fh:
+    with open(json_path, "w", encoding="utf-8") as fh:
         json.dump(output_data, fh, indent=2)
-    print(f"\nSaved JSON → {json_path}")
+    print(f"\nSaved JSON -> {json_path}")
 
     report = build_report(sweep, aurc, cascade_results, full_f1, full_acc,
                           weights, stage2_name)
     md_path = out_dir / "entropy_gated_prediction.md"
-    with open(md_path, "w") as fh:
+    with open(md_path, "w", encoding="utf-8") as fh:
         fh.write(report)
-    print(f"Saved Markdown → {md_path}")
+    print(f"Saved Markdown -> {md_path}")
 
     # ------------------------------------------------------------------
     # 8. Console summary
@@ -442,7 +474,7 @@ def main() -> None:
     print(f"Full ensemble  F1 = {full_f1:.4f}")
     print(f"AURC           = {aurc:.4f}  (lower = better)")
     print(f"Best cascade   F1 = {best_cascade['macro_f1']:.4f}"
-          f"  at τ={best_cascade['tau']:.2f}"
+          f"  at tau={best_cascade['tau']:.2f}"
           f"  (ens={best_cascade['ensemble_coverage']:.1%} / "
           f"{stage2_name}={best_cascade['stage2_coverage']:.1%})")
     print("=" * 60)

@@ -308,8 +308,14 @@ function Dashboard(props) {
           if (youtubeData.aspect_sentiment) {
             setAspectSentiment(youtubeData.aspect_sentiment);
           }
-          if (youtubeData.analysis_meta) {
-            setAnalysisMeta(youtubeData.analysis_meta);
+          const incomingAnalysisMeta = youtubeData.analysis_meta
+            ? { ...youtubeData.analysis_meta }
+            : {};
+          if (youtubeData.calibration && !incomingAnalysisMeta.calibration) {
+            incomingAnalysisMeta.calibration = youtubeData.calibration;
+          }
+          if (Object.keys(incomingAnalysisMeta).length > 0) {
+            setAnalysisMeta(incomingAnalysisMeta);
           }
           if (youtubeData.model_used) {
             setModelUsed(youtubeData.model_used);

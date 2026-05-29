@@ -1,5 +1,5 @@
-# Claude Code local config
-.claude/
+# Local tool config (keep project skills and hooks, ignore only local overrides)
+.claude/settings.local.json
 
 # Python
 __pycache__/
@@ -45,8 +45,13 @@ dist/
 # IDEs
 .idea/
 .vscode/
+~$*.docx
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Graphify
+graphify-out/manifest.json
+graphify-out/cost.json

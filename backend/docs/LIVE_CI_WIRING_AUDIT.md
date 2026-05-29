@@ -1,6 +1,6 @@
 # Live CI Wiring Audit
 
-Date: 2026-04-04
+Date: 2026-05-17
 
 ## Scope
 
@@ -71,48 +71,35 @@ version.
   base-model set matches the trained gate model set
 - The live runtime benchmark, manifest, and offline-vs-live reconciliation are
   present under `backend/results/runtime/route_a_live_v1/`
+- Frontend `vitest` passes with `81/81` tests after `npm ci`
+- Prediction-level live-vs-offline label equivalence is now documented in
+  `backend/results/runtime/route_a_live_v1/prediction_level_reconciliation.md`
 
 ### Not yet validated end-to-end
 
-- Frontend automated tests were not run in this environment because `node` and
-  `npm` are unavailable
-- Raw prediction-level live-vs-offline equivalence on the held-out split is
-  still not proven; the current reconciliation is benchmark-level, not
-  per-sample
 - Gold-set evaluation and domain-shift evaluation remain outside the scope of
   this wiring audit
 
 ## Remaining Material Gaps
 
-### 1. Prediction-level live-vs-offline comparison is still missing
-
-The refreshed reconciliation artifact confirms that benchmark rows remain
-numerically aligned, but it does not prove that the live runtime produces the
-same per-sample predictions as the offline artifact path.
-
-### 2. `hybrid_dl` calibration is wired, but no artifact entry exists
+### 1. `hybrid_dl` calibration is wired, but no artifact entry exists
 
 `hybrid_dl_engine.py` looks for a `hybrid_dl` row inside the pinned
 temperature-scaling artifact. The current artifact has no such entry, so
 runtime falls back to `T=1.0` and `calibration_applied=false`.
 
-### 3. Calibration claims must remain model-specific
+### 2. Calibration claims must remain model-specific
 
 The runtime supports calibration-aware inference, but the thesis should not say
 that calibration improved every model. The safe claim is narrower: calibration
 metadata is wired into the runtime, and the strongest deployment-oriented
 calibration result in the pinned benchmark is currently `ensemble_nsga2`.
 
-### 4. Neuro-fuzzy gate activation is exact-match dependent
+### 3. Neuro-fuzzy gate activation is exact-match dependent
 
 `fuzzy_engine.py` activates the learned gate only when the requested base-model
 set matches the artifact model set. Any different combination falls back to the
 static fuzzy path.
-
-### 5. Frontend verification is still blocked in this environment
-
-The UI components appear wired from code inspection, but `vitest` and snapshot
-checks still need a machine with `node` and `npm`.
 
 ## Thesis-Ready Validation Checklist
 
@@ -135,11 +122,12 @@ checks still need a machine with `node` and `npm`.
 
 ### Frontend verification
 
-- [ ] Run `vitest` once `node`/`npm` are available
-- [ ] Snapshot-check Search, Dashboard, Report, and Monitoring for calibration
-      and uncertainty rendering
-- [ ] Verify empty-state behavior when calibration metadata is absent
-- [ ] Verify fallback behavior when fuzzy gate is inactive
+- [x] Run `vitest` once `node`/`npm` are available
+- [x] Component-check Dashboard, Report, and Monitoring for confidence,
+      calibration, and uncertainty rendering
+- [x] Verify empty-state behavior when calibration metadata is absent
+- [x] Verify fallback behavior when calibration metadata arrives outside
+      `analysis_meta`
 
 ### Benchmark validation
 
@@ -147,7 +135,7 @@ checks still need a machine with `node` and `npm`.
       offline research scripts
 - [x] Refresh benchmark-level offline-vs-live reconciliation under the pinned
       runtime directory
-- [ ] Compare live runtime predictions against offline artifact predictions on
+- [x] Compare live runtime predictions against offline artifact predictions on
       the same held-out split
 - [x] Confirm that the live configuration used in the thesis matches the pinned
       manifest and benchmark artifacts
@@ -163,7 +151,5 @@ checks still need a machine with `node` and `npm`.
 
 ## Recommended Order
 
-1. Add a prediction-level live-vs-offline comparison on the held-out split.
-2. Run frontend `vitest` and snapshot checks once `node` is available.
-3. Add gold-set and domain-shift evidence for thesis credibility.
-4. Keep the final thesis wording tied to `route_a_live_v1`.
+1. Add gold-set and domain-shift evidence for thesis credibility.
+2. Keep the final thesis wording tied to `route_a_live_v1`.
