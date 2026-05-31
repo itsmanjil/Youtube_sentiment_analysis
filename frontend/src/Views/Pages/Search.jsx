@@ -16,7 +16,7 @@ function Search() {
   const [video_url, setVideoUrl] = useState("");
   const [max_comments, setMaxComments] = useState(200);
   const [useApi, setUseApi] = useState(true);
-  const [sentimentModel, setSentimentModel] = useState("logreg");
+  const [sentimentModel, setSentimentModel] = useState("meta_learner");
   const [showResearchOptions, setShowResearchOptions] = useState(false);
   const [ensembleModels, setEnsembleModels] = useState(["logreg", "svm", "tfidf"]);
   const [ensembleWeightsOptimization, setEnsembleWeightsOptimization] = useState("pso");
@@ -389,17 +389,23 @@ function Search() {
                       value={sentimentModel}
                       onChange={(e) => setSentimentModel(e.target.value)}
                     >
-                      <option value="meta_learner">Meta-Learner (stacking) — best F1</option>
-                      <option value="ensemble">Ensemble NSGA-II — best calibrated</option>
-                      <option value="logreg">Logistic Regression (baseline)</option>
-                      <option value="svm">Linear SVM (baseline)</option>
-                      <option value="tfidf">TF-IDF (baseline)</option>
-                      <option value="fuzzy_ensemble">Fuzzy Ensemble (uncertainty-aware)</option>
-                      <option value="hybrid_dl">Hybrid CNN-BiLSTM (deep learning)</option>
-                      <option value="deberta_v3">DeBERTa-v3 (transformer — CPU, experimental)</option>
+                      <optgroup label="Recommended">
+                        <option value="meta_learner">Meta-Learner (stacking) — best F1</option>
+                      </optgroup>
+                      <optgroup label="Research (Computational Intelligence)">
+                        <option value="ensemble">Ensemble NSGA-II — best calibrated</option>
+                        <option value="fuzzy_ensemble">Fuzzy Ensemble (uncertainty-aware)</option>
+                        <option value="hybrid_dl">Hybrid CNN-BiLSTM (deep learning)</option>
+                        <option value="deberta_v3">DeBERTa-v3 (transformer — CPU, experimental)</option>
+                      </optgroup>
+                      <optgroup label="Baselines">
+                        <option value="logreg">Logistic Regression</option>
+                        <option value="svm">Linear SVM</option>
+                        <option value="tfidf">TF-IDF</option>
+                      </optgroup>
                     </select>
                     <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-                      Phase 1 path: ModernBERT / DeBERTa-v3 for strong encoder baselines. Classical models remain available as baselines and fallback comparators.
+                      Meta-Learner is the recommended default (best macro-F1). Research models showcase the computational-intelligence ensemble methods; baselines are provided for comparison.
                     </p>
                   </div>
                   <div className="col-md-12 mt-3">
