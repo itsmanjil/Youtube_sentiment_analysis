@@ -389,17 +389,14 @@ function Search() {
                       value={sentimentModel}
                       onChange={(e) => setSentimentModel(e.target.value)}
                     >
-                      <option value="hybrid_dl">Hybrid CNN-BiLSTM (deep learning)</option>
-                      <option value="modernbert">ModernBERT (transformer)</option>
-                      <option value="deberta_v3">DeBERTa-v3 (transformer)</option>
-                      <option value="xlm_v">XLM-V (multilingual transformer)</option>
-                      <option value="mdeberta_v3">mDeBERTa-v3 (multilingual transformer)</option>
+                      <option value="meta_learner">Meta-Learner (stacking) — best F1</option>
+                      <option value="ensemble">Ensemble NSGA-II — best calibrated</option>
                       <option value="logreg">Logistic Regression (baseline)</option>
                       <option value="svm">Linear SVM (baseline)</option>
-                      <option value="tfidf">TF-IDF (legacy baseline)</option>
-                      <option value="ensemble">Ensemble (custom weights)</option>
+                      <option value="tfidf">TF-IDF (baseline)</option>
                       <option value="fuzzy_ensemble">Fuzzy Ensemble (uncertainty-aware)</option>
-                      <option value="meta_learner">Meta-Learner (stacking)</option>
+                      <option value="hybrid_dl">Hybrid CNN-BiLSTM (deep learning)</option>
+                      <option value="deberta_v3">DeBERTa-v3 (transformer — CPU, experimental)</option>
                     </select>
                     <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
                       Phase 1 path: ModernBERT / DeBERTa-v3 for strong encoder baselines. Classical models remain available as baselines and fallback comparators.
