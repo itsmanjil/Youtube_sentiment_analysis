@@ -33,63 +33,6 @@ import axiosInstance from "../../axios";
 import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
 
-const data = [
-  {
-    name: "Page A", //year,month ->Time
-    positive: 4000,
-    negative: 2400,
-    neutral: 2400,
-  },
-  {
-    name: "Page B",
-    positive: 3000,
-    negative: 1398,
-    neutral: 2210,
-  },
-  {
-    name: "Page C",
-    positive: 2000,
-    negative: 9800,
-    neutral: 2290,
-  },
-  {
-    name: "Page D",
-    positive: 2780,
-    negative: 3908,
-    neutral: 2000,
-  },
-  {
-    name: "Page E",
-    positive: 1890,
-    negative: 4800,
-    neutral: 2181,
-  },
-  {
-    name: "Page F",
-    positive: 2390,
-    negative: 3800,
-    neutral: 2500,
-  },
-  {
-    name: "Page G",
-    positive: 3490,
-    negative: 4300,
-    neutral: 2100,
-  },
-  {
-    name: "Page H",
-    positive: 3490,
-    negative: 4300,
-    neutral: 2100,
-  },
-  {
-    name: "Page I",
-    positive: 3490,
-    negative: 4300,
-    neutral: 2100,
-  },
-];
-// Removed unused variable data01
 // custom label for pie chart
 const COLORS = ["#FF0000", "#0000FF", "#008001"];
 
@@ -124,8 +67,6 @@ function Dashboard(props) {
   const location = useLocation();
   const { authToken } = useContext(AuthContext);
 
-  function refresh() {}
-  function calendar() {}
   const [user, setUser] = useState({});
   const [sentimentBreakdown, setSentimentBreakdown] = useState();
   const [videoData, setVideoData] = useState();
@@ -178,7 +119,6 @@ function Dashboard(props) {
         const userDatas = await axiosInstance({
           method: "GET",
           url: `user/me/${user_id}`,
-          timeout: 1000 * 10,
         });
         setUser({
           user_name: userDatas.data.user_name,
@@ -194,7 +134,6 @@ function Dashboard(props) {
           const analysesResponse = await axiosInstance({
             method: "GET",
             url: "youtube/analyses/",
-            timeout: 1000 * 10,
           });
 
           if (analysesResponse.status === 200 && analysesResponse.data.data) {
@@ -328,7 +267,7 @@ function Dashboard(props) {
   };
   useEffect(() => {
     getData();
-  }, [location.state]);
+  }, [location.state, authToken]);
 
   //line graph
   let [getLinePng, { ref: lineRef }] = useCurrentPng();
@@ -1078,7 +1017,7 @@ function Dashboard(props) {
                                 fill="#8884d8"
                                 label={renderCustomizedLabel}
                               >
-                                {data.map((entry, index) => (
+                                {sentimentBreakdown.map((entry, index) => (
                                   <Cell
                                     key={`cell-${index}`}
                                     fill={COLORS[index % COLORS.length]}
@@ -1092,27 +1031,27 @@ function Dashboard(props) {
                         </ResponsiveContainer>
                         <div>
                           <ul>
-                            <ol>
-                              <i
-                                className="fas fa-circle"
-                                style={{ color: "#008001" }}
-                              ></i>{" "}
-                              : Positive
-                            </ol>
-                            <ol>
+                            <li>
                               <i
                                 className="fas fa-circle"
                                 style={{ color: "#FF0000" }}
                               ></i>{" "}
                               : Negative
-                            </ol>
-                            <ol>
+                            </li>
+                            <li>
                               <i
                                 className="fas fa-circle"
                                 style={{ color: "#0000FF" }}
                               ></i>{" "}
                               : Neutral
-                            </ol>
+                            </li>
+                            <li>
+                              <i
+                                className="fas fa-circle"
+                                style={{ color: "#008001" }}
+                              ></i>{" "}
+                              : Positive
+                            </li>
                           </ul>
                         </div>
                       </div>

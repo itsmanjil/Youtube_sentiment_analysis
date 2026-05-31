@@ -151,7 +151,7 @@ def analyze_youtube_video(request):
 
     # Extract parameters
     video_url = request.data.get("video_url")
-    max_comments = request.data.get("max_comments", 200)
+    max_comments = int(request.data.get("max_comments", 200))
     use_api = request.data.get("use_api", True)
     emoji_mode = request.data.get("emoji_mode", "convert")
     filter_spam = request.data.get("filter_spam", True)
@@ -372,7 +372,7 @@ def analyze_youtube_video(request):
                         'is_reply': item['is_reply'],
                         'sentiment': item['sentiment'],
                         'sentiment_score': item['sentiment_score'],
-                        'is_spam': False,
+                        'is_spam': item.get('metadata', {}).get('is_spam', False),
                         'language': item['metadata']['language']
                     }
                 )

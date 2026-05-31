@@ -25,7 +25,6 @@ function Monitoring() {
       const response = await axiosInstance({
         method: "GET",
         url: "youtube/analyses/",
-        timeout: 1000 * 10,
       });
 
       if (response.status === 200 && response.data.data) {

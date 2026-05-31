@@ -233,8 +233,8 @@ def bootstrap_confidence_intervals(
             samples[label].append(counts.get(label, 0) / total)
 
     intervals = {}
-    lower_idx = int((alpha / 2) * (n_boot - 1))
-    upper_idx = int((1 - alpha / 2) * (n_boot - 1))
+    lower_idx = int(math.floor((alpha / 2) * n_boot))
+    upper_idx = min(int(math.ceil((1 - alpha / 2) * n_boot)) - 1, n_boot - 1)
     for label, values in samples.items():
         values.sort()
         intervals[label] = {

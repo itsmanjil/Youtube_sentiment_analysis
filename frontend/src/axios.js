@@ -14,7 +14,7 @@ const baseURL = normalizeBaseUrl(import.meta.env?.VITE_API_URL) || "/api/";
 
 const axiosInstance = axios.create({
   baseURL: baseURL,
-  timeout: 1000 * 10,
+  timeout: 1000 * 120,
   validateStatus: (status) => {
     // handling our own errors less than 500 status
     return status < 500;
