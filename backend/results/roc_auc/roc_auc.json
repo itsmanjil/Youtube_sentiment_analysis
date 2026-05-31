@@ -1,0 +1,67 @@
+{
+  "n_samples": 5000,
+  "dataset": "data\\test.csv",
+  "labels": [
+    "Positive",
+    "Neutral",
+    "Negative"
+  ],
+  "results": [
+    {
+      "model": "ensemble_nsga2",
+      "macro": 0.8596,
+      "weighted": 0.8606,
+      "auc_positive": 0.8948,
+      "auc_neutral": 0.8184,
+      "auc_negative": 0.8655
+    },
+    {
+      "model": "logreg",
+      "macro": 0.8589,
+      "weighted": 0.86,
+      "auc_positive": 0.8945,
+      "auc_neutral": 0.8172,
+      "auc_negative": 0.8652
+    },
+    {
+      "model": "meta_learner",
+      "macro": 0.8577,
+      "weighted": 0.8587,
+      "auc_positive": 0.8922,
+      "auc_neutral": 0.8186,
+      "auc_negative": 0.8623
+    },
+    {
+      "model": "ensemble_pso",
+      "macro": 0.8511,
+      "weighted": 0.8522,
+      "auc_positive": 0.8897,
+      "auc_neutral": 0.806,
+      "auc_negative": 0.8575
+    },
+    {
+      "model": "svm",
+      "macro": 0.8434,
+      "weighted": 0.8446,
+      "auc_positive": 0.8847,
+      "auc_neutral": 0.7954,
+      "auc_negative": 0.8501
+    },
+    {
+      "model": "tfidf",
+      "macro": 0.8315,
+      "weighted": 0.8323,
+      "auc_positive": 0.8684,
+      "auc_neutral": 0.7925,
+      "auc_negative": 0.8335
+    },
+    {
+      "model": "fuzzy_ensemble",
+      "macro": 0.8314,
+      "weighted": 0.8322,
+      "auc_positive": 0.868,
+      "auc_neutral": 0.7923,
+      "auc_negative": 0.8337
+    }
+  ]
+}
