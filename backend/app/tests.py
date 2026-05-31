@@ -580,7 +580,7 @@ class LiveWiringEngineTests(SimpleTestCase):
             mps=SimpleNamespace(is_available=lambda: False)
         )
         fake_torch.device = lambda name: name
-        fake_torch.load = lambda path, map_location=None: {
+        fake_torch.load = lambda path, map_location=None, weights_only=False: {
             "model_state_dict": {"weights": [1.0]}
         }
 

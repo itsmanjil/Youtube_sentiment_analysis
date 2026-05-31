@@ -22,6 +22,7 @@ For training, see: scripts/train/train_hybrid_dl.py
 For architecture details, see: research/architectures/hybrid_cnn_bilstm.py
 """
 
+import io
 import json
 import pickle
 import re
@@ -32,6 +33,38 @@ from src.utils import normalize_probs
 from src.utils.config import get_model_path
 from src.utils.runtime_artifacts import load_runtime_artifact_json
 from src.sentiment.base import SentimentResult, BaseSentimentEngine
+
+
+class _VocabularyStub:
+    """
+    Backward-compatibility stub for vocab.pkl files that were pickled with
+    the old `data.preprocessing.Vocabulary` or `research.data.preprocessing.Vocabulary`
+    class.  The production engine only needs the `.word2idx` dict.
+    """
+    def __init__(self):
+        self.word2idx: Dict[str, int] = {}
+        self.idx2word: Dict[int, str] = {}
+
+
+class _VocabCompatUnpickler(pickle.Unpickler):
+    """Redirects legacy Vocabulary class paths to `_VocabularyStub`."""
+
+    _VOCAB_MODULES = {
+        "data.preprocessing",
+        "research.data.preprocessing",
+        "preprocessing",
+    }
+
+    def find_class(self, module: str, name: str):
+        if module in self._VOCAB_MODULES and name == "Vocabulary":
+            return _VocabularyStub
+        return super().find_class(module, name)
+
+
+def _safe_load_vocab(vocab_path: Path):
+    """Load vocab.pkl with legacy class-path compatibility."""
+    with open(vocab_path, "rb") as f:
+        return _VocabCompatUnpickler(f).load()
 
 
 class HybridDLSentimentEngine(BaseSentimentEngine):
@@ -130,9 +163,9 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         else:
             self.device = torch.device(device)
 
-        # Load vocabulary (supports both dict and `Vocabulary` object formats).
-        with open(vocab_path, "rb") as f:
-            vocab_obj = pickle.load(f)
+        # Load vocabulary — uses compat unpickler to handle vocab.pkl files
+        # that were pickled with the old `data.preprocessing.Vocabulary` class.
+        vocab_obj = _safe_load_vocab(vocab_path)
 
         word2idx = None
         if isinstance(vocab_obj, dict):
@@ -189,8 +222,10 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
             dropout_classifier=self.hyperparams.get("dropout_classifier", [0.5, 0.4]),
         )
 
-        # Load weights
-        checkpoint = torch.load(model_path, map_location=self.device)
+        # Load weights — weights_only=False required for checkpoints saved with
+        # older PyTorch / numpy that embed numpy scalars in the state dict.
+        # This file is a project-internal artifact so the source is trusted.
+        checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
         state_dict = checkpoint
         if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
             state_dict = checkpoint["model_state_dict"]
