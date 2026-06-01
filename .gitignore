@@ -70,3 +70,6 @@ youtube_comments_cleaned.csv
 
 # Personal drafts
 thesis_draft.docx
+
+# Thesis local backups
+thesis_backup_*.docx
