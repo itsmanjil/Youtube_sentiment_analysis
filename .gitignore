@@ -62,8 +62,9 @@ graphify-out/20*/
 graphify-out/graph.html
 backend/graphify-out/
 
-# Claude Code internals
-.claude/worktrees/
+# Claude Code internals (kept local, not tracked)
+.claude/
+/CLAUDE.md
 
 # Data files (too large for git)
 youtube_comments_cleaned.csv
