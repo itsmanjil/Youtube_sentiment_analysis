@@ -12,7 +12,11 @@ djangorestframework-simplejwt==5.5.1
 psycopg2-binary==2.9.11
 nltk==3.9.2
 numpy==1.26.4
-pandas==2.2.3
+# Matches the environment that actually produced the pinned model artifacts
+# (models/*/*_metadata.json records pandas_version 3.0.0). Requires
+# numpy>=1.26.0 on Python <3.14 (this project targets 3.11+), which
+# numpy==1.26.4 above satisfies without a numpy bump.
+pandas==3.0.0
 python-dotenv==1.2.1
 scikit-learn==1.8.0
 google-api-python-client==2.188.0

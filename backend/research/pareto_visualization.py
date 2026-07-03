@@ -20,9 +20,7 @@ import json
 from pathlib import Path
 
 
-BACKEND = Path(
-    "/sessions/funny-wizardly-einstein/mnt/Youtube_sentiment_analysis/backend"
-)
+BACKEND = Path(__file__).resolve().parents[1]
 IN_JSON = BACKEND / "results" / "multi_objective_ensemble.json"
 OUT_DIR = BACKEND / "results"
 
@@ -164,7 +162,7 @@ def main() -> None:
         "Expected Calibration Error (ECE) — lower is better",
         "Macro-F1 — higher is better",
     )
-    (OUT_DIR / "pareto_f1_vs_ece.svg").write_text(svg1)
+    (OUT_DIR / "pareto_f1_vs_ece.svg").write_text(svg1, encoding="utf-8")
 
     # Figure 2: F1 vs Coverage
     svg2 = render_scatter(
@@ -174,7 +172,7 @@ def main() -> None:
         "Coverage (fraction of predictions above τ=0.7)",
         "Macro-F1 — higher is better",
     )
-    (OUT_DIR / "pareto_f1_vs_coverage.svg").write_text(svg2)
+    (OUT_DIR / "pareto_f1_vs_coverage.svg").write_text(svg2, encoding="utf-8")
 
     # Figure 3: ECE vs Coverage
     svg3 = render_scatter(
@@ -185,7 +183,7 @@ def main() -> None:
         "Expected Calibration Error (ECE) — lower is better",
         invert_y=True,
     )
-    (OUT_DIR / "pareto_ece_vs_coverage.svg").write_text(svg3)
+    (OUT_DIR / "pareto_ece_vs_coverage.svg").write_text(svg3, encoding="utf-8")
 
     knee = data["knee_point"]
     knee_txt = (
@@ -256,7 +254,7 @@ Pareto surface projected onto all three pairs.</figcaption>
 </body>
 </html>
 """
-    (OUT_DIR / "pareto_visualization.html").write_text(html)
+    (OUT_DIR / "pareto_visualization.html").write_text(html, encoding="utf-8")
 
     print("Wrote:")
     for p in [

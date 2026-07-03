@@ -43,7 +43,7 @@ import numpy as np
 import pandas as pd
 
 
-BASE = Path("/sessions/funny-wizardly-einstein/mnt/Youtube_sentiment_analysis/backend")
+BASE = Path(__file__).resolve().parents[1]
 MODEL_PATH = BASE / "models" / "logreg" / "model.sav"
 VEC_PATH = BASE / "models" / "logreg" / "tfidfVectorizer.pickle"
 TEST_PATH = BASE / "data" / "test.csv"
@@ -300,7 +300,7 @@ def main() -> None:
     }
 
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUT_JSON, "w") as f:
+    with open(OUT_JSON, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
 
     # Markdown
@@ -426,7 +426,7 @@ def main() -> None:
         "calibration (not accuracy) is the honest contribution of the CI layer.\n"
     )
 
-    with open(OUT_MD, "w") as f:
+    with open(OUT_MD, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
     print(f"Wrote: {OUT_JSON}")

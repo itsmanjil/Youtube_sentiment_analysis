@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "model": "/sessions/funny-wizardly-einstein/mnt/Youtube_sentiment_analysis/backend/models/logreg/model.sav",
-    "test_data": "/sessions/funny-wizardly-einstein/mnt/Youtube_sentiment_analysis/backend/data/test.csv",
+    "model": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\models\\logreg\\model.sav",
+    "test_data": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\data\\test.csv",
     "n_test": 165110,
     "overall_accuracy": 0.6946278238749924
   },
@@ -69,8 +69,8 @@
       "std": 0.175230306475622
     },
     "wrong": {
-      "mean": 0.5932984401208447,
-      "std": 0.14308219562339522
+      "mean": 0.5932984401208448,
+      "std": 0.1430821956233952
     }
   },
   "confusion_pairs": [

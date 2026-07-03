@@ -42,16 +42,19 @@ def load_dataset(
     df = df[df["text"].str.strip().astype(bool)]
 
     if max_per_class is not None:
-        df = (
-        df.groupby("label", group_keys=False)
-            .apply(
-                lambda group: group.sample(
-                    n=min(len(group), max_per_class),
-                    random_state=random_seed,
-                )
-            )
-            .reset_index(drop=True)
-        )
+        # Avoid groupby(...).apply(lambda group: ...) here: pandas 3.0 excludes
+        # the grouping column from the group passed to `apply` (the long-
+        # deprecated `include_groups=True` default is gone), so `group` no
+        # longer contains "label" and the result silently loses that column.
+        # Iterating groups directly and concatenating is version-agnostic and
+        # produces the same row order (groupby iterates sorted keys by
+        # default, same as the old group_keys=False + apply + reset_index).
+        df = pd.concat(
+            [
+                group.sample(n=min(len(group), max_per_class), random_state=random_seed)
+                for _, group in df.groupby("label")
+            ]
+        ).reset_index(drop=True)
 
     df = df.sample(frac=1.0, random_state=random_seed).reset_index(drop=True)
     return df

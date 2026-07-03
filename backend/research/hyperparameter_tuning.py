@@ -319,14 +319,14 @@ def main():
         "test_evaluation": test_results,
     }
     json_path = out_dir / "hyperparameter_tuning.json"
-    with open(json_path, "w") as f:
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
     print(f"\nSaved JSON → {json_path}")
 
     # Save Markdown
     md = build_markdown(logreg_results, svm_results, vec_results, test_results)
     md_path = out_dir / "hyperparameter_tuning.md"
-    with open(md_path, "w") as f:
+    with open(md_path, "w", encoding="utf-8") as f:
         f.write(md)
     print(f"Saved Markdown → {md_path}")
 
