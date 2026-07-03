@@ -8,7 +8,6 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from users.models import NewUser
 from app.models import YouTubeAnalysis
-from app_api.views import MyTokenObtainPairSerializer
 from .serializers import RegistrationSerializer
 import logging
 
@@ -29,15 +28,6 @@ def registration_view(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  
-
-@api_view(["POST",])
-@permission_classes([AllowAny])
-def login_view(request):
-    serializer = MyTokenObtainPairSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    logger.debug("login_view issued JWT pair for user_id=%s", serializer.user.id)
-    return Response(serializer.validated_data, status=status.HTTP_200_OK)
-
 
 @api_view(["POST",])
 @permission_classes([AllowAny])

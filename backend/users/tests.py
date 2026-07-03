@@ -1,7 +1,6 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from rest_framework_simplejwt.tokens import AccessToken
 
 from app.models import YouTubeAnalysis, YouTubeVideo
 from users.models import NewUser
@@ -69,7 +68,11 @@ class UserProfileAPITests(APITestCase):
         )
 
 
-class UserAuthAliasAPITests(APITestCase):
+class UserLogoutAPITests(APITestCase):
+    # JWT issuance itself (custom claims, etc.) is covered by
+    # app_api.tests.JWTAuthAPITests against the single login path,
+    # `token_obtain_pair` — login no longer has a second, duplicate route to
+    # test here. These tests only exercise logout/blacklisting.
     def setUp(self):
         self.user = NewUser.objects.create_user(
             email="jwtlogin@example.com",
@@ -79,21 +82,6 @@ class UserAuthAliasAPITests(APITestCase):
             password="testpassword123",
         )
 
-    def test_login_alias_returns_jwt_pair_with_custom_claims(self):
-        response = self.client.post(
-            reverse("login"),
-            {"email": self.user.email, "password": "testpassword123"},
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("access", response.data)
-        self.assertIn("refresh", response.data)
-
-        access_token = AccessToken(response.data["access"])
-        self.assertEqual(access_token["user_name"], self.user.user_name)
-        self.assertEqual(access_token["is_registered"], self.user.is_registered)
-
     def test_logout_requires_refresh_token(self):
         response = self.client.post(reverse("logout"), {}, format="json")
 
@@ -102,7 +90,7 @@ class UserAuthAliasAPITests(APITestCase):
 
     def test_logout_blacklists_refresh_token(self):
         login_response = self.client.post(
-            reverse("login"),
+            reverse("token_obtain_pair"),
             {"email": self.user.email, "password": "testpassword123"},
             format="json",
         )
