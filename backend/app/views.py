@@ -120,6 +120,49 @@ def _has_value(value):
     return True
 
 
+class _InvalidParam(ValueError):
+    """Raised for a malformed/out-of-range request parameter; caught and
+    turned into a 400 response rather than propagating as an unhandled 500."""
+
+
+def _parse_bounded_int(value, default, *, minimum, maximum, name):
+    if value is None:
+        value = default
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        raise _InvalidParam(f"{name} must be an integer.")
+    if parsed < minimum or parsed > maximum:
+        raise _InvalidParam(
+            f"{name} must be between {minimum} and {maximum} (got {parsed})."
+        )
+    return parsed
+
+
+def _parse_bounded_float(value, default, *, minimum, maximum, name):
+    if value is None:
+        value = default
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        raise _InvalidParam(f"{name} must be a number.")
+    if parsed < minimum or parsed > maximum:
+        raise _InvalidParam(
+            f"{name} must be between {minimum} and {maximum} (got {parsed})."
+        )
+    return parsed
+
+
+def _coerce_bool(value, default=False):
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "t", "yes", "y", "on"}
+    return bool(value)
+
+
 def _normalize_sentiment_model(value):
     normalized = str(value or "logreg").lower().strip()
     return _MODEL_ALIASES.get(normalized, normalized)
@@ -151,18 +194,42 @@ def analyze_youtube_video(request):
 
     # Extract parameters
     video_url = request.data.get("video_url")
-    max_comments = int(request.data.get("max_comments", 200))
-    use_api = request.data.get("use_api", True)
+    try:
+        max_comments = _parse_bounded_int(
+            request.data.get("max_comments"), 200, minimum=1, maximum=2000, name="max_comments"
+        )
+        use_api = _coerce_bool(request.data.get("use_api"), default=True)
+        filter_spam = _coerce_bool(request.data.get("filter_spam"), default=True)
+        filter_language = _coerce_bool(request.data.get("filter_language"), default=True)
+        bootstrap_samples = _parse_bounded_int(
+            request.data.get("bootstrap_samples"),
+            500,
+            minimum=1,
+            maximum=2000,
+            name="bootstrap_samples",
+        )
+        random_seed = _parse_bounded_int(
+            request.data.get("random_seed"), 42, minimum=0, maximum=2**31 - 1, name="random_seed"
+        )
+        aspect_top_n = _parse_bounded_int(
+            request.data.get("aspect_top_n"), 12, minimum=1, maximum=200, name="aspect_top_n"
+        )
+        aspect_min_freq = _parse_bounded_int(
+            request.data.get("aspect_min_freq"), 3, minimum=1, maximum=1000, name="aspect_min_freq"
+        )
+        confidence_threshold = _parse_bounded_float(
+            request.data.get("confidence_threshold"),
+            0.6,
+            minimum=0.0,
+            maximum=1.0,
+            name="confidence_threshold",
+        )
+    except _InvalidParam as exc:
+        return Response({"msg": str(exc)}, status=400)
+
     emoji_mode = request.data.get("emoji_mode", "convert")
-    filter_spam = request.data.get("filter_spam", True)
-    filter_language = request.data.get("filter_language", True)
     sentiment_model = _normalize_sentiment_model(request.data.get("sentiment_model", "logreg"))
     calibration_profile = str(request.data.get("calibration_profile", "auto") or "auto")
-    bootstrap_samples = int(request.data.get("bootstrap_samples", 500))
-    random_seed = int(request.data.get("random_seed", 42))
-    aspect_top_n = int(request.data.get("aspect_top_n", 12))
-    aspect_min_freq = int(request.data.get("aspect_min_freq", 3))
-    confidence_threshold = float(request.data.get("confidence_threshold", 0.6))
     ensemble_models = _coerce_model_list(request.data.get("ensemble_models"))
     ensemble_weights_optimization = request.data.get("ensemble_weights_optimization")
     ensemble_weights_input = request.data.get("ensemble_weights")
@@ -248,6 +315,12 @@ def analyze_youtube_video(request):
                     {"msg": f"Scraper error: {str(e)}"},
                     status=502
                 )
+
+        if not video_metadata:
+            return Response(
+                {"msg": "Video not found. It may be private, deleted, or the URL is incorrect."},
+                status=404,
+            )
 
         if not comments_raw:
             return Response(
@@ -347,11 +420,11 @@ def analyze_youtube_video(request):
         except (ValueError, RuntimeError, ImportError, FileNotFoundError) as exc:
             return Response({"msg": str(exc)}, status=400)
 
-        for item in processed_comments:
-            result = coerce_sentiment_result(
-                engine.analyze(item['processed_text']),
-                sentiment_model,
-            )
+        batch_results = engine.batch_analyze(
+            [item['processed_text'] for item in processed_comments]
+        )
+        for item, raw_result in zip(processed_comments, batch_results):
+            result = coerce_sentiment_result(raw_result, sentiment_model)
             item['sentiment'] = result.label
             item['sentiment_score'] = result.score
             item['sentiment_probs'] = result.probs
@@ -361,8 +434,13 @@ def analyze_youtube_video(request):
         logger.debug("Saving processed comments to database")
         for item in processed_comments:
             try:
+                # `comment_id` is globally unique in the DB. Coerce a missing/blank
+                # id to None (NULL) rather than '' — SQL treats multiple NULLs as
+                # distinct for uniqueness, whereas multiple '' comments would
+                # collide into a single row and silently overwrite each other.
+                comment_id = item.get('comment_id') or None
                 YouTubeComment.objects.update_or_create(
-                    comment_id=item.get('comment_id', ''),
+                    comment_id=comment_id,
                     defaults={
                         'video': video,
                         'text': item['text'],
@@ -462,6 +540,11 @@ def analyze_youtube_video(request):
             "model_artifact": getattr(engine, "model_artifact", None),
             "preprocessing_profile": processing_profile,
             "runtime_artifacts": get_runtime_artifact_metadata(),
+            # Per-file sha256 verification against the pinned manifest (see
+            # src/utils/runtime_artifacts.py::verify_model_artifact_hash).
+            # None = no pinned hash to verify against; True/False = verified
+            # match/mismatch for the actual model file this engine loaded.
+            "artifact_verified": getattr(engine, "artifact_verified", None),
             "confidence_stats": confidence_stats,
             "uncertainty_stats": uncertainty_stats,
             "sentiment_confidence_intervals": sentiment_cis,
@@ -474,6 +557,7 @@ def analyze_youtube_video(request):
                 "preset": getattr(engine, "model_preset", None),
                 "source": getattr(engine, "model_source", None),
                 "artifact": getattr(engine, "model_artifact", None),
+                "is_fine_tuned": getattr(engine, "is_fine_tuned", None),
                 "max_length": getattr(engine, "max_length", None),
                 "device": str(getattr(engine, "device", "")),
                 "calibration_profile": getattr(engine, "calibration_profile", calibration_profile),
@@ -591,14 +675,14 @@ def analyze_youtube_video(request):
             'model_used': sentiment_model.upper()
         })
 
-    except Exception as e:
+    except Exception:
         logger.exception(
             "Analysis failed for user=%s video_url=%s",
             getattr(user, "id", None),
             video_url,
         )
         return Response(
-            {"msg": f"Analysis failed: {str(e)}"},
+            {"msg": "Analysis failed due to an internal error. Please try again later."},
             status=500
         )
 
@@ -660,8 +744,16 @@ def get_youtube_analysis(request, video_id):
             }
         })
 
-    except Exception as e:
-        return Response({"msg": str(e)}, status=500)
+    except Exception:
+        logger.exception(
+            "get_youtube_analysis failed for user=%s video_id=%s",
+            getattr(request.user, "id", None),
+            video_id,
+        )
+        return Response(
+            {"msg": "Failed to retrieve analysis due to an internal error."},
+            status=500,
+        )
 
 
 @api_view(["GET"])
@@ -708,8 +800,15 @@ def get_user_youtube_analyses(request):
 
         return Response({'data': data})
 
-    except Exception as e:
-        return Response({"msg": str(e)}, status=500)
+    except Exception:
+        logger.exception(
+            "get_user_youtube_analyses failed for user=%s",
+            getattr(request.user, "id", None),
+        )
+        return Response(
+            {"msg": "Failed to retrieve analyses due to an internal error."},
+            status=500,
+        )
 
 
 # Health check endpoint

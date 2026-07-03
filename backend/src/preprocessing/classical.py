@@ -16,8 +16,12 @@ in:
 
 Design goals
 ------------
-1. Deterministic: avoid network downloads at runtime; degrade gracefully if
-   NLTK corpora are missing.
+1. Deterministic: the stopword list is vendored below rather than loaded from
+   NLTK's `stopwords` corpus at runtime. Relying on `nltk.corpus.stopwords`
+   means two machines (or a dev box vs. a CI/prod box without
+   `nltk.download('stopwords')`) can silently produce different tokenized
+   features from identical code and data — a reproducibility hazard for any
+   model trained/served with `preprocess=True`.
 2. Compatible with upstream cleaning: inputs are often already cleaned by
    `YouTubePreprocessor` (letters/spaces). Contraction expansion therefore
    targets apostrophe-stripped forms like "dont" and "cant".
@@ -34,40 +38,38 @@ from typing import Iterable, List, Sequence
 
 NEGATORS = {"not", "no", "never", "nor"}
 
-# Minimal fallback (enough to reduce noise without requiring NLTK downloads).
+# Vendored copy of NLTK's `stopwords.words("english")` (179 tokens, NLTK data
+# package `stopwords`, retrieved 2026). Kept as a literal here — not loaded
+# from the NLTK corpus at runtime — so preprocessing is bit-for-bit
+# deterministic across machines regardless of whether NLTK corpora are
+# installed. Includes both apostrophe and apostrophe-stripped contraction
+# forms since upstream cleaning may or may not have removed punctuation.
 _FALLBACK_STOPWORDS = {
-    "a",
-    "an",
-    "and",
-    "are",
-    "as",
-    "at",
-    "be",
-    "but",
-    "by",
-    "for",
-    "from",
-    "has",
-    "have",
-    "he",
-    "i",
-    "in",
-    "is",
-    "it",
-    "its",
-    "of",
-    "on",
-    "or",
-    "that",
-    "the",
-    "this",
-    "to",
-    "was",
-    "were",
-    "will",
-    "with",
-    "you",
-    "your",
+    "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you",
+    "you're", "youre", "you've", "youve", "you'll", "youll", "you'd", "youd",
+    "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself",
+    "she", "she's", "shes", "her", "hers", "herself", "it", "it's", "its",
+    "itself", "they", "them", "their", "theirs", "themselves", "what",
+    "which", "who", "whom", "this", "that", "that'll", "thatll", "these",
+    "those", "am", "is", "are", "was", "were", "be", "been", "being", "have",
+    "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the",
+    "and", "but", "if", "or", "because", "as", "until", "while", "of", "at",
+    "by", "for", "with", "about", "against", "between", "into", "through",
+    "during", "before", "after", "above", "below", "to", "from", "up",
+    "down", "in", "out", "on", "off", "over", "under", "again", "further",
+    "then", "once", "here", "there", "when", "where", "why", "how", "all",
+    "any", "both", "each", "few", "more", "most", "other", "some", "such",
+    "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very",
+    "s", "t", "can", "will", "just", "don", "don't", "dont", "should",
+    "should've", "shouldve", "now", "d", "ll", "m", "o", "re", "ve", "y",
+    "ain", "aren", "aren't", "arent", "couldn", "couldn't", "couldnt",
+    "didn", "didn't", "didnt", "doesn", "doesn't", "doesnt", "hadn",
+    "hadn't", "hadnt", "hasn", "hasn't", "hasnt", "haven", "haven't",
+    "havent", "isn", "isn't", "isnt", "ma", "mightn", "mightn't", "mightnt",
+    "mustn", "mustn't", "mustnt", "needn", "needn't", "neednt", "shan",
+    "shan't", "shant", "shouldn", "shouldn't", "shouldnt", "wasn", "wasn't",
+    "wasnt", "weren", "weren't", "werent", "won", "won't", "wont", "wouldn",
+    "wouldn't", "wouldnt",
 }
 
 # Apostrophe-stripped, high-signal negation contractions commonly seen after
@@ -120,18 +122,16 @@ class ClassicalPreprocessConfig:
 
 @lru_cache(maxsize=1)
 def _get_stopwords() -> set[str]:
-    """Return a stopword set, falling back to a small built-in list."""
-    try:
-        import nltk
-        from nltk.corpus import stopwords
+    """
+    Return the vendored stopword set.
 
-        try:
-            return set(stopwords.words("english"))
-        except LookupError:
-            # Avoid forcing `nltk.download(...)` at runtime.
-            return set(_FALLBACK_STOPWORDS)
-    except Exception:
-        return set(_FALLBACK_STOPWORDS)
+    Deliberately does NOT read `nltk.corpus.stopwords` at runtime: whether
+    that corpus is installed/downloaded varies by machine, which would make
+    `preprocess_classical_text` produce different tokens for identical input
+    depending on environment. `_FALLBACK_STOPWORDS` is the single source of
+    truth so behavior is identical everywhere.
+    """
+    return set(_FALLBACK_STOPWORDS)
 
 
 def _expand_negation_contractions(tokens: List[str]) -> List[str]:

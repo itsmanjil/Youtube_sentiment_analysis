@@ -88,7 +88,11 @@ def load_df(path: str, sample: int | None, seed: int) -> pd.DataFrame:
 
 def score_model(name: str, texts: List[str]) -> np.ndarray:
     """Returns (n_samples, n_classes) probability matrix (rows sum to 1)."""
-    engine = get_sentiment_engine(name)
+    # calibrate=False: fit T on *raw* model output. Without this, re-running this
+    # script would score models through the previously-fitted temperature (loaded
+    # automatically from the pinned runtime artifact), fitting a new T on top of
+    # an already-calibrated distribution and silently compounding the scaling.
+    engine = get_sentiment_engine(name, calibrate=False)
     results = engine.batch_analyze(texts)
     mat = np.zeros((len(texts), len(LABELS)))
     for i, r in enumerate(results):
@@ -162,7 +166,15 @@ def calibrate_model(
     y_val: List[str],
     y_test: List[str],
 ) -> dict:
-    """Fit T on val, evaluate before/after on test."""
+    """Fit T on val, evaluate before/after on test.
+
+    The fitted T is only *kept* (and therefore applied at serving time) if it
+    actually reduces test-set ECE relative to the uncalibrated model. NLL
+    minimisation on the validation set is not guaranteed to improve held-out
+    ECE — for several models here it makes ECE measurably worse (see
+    docs/THESIS_RISKS_GAPS.md / code review) — so shipping a harmful T by
+    default would silently degrade served probabilities.
+    """
 
     # Fit temperature on validation set
     T = fit_temperature(val_probs, y_val)
@@ -173,18 +185,35 @@ def calibrate_model(
     # Metrics before calibration (test)
     ece_before, brier_before = compute_calibration_metrics(y_test, test_probs, labels=LABELS)
 
-    # Metrics after calibration (test)
-    ece_after, brier_after = compute_calibration_metrics(y_test, test_calibrated, labels=LABELS)
+    # Metrics after calibration (test), using the fitted T
+    ece_after_fitted, brier_after_fitted = compute_calibration_metrics(
+        y_test, test_calibrated, labels=LABELS
+    )
+
+    # Only keep T if it actually improves held-out calibration (ECE).
+    kept = ece_after_fitted < ece_before
+    if kept:
+        T_final = T
+        ece_after, brier_after = ece_after_fitted, brier_after_fitted
+        final_probs = test_calibrated
+    else:
+        # Fall back to the identity transform (T=1): no calibration is better
+        # than harmful calibration.
+        T_final = 1.0
+        ece_after, brier_after = ece_before, brier_before
+        final_probs = test_probs
 
     # Macro-F1 is argmax-invariant — verify it doesn't change when T != 1
     preds_before = [LABELS[i] for i in test_probs.argmax(axis=1)]
-    preds_after  = [LABELS[i] for i in test_calibrated.argmax(axis=1)]
+    preds_after  = [LABELS[i] for i in final_probs.argmax(axis=1)]
     f1_before = f1_score(y_test, preds_before, average="macro", zero_division=0)
     f1_after  = f1_score(y_test, preds_after,  average="macro", zero_division=0)
 
     return {
         "model": name,
-        "temperature": round(T, 4),
+        "temperature": round(T_final, 4),
+        "temperature_fitted": round(T, 4),
+        "kept": kept,
         "ece_before": round(ece_before, 6),
         "ece_after": round(ece_after, 6),
         "ece_reduction_pct": round(100 * (ece_before - ece_after) / max(ece_before, 1e-10), 2),
@@ -201,6 +230,8 @@ def calibrate_model(
 # ---------------------------------------------------------------------------
 
 def build_report(results: List[dict]) -> str:
+    n_kept = sum(1 for r in results if r.get("kept"))
+    n_discarded = len(results) - n_kept
     lines = [
         "# Temperature Scaling Calibration\n",
         "## Method\n",
@@ -211,15 +242,26 @@ def build_report(results: List[dict]) -> str:
         "- T < 1: model was underconfident → scaling sharpens probabilities  \n"
         "- T = 1: no change required (already well-calibrated)\n",
         "**Macro-F1 is unaffected** — temperature scaling preserves the argmax.\n",
+        "**Gating**: NLL minimisation on the validation set is not guaranteed to "
+        "improve held-out ECE. A fitted T is only *kept* (and served) if it "
+        f"reduces test-set ECE relative to the uncalibrated model; otherwise "
+        "T is pinned to 1.0 (identity) and the fitted value is reported for "
+        f"reference only. Of {len(results)} models, **{n_kept} kept** their "
+        f"fitted temperature and **{n_discarded} were discarded** as harmful "
+        "on this run.\n",
         "## Results (Test Set)\n",
         "### ECE (Expected Calibration Error, 15 bins)\n",
-        "*Lower is better. Reduction % = (before − after) / before × 100*\n",
-        "| Model | T | ECE Before | ECE After | Reduction |",
-        "|-------|---|------------|-----------|-----------|",
+        "*Lower is better. Reduction % = (before − after) / before × 100. "
+        "\"T (fitted)\" is the NLL-optimal value; \"T (served)\" is 1.0 when the "
+        "fitted value was discarded for not improving held-out ECE.*\n",
+        "| Model | T (fitted) | T (served) | Kept | ECE Before | ECE After | Reduction |",
+        "|-------|------------|------------|------|------------|-----------|-----------|",
     ]
     for r in results:
+        fitted = r.get("temperature_fitted", r["temperature"])
         lines.append(
-            f"| {r['model']} | {r['temperature']:.3f} "
+            f"| {r['model']} | {fitted:.3f} | {r['temperature']:.3f} "
+            f"| {'yes' if r.get('kept') else 'no'} "
             f"| {r['ece_before']:.4f} | {r['ece_after']:.4f} "
             f"| {r['ece_reduction_pct']:+.1f}% |"
         )
@@ -250,35 +292,53 @@ def build_report(results: List[dict]) -> str:
             f"| {delta:+.4f} |"
         )
 
-    # Summary stats
-    avg_ece_red = sum(r["ece_reduction_pct"] for r in results) / len(results)
-    avg_brier_red = sum(r["brier_reduction_pct"] for r in results) / len(results)
-    most_overconf = max(results, key=lambda r: r["temperature"])
+    # Summary stats (computed only over *kept*/served temperatures — averaging
+    # in discarded rows, whose served ece_after == ece_before by construction,
+    # would understate how much the surviving calibrations actually help).
+    kept_results = [r for r in results if r.get("kept")]
+    avg_ece_red = (
+        sum(r["ece_reduction_pct"] for r in kept_results) / len(kept_results)
+        if kept_results else 0.0
+    )
+    avg_brier_red = (
+        sum(r["brier_reduction_pct"] for r in kept_results) / len(kept_results)
+        if kept_results else 0.0
+    )
+    most_overconf = max(results, key=lambda r: r.get("temperature_fitted", r["temperature"]))
     best_ece_gain = max(results, key=lambda r: r["ece_reduction_pct"])
 
     lines += [
         "\n## Summary\n",
-        f"- Average ECE reduction: **{avg_ece_red:.1f}%** across all 5 models",
-        f"- Average Brier reduction: **{avg_brier_red:.1f}%** across all 5 models",
-        f"- Most overconfident model: **{most_overconf['model']}** "
-        f"(T={most_overconf['temperature']:.3f})",
+        f"- Models kept (served with fitted T): **{len(kept_results)}/{len(results)}**",
+        f"- Average ECE reduction among kept models: **{avg_ece_red:.1f}%**"
+        + (" (no models kept)" if not kept_results else ""),
+        f"- Average Brier reduction among kept models: **{avg_brier_red:.1f}%**"
+        + (" (no models kept)" if not kept_results else ""),
+        f"- Most overconfident model (by fitted T, irrespective of whether kept): "
+        f"**{most_overconf['model']}** "
+        f"(T_fitted={most_overconf.get('temperature_fitted', most_overconf['temperature']):.3f})",
         f"- Largest ECE improvement: **{best_ece_gain['model']}** "
         f"({best_ece_gain['ece_reduction_pct']:+.1f}%)\n",
         "## Thesis Interpretation\n",
         "Temperature scaling provides a lightweight, theoretically-grounded "
-        "calibration layer that improves probabilistic reliability without "
-        "retraining. The learned temperatures reveal the inherent confidence "
-        "tendencies of each architecture:\n",
+        "calibration layer that *can* improve probabilistic reliability without "
+        "retraining — but NLL-optimal T on the validation set is not guaranteed "
+        "to reduce held-out ECE. In this run, the fitted temperature only "
+        f"improved test-set ECE for {len(kept_results)}/{len(results)} model(s); "
+        "for the rest, the fitted T made ECE *worse*, so those models are served "
+        "uncalibrated (T=1.0) rather than shipping a harmful transform. See the "
+        "per-model \"Kept\" column above.\n",
         "- Classical ML models (TF-IDF + LogReg/SVM) output decision-function "
         "scores converted to probabilities via Platt scaling, which can be "
         "systematically over- or under-confident depending on the feature space.\n",
         "- The ensemble and meta-learner aggregate multiple models, which can "
         "amplify or dampen individual model biases — their temperatures reveal "
         "whether aggregation helped or hurt calibration.\n",
-        "Since temperature scaling preserves argmax predictions, it is safe to "
-        "apply at inference time with no accuracy trade-off. The calibrated "
-        "probabilities are required for the entropy-gated selective predictor "
-        "(§4.4) to achieve its theoretical guarantees.\n",
+        "Because gating pins discarded models to T=1.0 (the identity transform), "
+        "temperature scaling remains argmax-preserving and safe to apply at "
+        "inference time with no accuracy trade-off for every model, kept or not. "
+        "The entropy-gated selective predictor (§4.4) should be read against the "
+        "*served* ECE values above, not the fitted-but-discarded ones.\n",
         "## Reference\n",
         "Guo, C., Pleiss, G., Sun, Y., & Weinberger, K. Q. (2017). "
         "On calibration of modern neural networks. *ICML 2017*.\n",
@@ -332,31 +392,34 @@ def main() -> None:
         row = calibrate_model(name, val_probs, test_probs, y_val, y_test)
         results.append(row)
         print(f"  T={row['temperature']:.3f}  "
-              f"ECE {row['ece_before']:.4f}→{row['ece_after']:.4f} "
+              f"ECE {row['ece_before']:.4f}->{row['ece_after']:.4f} "
               f"({row['ece_reduction_pct']:+.1f}%)  "
-              f"Brier {row['brier_before']:.4f}→{row['brier_after']:.4f}  "
+              f"Brier {row['brier_before']:.4f}->{row['brier_after']:.4f}  "
               f"F1={row['macro_f1_before']:.4f}")
 
     # ------------------------------------------------------------------
     # 3. Save outputs
     # ------------------------------------------------------------------
+    # encoding="utf-8" explicitly: on Windows, the default locale encoding
+    # (cp1252) cannot encode the arrow/epsilon characters used in the report
+    # text and raises UnicodeEncodeError when writing the .md file.
     json_path = out_dir / "temperature_scaling.json"
-    with open(json_path, "w") as fh:
+    with open(json_path, "w", encoding="utf-8") as fh:
         json.dump({"models": results}, fh, indent=2)
-    print(f"\nSaved JSON → {json_path}")
+    print(f"\nSaved JSON -> {json_path}")
 
     report = build_report(results)
     md_path = out_dir / "temperature_scaling.md"
-    with open(md_path, "w") as fh:
+    with open(md_path, "w", encoding="utf-8") as fh:
         fh.write(report)
-    print(f"Saved Markdown → {md_path}")
+    print(f"Saved Markdown -> {md_path}")
 
     # ------------------------------------------------------------------
     # 4. Console table
     # ------------------------------------------------------------------
     print("\n" + "=" * 70)
     print(f"{'Model':<14} {'T':>6}  {'ECE_before':>10}  {'ECE_after':>9}  "
-          f"{'ΔECE%':>7}  {'F1':>6}")
+          f"{'dECE%':>7}  {'F1':>6}")
     print("-" * 70)
     for r in results:
         print(f"{r['model']:<14} {r['temperature']:>6.3f}  "

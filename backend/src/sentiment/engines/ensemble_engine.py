@@ -96,6 +96,8 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         weights_optimization: Optional[str] = None,
         preprocess: bool = False,
         preprocess_config: Optional[ClassicalPreprocessConfig] = None,
+        calibrate: bool = True,
+        allow_degraded: bool = False,
     ):
         self._weights_optimization = weights_optimization  # "pso" | "nsga2" | None
         if base_models is None:
@@ -130,9 +132,29 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
                 f"Errors: {self.model_errors}"
             )
 
+        if self.model_errors and not allow_degraded:
+            # A partially-initialized ensemble silently renormalizes weights over
+            # the surviving models — e.g. a corrupted svm/model.sav quietly turns
+            # a 3-model PSO-optimized ensemble into a differently-weighted 2-model
+            # one with no caller-visible signal. Fail loudly by default; callers
+            # that explicitly want best-effort degraded behavior can opt in.
+            raise RuntimeError(
+                "Ensemble base models failed to initialize: "
+                f"{self.model_errors}. Requested: {self.requested_models}. "
+                "Pass allow_degraded=True to proceed with only the surviving "
+                "models (weights will be renormalized over them)."
+            )
+
         self.base_models = list(self.engines.keys())
         self.weights, self.weights_source = self._normalize_weights(weights)
-        self.temperature, self.calibration_applied = self._load_temperature("ensemble")
+        self.calibration_enabled = bool(calibrate)
+        if self.calibration_enabled:
+            self.temperature, self.calibration_applied = self._load_temperature("ensemble")
+        else:
+            # Used by research/ci/temperature_scaling.py when re-fitting T: avoids
+            # applying the *previous* artifact's temperature before computing the
+            # new one (which would fit T on already-calibrated probabilities).
+            self.temperature, self.calibration_applied = 1.0, False
 
     def _load_temperature(self, model_name: str):
         """Load fitted temperature from research results; return (T, applied)."""

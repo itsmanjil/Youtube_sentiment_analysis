@@ -4,11 +4,16 @@ Pinned runtime artifact resolution for live inference.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import logging
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from .config import Config
+
+logger = logging.getLogger(__name__)
 
 
 def get_runtime_artifact_version() -> str:
@@ -73,6 +78,90 @@ def load_runtime_artifact_json(
     if isinstance(payload, dict):
         return payload
     return None
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+@lru_cache(maxsize=64)
+def _verify_model_artifact_hash_cached(
+    local_path_str: str,
+    artifact_name: str,
+    version: Optional[str],
+) -> Optional[bool]:
+    return _verify_model_artifact_hash_uncached(Path(local_path_str), artifact_name, version)
+
+
+def verify_model_artifact_hash(
+    local_path: Path,
+    artifact_name: str,
+    version: Optional[str] = None,
+) -> Optional[bool]:
+    """
+    Cached wrapper around `_verify_model_artifact_hash_uncached` — engines are
+    reconstructed per-request, so without caching every request would re-hash
+    a multi-MB pickle file. Safe to cache since model files don't change while
+    a worker process is running.
+    """
+    return _verify_model_artifact_hash_cached(str(local_path), artifact_name, version)
+
+
+def _verify_model_artifact_hash_uncached(
+    local_path: Path,
+    artifact_name: str,
+    version: Optional[str] = None,
+) -> Optional[bool]:
+    """
+    Verify a locally-loaded model file's sha256 against the pinned manifest.
+
+    The manifest's "path" field for model artifacts is relative to the
+    runtime-artifact directory, where the actual model files (backend/models/...)
+    do not live — only the JSON research artifacts (temperature_scaling,
+    pso_ensemble_weights, etc.) resolve correctly via `resolve_runtime_artifact_path`.
+    This function instead verifies against `source_path`/`sha256`, computed on
+    the model file actually being loaded at `local_path`, so drift between the
+    pinned manifest and the model/vectorizer files being served is detectable
+    instead of the manifest being purely decorative provenance.
+
+    Returns
+    -------
+    Optional[bool]
+        True if the hash matches, False if it doesn't, None if the artifact
+        isn't in the manifest or the local file couldn't be hashed (e.g.
+        missing) — callers should treat None as "unable to verify", not as a
+        failure.
+    """
+    manifest = load_runtime_manifest(version)
+    entry = (manifest.get("artifacts") or {}).get(str(artifact_name))
+    if not isinstance(entry, dict):
+        return None
+    expected = entry.get("sha256")
+    if not expected:
+        return None
+
+    try:
+        actual = _sha256_file(Path(local_path))
+    except OSError:
+        return None
+
+    matches = actual == expected
+    if not matches:
+        logger.warning(
+            "Runtime artifact hash mismatch for %r: pinned manifest expects "
+            "sha256=%s but %s has sha256=%s. The served model may differ from "
+            "the one the pinned research results (calibration, ensemble "
+            "weights, etc.) were computed against.",
+            artifact_name,
+            expected,
+            local_path,
+            actual,
+        )
+    return matches
 
 
 def get_runtime_artifact_metadata(version: Optional[str] = None) -> Dict[str, Any]:

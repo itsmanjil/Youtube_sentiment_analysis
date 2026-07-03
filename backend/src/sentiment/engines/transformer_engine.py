@@ -69,16 +69,17 @@ class TransformerSentimentEngine(BaseSentimentEngine):
 
     Examples
     --------
-    >>> # Use pre-trained BERT
-    >>> engine = TransformerSentimentEngine('bert-base-uncased')
-    >>> result = engine.analyze("This is the best video ever!")
-    >>> print(result.label, result.score)
-    Positive 0.97
-
-    >>> # Use fine-tuned model from local path
+    >>> # Use fine-tuned model from local path (recommended for real predictions)
     >>> engine = TransformerSentimentEngine('./models/transformers/bert')
     >>> result = engine.analyze("Terrible quality, don't watch")
     Negative 0.93
+
+    >>> # Base (untrained-head) HuggingFace checkpoint — requires explicit opt-in,
+    >>> # since a base classification head is randomly initialized and its
+    >>> # predictions are noise until fine-tuned.
+    >>> engine = TransformerSentimentEngine(
+    ...     'bert-base-uncased', allow_untrained_fallback=True
+    ... )
 
     Notes
     -----
@@ -113,6 +114,7 @@ class TransformerSentimentEngine(BaseSentimentEngine):
         calibration_profile: str = "auto",
         temperature_artifact_path: Optional[str] = None,
         temperature: Optional[float] = None,
+        allow_untrained_fallback: bool = False,
     ):
         # Lazy import dependencies
         try:
@@ -142,7 +144,20 @@ class TransformerSentimentEngine(BaseSentimentEngine):
         else:
             self.device = torch.device(device)
 
+        self.is_fine_tuned = True
         model_name_or_path = self._resolve_model_name_or_path(model_name_or_path)
+
+        if not self.is_fine_tuned and not allow_untrained_fallback:
+            raise RuntimeError(
+                f"No fine-tuned checkpoint found for preset '{self.model_preset}' at "
+                f"{Config.get_model_path(self.model_preset)}. Falling back to the base "
+                f"HuggingFace checkpoint '{model_name_or_path}' would silently serve "
+                "predictions from a randomly-initialized classification head. "
+                "Fine-tune and save the model first, or pass "
+                "allow_untrained_fallback=True to explicitly opt into raw-pretrained "
+                "(untrained head) inference for research/debugging purposes."
+            )
+
         self.model_source = model_name_or_path
         self.model_artifact = Path(model_name_or_path).name if Path(model_name_or_path).exists() else model_name_or_path
         self.temperature = 1.0
@@ -197,12 +212,20 @@ class TransformerSentimentEngine(BaseSentimentEngine):
             if explicit_preset:
                 self.model_preset = explicit_preset
             else:
+                # Caller passed a raw HuggingFace model id directly (not a preset
+                # alias, not a local path) — this is an explicit, deliberate
+                # request for a base/untrained-head checkpoint.
+                self.is_fine_tuned = False
                 return explicit_value
 
         if self.model_preset:
             local_path = Config.get_model_path(self.model_preset)
             if local_path and Path(local_path).exists():
                 return str(local_path)
+            # No fine-tuned checkpoint on disk for this preset — falling through to
+            # the raw HuggingFace base model would silently attach a fresh,
+            # randomly-initialized classification head.
+            self.is_fine_tuned = False
             return self.MODEL_PRESETS[self.model_preset]
 
         local_bert_path = Config.get_model_path("bert")
@@ -211,6 +234,7 @@ class TransformerSentimentEngine(BaseSentimentEngine):
             return str(local_bert_path)
 
         self.model_preset = "bert"
+        self.is_fine_tuned = False
         return self.MODEL_PRESETS["bert"]
 
     def _resolve_temperature_artifact_path(

@@ -168,13 +168,19 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
             H_norm = H / math.log(max(len(p_list), 2))
             model_conf[m] = 1.0 - H_norm
 
-        # Gaussian MF activation sum per model
+        # Gaussian MF activation sum per model.
+        # Must match research/ci/neuro_fuzzy_gate.py::_fuzzy_activations exactly:
+        #   gate_m = sum_k alpha_k * exp(-0.5 * ((confidence_m - center_k) / width_k) ** 2)
+        # (alpha is a linear consequent weight applied *outside* the exponent, not
+        # inside it — the two forms coincide only when alpha == 1.)
         model_act = {}
         for m in probs_by_model:
             act = 0.0
             for mf in self._nf_mfs.get(m, []):
                 c, w, a = mf["center"], mf["width"], mf["alpha"]
-                act += math.exp(-a * (model_conf[m] - c) ** 2 / (2 * max(w ** 2, 1e-10)))
+                width = max(w, 1e-3)
+                mu = math.exp(-0.5 * ((model_conf[m] - c) / width) ** 2)
+                act += a * mu
             model_act[m] = act
 
         # Softmax → gate weights

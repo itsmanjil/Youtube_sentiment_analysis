@@ -32,7 +32,9 @@ class YouTubePreprocessor:
         r'(?i)(earn money)',
         r'(?i)(watch my)',
         r'(?i)(dm me)',
-        r'(\d{4,})',  # Long number sequences (phone numbers)
+        r'(\d{7,})',  # Long number sequences (phone numbers). 4-6 digits false-
+        # positives on ordinary content ("since 2019", "10000 views") — require
+        # phone-number-length runs instead.
         r'((.)\2{10,})',  # 10+ repeated characters
         r'(?i)(type amen)',
         r'(?i)(copy and paste)',
@@ -101,7 +103,11 @@ class YouTubePreprocessor:
         return re.sub(r'(.)\1{2,}', r'\1', text)
 
     def remove_channel_mentions(self, text):
-        return re.sub(r'@[\w\s-]+', '', text)
+        # `\s` must not be inside the character class: `@[\w\s-]+` greedily
+        # consumes every word after the `@` (e.g. "great vid @PewDiePie love it"
+        # -> "great vid "), destroying the rest of the comment. Match only the
+        # mention token itself.
+        return re.sub(r'@[\w-]+', '', text)
 
     def filter_short_comments(self, text, min_words=3):
         try:

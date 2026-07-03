@@ -1,6 +1,9 @@
-# Pinned to backend/Pipfile.lock (Python 3.11+). Regenerate with `pipenv requirements`.
-# Deep-learning extras (Hybrid-DL / Transformers) are in backend/requirements-dl.txt
-# (kept separate to avoid NumPy ABI conflicts with PyTorch wheels).
+# Pinned to backend/Pipfile.lock (Python 3.11+). Regenerate with `pipenv requirements`
+# (note: Pipfile.lock must be regenerated separately after changing pins here).
+# Deep-learning extras (Hybrid-DL / Transformers) are in backend/requirements-dl.txt.
+# pandas/numpy are pinned to versions that satisfy BOTH files so a single venv can
+# install requirements.txt followed by requirements-dl.txt (or vice versa) without
+# the two-venv workaround previously documented in requirements-dl.txt.
 
 django==5.2.10
 djangorestframework==3.16.1
@@ -9,7 +12,7 @@ djangorestframework-simplejwt==5.5.1
 psycopg2-binary==2.9.11
 nltk==3.9.2
 numpy==1.26.4
-pandas==3.0.0
+pandas==2.2.3
 python-dotenv==1.2.1
 scikit-learn==1.8.0
 google-api-python-client==2.188.0

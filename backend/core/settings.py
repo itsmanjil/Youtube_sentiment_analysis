@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
-from core.settings_utils import resolve_runtime_settings
+from core.settings_utils import resolve_database_settings, resolve_runtime_settings
 
 DEFAULT_ENVIRONMENT = "test" if "test" in sys.argv else "production"
 RUNTIME_SETTINGS = resolve_runtime_settings(
@@ -79,12 +79,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+DATABASES = resolve_database_settings(
+    os.environ,
+    debug=DEBUG,
+    base_dir=BASE_DIR,
+)
 
 
 
@@ -130,8 +129,11 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
-    # 'ACCESS_TOKEN_LIFETIME': timedelta(days=50),
+    # Kept short since both tokens live in localStorage (XSS-exfiltratable) and
+    # the frontend already refreshes silently (AuthContext polls every 60s and
+    # refreshes ~60s before expiry) — a long-lived access token only adds risk
+    # without adding convenience.
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=90),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,

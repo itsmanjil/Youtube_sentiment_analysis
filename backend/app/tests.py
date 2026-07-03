@@ -100,6 +100,12 @@ class MockSentimentEngine:
             raw={"compound": score},
         )
 
+    def batch_analyze(self, texts):
+        # All real engines implement batch_analyze (views.py calls it directly
+        # for efficiency instead of looping analyze() per comment); the mock
+        # must satisfy the same interface.
+        return [self.analyze(text) for text in texts]
+
 class YouTubeAnalysisAPITests(APITestCase):
     def setUp(self):
         # Create a test user

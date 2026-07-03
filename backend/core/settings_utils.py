@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -104,4 +105,66 @@ def resolve_runtime_settings(
         "cors_allow_all_origins": cors_allow_all_origins,
         "cors_allowed_origins": cors_allowed_origins,
         "csrf_trusted_origins": csrf_trusted_origins,
+    }
+
+
+def resolve_database_settings(
+    env: Mapping[str, str],
+    *,
+    debug: bool,
+    base_dir: Path,
+) -> dict[str, object]:
+    """
+    Resolve the Django DATABASES setting.
+
+    SQLite (single-writer, file-locking) is fine for local development and
+    tests, but is a concurrency/scaling hazard in production: concurrent
+    analyze requests each issue many writes, and multi-worker deployments hit
+    "database is locked" errors. `psycopg2-binary` is already a pinned
+    dependency, so Postgres is wired up here via DB_ENGINE=postgres and the
+    standard DB_NAME/DB_USER/DB_PASSWORD/DB_HOST/DB_PORT env vars. Production
+    (DEBUG=False) must opt in explicitly rather than silently falling back to
+    SQLite.
+    """
+    db_engine = (env.get("DB_ENGINE") or "").strip().lower()
+
+    if db_engine in {"postgres", "postgresql"}:
+        missing = [
+            name
+            for name in ("DB_NAME", "DB_USER", "DB_PASSWORD", "DB_HOST")
+            if not (env.get(name) or "").strip()
+        ]
+        if missing:
+            raise ImproperlyConfigured(
+                f"DB_ENGINE=postgres requires {missing} to be set."
+            )
+        return {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": env["DB_NAME"].strip(),
+                "USER": env["DB_USER"].strip(),
+                "PASSWORD": env["DB_PASSWORD"],
+                "HOST": env["DB_HOST"].strip(),
+                "PORT": (env.get("DB_PORT") or "5432").strip(),
+            }
+        }
+
+    if db_engine and db_engine != "sqlite":
+        raise ImproperlyConfigured(
+            f"Unsupported DB_ENGINE={db_engine!r}. Use 'postgres' or 'sqlite'."
+        )
+
+    if not debug:
+        raise ImproperlyConfigured(
+            "DB_ENGINE=postgres (with DB_NAME/DB_USER/DB_PASSWORD/DB_HOST) must "
+            "be configured when DEBUG is False. SQLite is a single-writer, "
+            "file-locking datastore and is not safe for a production deployment "
+            "with concurrent requests."
+        )
+
+    return {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": base_dir / "db.sqlite3",
+        }
     }

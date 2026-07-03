@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
-from src.utils.runtime_artifacts import load_runtime_artifact_json
+from src.utils.runtime_artifacts import load_runtime_artifact_json, verify_model_artifact_hash
 from src.utils.config import get_model_path, Config
 from src.preprocessing import (
     ClassicalPreprocessConfig,
@@ -92,6 +92,7 @@ class TFIDFSentimentEngine(BaseSentimentEngine):
         vectorizer_path: Union[str, Path] = "./models/tfidf/tfidfVectorizer.pickle",
         preprocess: bool = False,
         preprocess_config: Optional[ClassicalPreprocessConfig] = None,
+        calibrate: bool = True,
     ):
         self.preprocess = bool(preprocess)
         self.preprocess_config = preprocess_config or ClassicalPreprocessConfig()
@@ -117,7 +118,19 @@ class TFIDFSentimentEngine(BaseSentimentEngine):
             ) from exc
 
         self._validate_fitted()
-        self.temperature, self.calibration_applied = self._load_temperature("tfidf")
+        self.artifact_verified = {
+            "model": verify_model_artifact_hash(model_path, "tfidf_model"),
+            "vectorizer": verify_model_artifact_hash(vectorizer_path, "tfidf_vectorizer"),
+        }
+        self.calibration_enabled = bool(calibrate)
+        if self.calibration_enabled:
+            self.temperature, self.calibration_applied = self._load_temperature("tfidf")
+        else:
+            # Meta-learner base models are trained on raw (uncalibrated) probs —
+            # see research/meta_learner.py::_predict_proba_matrix. Applying a
+            # temperature here would feed the meta-learner features it was never
+            # fit on, silently skewing its predictions.
+            self.temperature, self.calibration_applied = 1.0, False
 
     def _load_temperature(self, model_name: str):
         """Load fitted temperature from research results; return (T, applied)."""

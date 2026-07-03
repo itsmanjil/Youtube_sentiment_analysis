@@ -26,6 +26,39 @@ jobs:
       - name: Backend test suite
         run: python manage.py test app app_api users
 
+  research-smoke:
+    # Classical-model research/ci scripts are never exercised by `manage.py
+    # test` (that suite mocks the sentiment engines) and have no other CI
+    # coverage, so a refactor of src/sentiment or src/preprocessing can
+    # silently break them. Run the lightweight ones end-to-end (small sample
+    # sizes) against the models/data already committed in the repo, so a
+    # broken import or signature change fails the build instead of only
+    # surfacing the next time someone runs the script by hand.
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_ENV: test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install backend dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Split leakage check
+        run: >
+          python scripts/prepare/check_split_leakage.py
+          --train data/train.csv --val data/val.csv --test data/test.csv
+      - name: Temperature scaling smoke run (classical + ensemble + meta-learner)
+        run: >
+          python research/ci/temperature_scaling.py
+          --sample_val 200 --sample_test 200
+          --output /tmp/research-smoke/
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

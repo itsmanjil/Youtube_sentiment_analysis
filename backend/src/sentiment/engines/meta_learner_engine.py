@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
-from src.utils.runtime_artifacts import load_runtime_artifact_json
+from src.utils.runtime_artifacts import load_runtime_artifact_json, verify_model_artifact_hash
 from src.utils.config import get_model_path
 from src.preprocessing import ClassicalPreprocessConfig
 from src.sentiment.base import SentimentResult, normalize_label, coerce_sentiment_result, BaseSentimentEngine
@@ -100,9 +100,11 @@ class MetaLearnerSentimentEngine(BaseSentimentEngine):
         base_models: Optional[List[str]] = None,
         preprocess: bool = False,
         preprocess_config: Optional[ClassicalPreprocessConfig] = None,
+        calibrate: bool = True,
     ):
         self.preprocess = bool(preprocess)
         self.preprocess_config = preprocess_config
+        self.calibration_enabled = bool(calibrate)
 
         self.meta_model_path = get_model_path(meta_model_path)
 
@@ -114,6 +116,10 @@ class MetaLearnerSentimentEngine(BaseSentimentEngine):
 
         with open(self.meta_model_path, "rb") as f:
             saved = pickle.load(f)
+
+        self.artifact_verified = {
+            "meta_learner": verify_model_artifact_hash(self.meta_model_path, "meta_learner"),
+        }
 
         self.meta_learner = saved.get("meta_learner")
         if self.meta_learner is None:
@@ -181,10 +187,17 @@ class MetaLearnerSentimentEngine(BaseSentimentEngine):
                 continue
             try:
                 engine_kwargs = {}
-                if model in classical_models and self.preprocess:
-                    engine_kwargs["preprocess"] = True
-                    if self.preprocess_config is not None:
-                        engine_kwargs["preprocess_config"] = self.preprocess_config
+                if model in classical_models:
+                    # Level-1 was trained on raw (uncalibrated) base-model probs
+                    # (research/meta_learner.py fits fresh sklearn models per fold
+                    # with no temperature scaling). Applying live temperature
+                    # scaling here would feed the meta-learner a feature
+                    # distribution it never saw during training.
+                    engine_kwargs["calibrate"] = False
+                    if self.preprocess:
+                        engine_kwargs["preprocess"] = True
+                        if self.preprocess_config is not None:
+                            engine_kwargs["preprocess_config"] = self.preprocess_config
                 self.engines[model] = get_base_engine(model, **engine_kwargs)
             except Exception as exc:
                 self.model_errors[model] = str(exc)
@@ -196,7 +209,13 @@ class MetaLearnerSentimentEngine(BaseSentimentEngine):
                 f"{missing}. Errors: {self.model_errors}"
             )
 
-        self.temperature, self.calibration_applied = self._load_temperature("meta_learner")
+        if self.calibration_enabled:
+            self.temperature, self.calibration_applied = self._load_temperature("meta_learner")
+        else:
+            # Used by research/ci/temperature_scaling.py when re-fitting T: avoids
+            # applying the *previous* artifact's temperature before computing the
+            # new one (which would fit T on already-calibrated probabilities).
+            self.temperature, self.calibration_applied = 1.0, False
 
     def _load_temperature(self, model_name: str):
         """Load fitted temperature from research results; return (T, applied)."""

@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 def registration_view(request):
     data = {}
     serializer = RegistrationSerializer(data=request.data)
-    logger.debug("registration_view serializer=%s data=%s", serializers, data)
     if serializer.is_valid():
         account = serializer.save()
         account.is_active = True
@@ -36,7 +35,7 @@ def registration_view(request):
 def login_view(request):
     serializer = MyTokenObtainPairSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    logger.debug("login_view issued JWT pair for email=%s", request.data.get("email"))
+    logger.debug("login_view issued JWT pair for user_id=%s", serializer.user.id)
     return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
