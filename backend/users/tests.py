@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from app.models import YouTubeAnalysis, YouTubeVideo
+from core.auth_cookies import REFRESH_COOKIE_NAME
 from users.models import NewUser
 
 
@@ -89,29 +90,28 @@ class UserLogoutAPITests(APITestCase):
         self.assertEqual(response.data["message"], "refresh token is required")
 
     def test_logout_blacklists_refresh_token(self):
+        # The refresh token lives in an httpOnly cookie now; the test client
+        # persists cookies across requests like a browser, so logout needs
+        # no body here.
         login_response = self.client.post(
             reverse("token_obtain_pair"),
             {"email": self.user.email, "password": "testpassword123"},
             format="json",
         )
-        refresh_token = login_response.data["refresh"]
+        refresh_token = login_response.cookies[REFRESH_COOKIE_NAME].value
 
-        logout_response = self.client.post(
-            reverse("logout"),
-            {"refresh": refresh_token},
-            format="json",
-        )
+        logout_response = self.client.post(reverse("logout"), {}, format="json")
 
         self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
         self.assertEqual(logout_response.data["message"], "User logged out")
 
+        # Re-attach the now-blacklisted token explicitly rather than relying
+        # on the test client's cookie jar reflecting the server's
+        # clear_refresh_cookie() — this confirms it's rejected specifically
+        # because it was blacklisted, not merely because the cookie is gone.
+        self.client.cookies[REFRESH_COOKIE_NAME] = refresh_token
         refresh_response = self.client.post(
-            reverse("token_refresh"),
-            {"refresh": refresh_token},
-            format="json",
+            reverse("token_refresh"), {}, format="json"
         )
 
-        self.assertIn(
-            refresh_response.status_code,
-            {status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED},
-        )
+        self.assertEqual(refresh_response.status_code, status.HTTP_401_UNAUTHORIZED)

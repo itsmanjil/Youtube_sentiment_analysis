@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
-from core.settings_utils import resolve_database_settings, resolve_runtime_settings
+from core.settings_utils import env_bool, resolve_database_settings, resolve_runtime_settings
 
 DEFAULT_ENVIRONMENT = "test" if "test" in sys.argv else "production"
 RUNTIME_SETTINGS = resolve_runtime_settings(
@@ -119,6 +119,15 @@ STATIC_URL = 'static/'
 
 _IS_TEST_ENVIRONMENT = RUNTIME_SETTINGS["environment"] == "test"
 
+# youtube/analyze/ can take far longer than any reasonable HTTP timeout for
+# large max_comments/transformer models, so it normally runs on a background
+# thread and returns a pollable job id (see app/models.py::AnalysisJob and
+# app/views.py). Tests default to running it synchronously in-request so the
+# large existing test suite (which asserts on the direct response body) does
+# not need to poll a background job; override with ANALYSIS_RUN_SYNC=true/false
+# to force either mode (e.g. for local debugging without a worker thread).
+ANALYSIS_RUN_SYNC = env_bool(os.environ, "ANALYSIS_RUN_SYNC", default=_IS_TEST_ENVIRONMENT)
+
 REST_FRAMEWORK = {
 
     'DEFAULT_PERMISSION_CLASSES': [
@@ -149,10 +158,13 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    # Kept short since both tokens live in localStorage (XSS-exfiltratable) and
-    # the frontend already refreshes silently (AuthContext polls every 60s and
-    # refreshes ~60s before expiry) — a long-lived access token only adds risk
-    # without adding convenience.
+    # Access token: kept short since it lives in localStorage
+    # (XSS-exfiltratable) and the frontend already refreshes silently
+    # (AuthContext polls every 60s and refreshes ~60s before expiry) — a
+    # long-lived access token only adds risk without adding convenience.
+    # Refresh token: no longer in localStorage at all — see
+    # core/auth_cookies.py, which stores it in an httpOnly cookie instead,
+    # so it isn't readable by JavaScript regardless of its lifetime.
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=90),
     'ROTATE_REFRESH_TOKENS': True,
@@ -190,6 +202,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = RUNTIME_SETTINGS["cors_allow_all_origins"]
 CORS_ALLOWED_ORIGINS = RUNTIME_SETTINGS["cors_allowed_origins"]
 CSRF_TRUSTED_ORIGINS = RUNTIME_SETTINGS["csrf_trusted_origins"]
+# Required so the browser sends/accepts the httpOnly refresh-token cookie
+# (core/auth_cookies.py) on cross-origin requests from the frontend dev
+# server. Safe alongside CORS_ALLOW_ALL_ORIGINS=False + an explicit
+# CORS_ALLOWED_ORIGINS list (enforced by settings_utils.resolve_runtime_settings
+# in production) — browsers refuse credentialed requests against a wildcard
+# origin anyway.
+CORS_ALLOW_CREDENTIALS = True
 
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG

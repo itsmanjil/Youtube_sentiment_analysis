@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
+from core.auth_cookies import REFRESH_COOKIE_NAME, clear_refresh_cookie
 from users.models import NewUser
 from app.models import YouTubeAnalysis
 from .serializers import RegistrationSerializer
@@ -32,7 +33,9 @@ def registration_view(request):
 @api_view(["POST",])
 @permission_classes([AllowAny])
 def logout_view(request):
-   refresh = request.data.get("refresh")
+   # The refresh token lives in an httpOnly cookie (core/auth_cookies.py),
+   # not the request body, so the browser attaches it automatically.
+   refresh = request.COOKIES.get(REFRESH_COOKIE_NAME)
    if not refresh:
        return Response(
            {"message": "refresh token is required"},
@@ -48,7 +51,9 @@ def logout_view(request):
            status=status.HTTP_400_BAD_REQUEST,
        )
 
-   return Response({"message":"User logged out"})
+   response = Response({"message": "User logged out"})
+   clear_refresh_cookie(response)
+   return response
 
 @api_view(["GET",])
 @permission_classes([IsAuthenticated])

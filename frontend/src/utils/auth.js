@@ -67,7 +67,12 @@ export const hasValidAccessToken = (authToken, nowMs = Date.now()) =>
   );
 
 export const shouldRefreshAccessToken = (authToken, nowMs = Date.now()) => {
-  if (!authToken?.refresh || !authToken?.access) {
+  // The refresh token lives in an httpOnly cookie now (see
+  // core/auth_cookies.py on the backend) — JS can't see whether one exists,
+  // so "should we attempt a refresh" is decided purely by whether our
+  // locally-stored access token is missing/near-expiry, for any session we
+  // believe is active (authToken record exists at all).
+  if (!authToken) {
     return false;
   }
 
@@ -90,10 +95,8 @@ export const getInitialAuthState = () => {
     return { authToken, user };
   }
 
-  if (authToken.refresh) {
-    return { authToken, user: null };
-  }
-
-  clearStoredAuthToken();
-  return { authToken: null, user: null };
+  // Access is missing/expired, but a valid refresh cookie may still exist
+  // (it's httpOnly, so JS can't check) — keep the record so AuthContext's
+  // init effect attempts a refresh instead of assuming the session is dead.
+  return { authToken, user: null };
 };

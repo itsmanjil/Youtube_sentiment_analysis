@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
 import {
-  AUTH_STORAGE_KEY,
   getInitialAuthState,
   hasValidAccessToken,
   isAccessTokenExpired,
@@ -24,12 +23,16 @@ describe("auth utils", () => {
   });
 
   test("parses JSON tokens from storage", () => {
-    const authToken = { access: "a", refresh: "r" };
+    const authToken = { access: "a" };
 
     expect(parseStoredAuthToken(JSON.stringify(authToken))).toEqual(authToken);
   });
 
-  test("treats expired access token without refresh as signed out", () => {
+  test("keeps an expired access token so a cookie-based refresh can be attempted", () => {
+    // The refresh token lives in an httpOnly cookie (invisible to JS), so
+    // there's no client-visible "refresh" field to check anymore — an
+    // expired/missing access token is always kept around long enough for
+    // AuthContext to attempt a refresh; only a failed refresh clears it.
     const expiredAccess = makeToken({
       exp: Math.floor(Date.now() / 1000) - 60,
       user_name: "Expired",
@@ -37,20 +40,8 @@ describe("auth utils", () => {
 
     persistAuthToken({ access: expiredAccess });
 
-    expect(getInitialAuthState()).toEqual({ authToken: null, user: null });
-    expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBeNull();
-  });
-
-  test("keeps expired access token if refresh token exists", () => {
-    const expiredAccess = makeToken({
-      exp: Math.floor(Date.now() / 1000) - 60,
-      user_name: "Refreshable",
-    });
-
-    persistAuthToken({ access: expiredAccess, refresh: "refresh-token" });
-
     expect(getInitialAuthState()).toEqual({
-      authToken: { access: expiredAccess, refresh: "refresh-token" },
+      authToken: { access: expiredAccess },
       user: null,
     });
   });
@@ -75,17 +66,8 @@ describe("auth utils", () => {
       user_name: "Healthy",
     });
 
-    expect(
-      shouldRefreshAccessToken({
-        access: nearExpiryAccess,
-        refresh: "refresh-token",
-      })
-    ).toBe(true);
-    expect(
-      shouldRefreshAccessToken({
-        access: healthyAccess,
-        refresh: "refresh-token",
-      })
-    ).toBe(false);
+    expect(shouldRefreshAccessToken({ access: nearExpiryAccess })).toBe(true);
+    expect(shouldRefreshAccessToken({ access: healthyAccess })).toBe(false);
+    expect(shouldRefreshAccessToken(null)).toBe(false);
   });
 });

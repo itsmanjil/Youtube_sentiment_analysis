@@ -63,7 +63,10 @@ describe("AuthProvider", () => {
     localStorage.clear();
   });
 
-  test("refreshes an expired stored session on startup", async () => {
+  test("refreshes an expired stored session on startup via the refresh cookie", async () => {
+    // The refresh token is an httpOnly cookie the browser attaches
+    // automatically (axios.js sets withCredentials) — there's no "refresh"
+    // field in local storage or the request body to assert on here.
     const expiredAccess = makeToken({
       exp: Math.floor(Date.now() / 1000) - 60,
       user_name: "Old User",
@@ -74,11 +77,11 @@ describe("AuthProvider", () => {
     });
     localStorage.setItem(
       "authToken",
-      JSON.stringify({ access: expiredAccess, refresh: "refresh-1" })
+      JSON.stringify({ access: expiredAccess })
     );
     axiosInstance.post.mockResolvedValueOnce({
       status: 200,
-      data: { access: refreshedAccess, refresh: "refresh-2" },
+      data: { access: refreshedAccess },
     });
 
     renderWithProvider();
@@ -87,12 +90,9 @@ describe("AuthProvider", () => {
       expect(screen.getByText("Fresh User")).toBeInTheDocument();
     });
 
-    expect(axiosInstance.post).toHaveBeenCalledWith("token/refresh/", {
-      refresh: "refresh-1",
-    });
+    expect(axiosInstance.post).toHaveBeenCalledWith("token/refresh/", {});
     expect(JSON.parse(localStorage.getItem("authToken"))).toEqual({
       access: refreshedAccess,
-      refresh: "refresh-2",
     });
   });
 
@@ -103,7 +103,7 @@ describe("AuthProvider", () => {
     });
     localStorage.setItem(
       "authToken",
-      JSON.stringify({ access: expiredAccess, refresh: "refresh-1" })
+      JSON.stringify({ access: expiredAccess })
     );
     axiosInstance.post.mockRejectedValueOnce(new Error("refresh failed"));
 

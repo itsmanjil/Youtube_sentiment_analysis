@@ -87,15 +87,22 @@ Logout posts the refresh token to `/api/user/logout/`, which blacklists it serve
 ```text
 Search page
     -> POST /api/youtube/analyze/
-    -> normalize request options
-    -> fetch video metadata + comments
-    -> preprocess/filter comments
-    -> select sentiment engine
-    -> run inference
-    -> compute analytics
-    -> save analysis + comments
-    -> return response to frontend
+    -> normalize + validate request options (still synchronous: bad input is
+       still a normal 400, no job created)
+    -> create an AnalysisJob row, run the rest on a background thread
+    -> return 202 {job_id, status} immediately
+    -> Search page polls GET /api/youtube/analyze/status/<job_id>/
+       until status is "done" (fetch -> preprocess -> inference -> analytics
+       -> save analysis + comments all happened on the background thread)
+       or "failed"
 ```
+
+Comment fetch + preprocessing + inference (especially transformer models) on
+up to 2,000 comments can take far longer than any reasonable HTTP timeout, so
+the actual work runs on a background thread (`app/views.py::_execute_analysis_job`)
+rather than blocking the request; `ANALYSIS_RUN_SYNC=true` restores the old
+fully-synchronous behavior (the default in the test environment, so the
+existing test suite can assert on the response body directly).
 
 The frontend can request classical models, ensemble variants, and research-oriented options such as fuzzy ensemble configuration. The backend now only accepts inline structured configuration for user-controlled options like `ensemble_weights`.
 

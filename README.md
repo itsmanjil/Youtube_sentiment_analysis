@@ -138,10 +138,22 @@ All API routes are rooted at `/api/`. DRF defaults to authenticated access, with
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `POST` | `/api/youtube/analyze/` | Fetch comments, run sentiment analysis, persist the result. |
+| `POST` | `/api/youtube/analyze/` | Start a background analysis job (fetch comments, run sentiment analysis, persist the result). Returns `202 {job_id, status}` immediately rather than blocking on the analysis. |
+| `GET` | `/api/youtube/analyze/status/<job_id>/` | Poll a job started above. Returns `{status: "pending"\|"running"}` while in progress, the full result body (same shape the endpoint used to return directly) once `status` is `"done"`, or `{status: "failed", msg}` with the original error's HTTP status if it failed. Scoped to the requesting user — 404 for another user's job. |
 | `GET` | `/api/youtube/analysis/<video_id>/` | Fetch one saved analysis scoped to the current user. |
 | `GET` | `/api/youtube/analyses/` | List the current user's saved analyses. |
 | `GET` | `/api/youtube/health/` | Unauthenticated health check (DB reachability + default model artifacts present). Returns 503 if unhealthy. |
+
+**Why `/analyze/` is a background job:** fetching + preprocessing + running
+inference (especially transformer models) on up to 2,000 comments can take
+far longer than any reasonable HTTP timeout. The view validates input
+synchronously (still a normal `400` on bad input, no job created), then runs
+the actual work on a background thread and returns a pollable `job_id`
+(`app/models.py::AnalysisJob`) instead of blocking the request. Set
+`ANALYSIS_RUN_SYNC=true` to force the old fully-synchronous behavior (mainly
+useful for local debugging without a background thread); it defaults to
+`true` in the test environment so the existing test suite can assert on the
+response body directly, and `false` otherwise.
 
 ### Analysis Request Fields
 

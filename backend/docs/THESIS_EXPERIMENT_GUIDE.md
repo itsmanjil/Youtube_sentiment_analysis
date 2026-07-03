@@ -197,13 +197,22 @@ To validate weak labels, build a small manual gold set and reserve it for testin
 
 ```bash
 python backend/scripts/prepare/create_gold_set.py \
-    --input_csv backend/data/youtube_training/train_*.csv \
+    --input_csv backend/data/test.csv \
     --sample_size 300 \
     --stratify balanced \
     --include_columns video_id
 ```
 
 This creates `gold_set_template.csv` with an empty `label` column.
+
+**Sample from the held-out test split, not train.** An earlier gold set was
+sampled from `train.csv`: 95 of 300 items (31.7%) turned out to be exact-text
+members of the training split (see `research/ci/gold_set_train_membership.py`
+and the holdout re-evaluation in `results/gold_set/gold_set_evaluation_holdout.md`).
+The holdout re-run showed the headline numbers are not materially affected, but
+future annotation rounds should sample from `test.csv` from the start rather
+than needing that correction. `create_gold_set.py` now refuses to sample from
+a path containing "train" unless `--allow_train_split` is passed.
 
 ### 2) Manually label
 

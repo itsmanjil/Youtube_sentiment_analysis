@@ -51,6 +51,54 @@ class YouTubeComment(models.Model):
         verbose_name_plural = "YouTube Comments"
 
 
+class AnalysisJob(models.Model):
+    """
+    Tracks a `youtube/analyze/` request executed in the background.
+
+    The actual analysis (comment fetch + preprocessing + model inference +
+    aspect mining) can take longer than any reasonable HTTP request timeout
+    for large `max_comments`/transformer models, so the view creates one of
+    these, runs the work on a background thread, and returns immediately;
+    the frontend polls `GET youtube/analyze/status/<id>/` until `status` is
+    `done` or `failed`. Persisting job state here (rather than an in-memory
+    dict) means a status poll works correctly even if it lands on a
+    different WSGI worker process than the one running the job.
+    """
+
+    STATUS_PENDING = "pending"
+    STATUS_RUNNING = "running"
+    STATUS_DONE = "done"
+    STATUS_FAILED = "failed"
+    STATUS_CHOICES = [
+        (STATUS_PENDING, "Pending"),
+        (STATUS_RUNNING, "Running"),
+        (STATUS_DONE, "Done"),
+        (STATUS_FAILED, "Failed"),
+    ]
+
+    user = models.ForeignKey(NewUser, on_delete=models.CASCADE, related_name="analysis_jobs")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    # The validated request parameters, so the background thread/task has
+    # everything it needs without depending on the original HTTP request
+    # object (which doesn't survive past the view function returning).
+    request_params = models.JSONField()
+    # Populated on success: the exact payload the synchronous endpoint used
+    # to return directly in the response body.
+    result = models.JSONField(null=True, blank=True)
+    error_message = models.TextField(null=True, blank=True)
+    error_status = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Analysis Job"
+        verbose_name_plural = "Analysis Jobs"
+
+    def __str__(self):
+        return f"AnalysisJob({self.id}, {self.status})"
+
+
 class YouTubeAnalysis(models.Model):
     """Store YouTube sentiment analysis results"""
     user = models.ForeignKey(NewUser, on_delete=models.SET_NULL, null=True)

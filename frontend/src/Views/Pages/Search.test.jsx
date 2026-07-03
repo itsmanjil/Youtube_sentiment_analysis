@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Search from './Search';
 import AuthContext from '../../context/AuthContext';
@@ -306,5 +306,88 @@ describe('Search Component', () => {
         state: mockResponse.data,
       });
     });
+  });
+
+  test('polls the background job and navigates once it completes (202 + job_id path)', async () => {
+    // youtube/analyze/ runs in the background in real deployments and
+    // returns 202 + a job_id immediately; the frontend must poll
+    // youtube/analyze/status/<id>/ until it's done rather than treating the
+    // initial response as the result.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderWithAuth(<Search />);
+
+      const urlInput = screen.getByPlaceholderText('https://www.youtube.com/watch?v=...');
+      fireEvent.change(urlInput, { target: { value: 'https://www.youtube.com/watch?v=test' } });
+
+      const finalResult = {
+        status: 'done',
+        sentiment_data: { Positive: 4, Negative: 1, Neutral: 2 },
+        video: { title: 'Polled Video' },
+      };
+
+      axiosInstance
+        .mockResolvedValueOnce({ status: 202, data: { job_id: 42, status: 'pending' } })
+        .mockResolvedValueOnce({ status: 200, data: { status: 'running' } })
+        .mockResolvedValueOnce({ status: 200, data: finalResult });
+
+      await act(async () => {
+        fireEvent.click(screen.getByDisplayValue('Analyze Video'));
+      });
+
+      // Let the two poll iterations' setTimeout delays elapse.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000);
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000);
+      });
+
+      await vi.waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/dashboard', {
+          state: finalResult,
+        });
+      });
+
+      expect(axiosInstance).toHaveBeenCalledWith(
+        expect.objectContaining({ method: 'GET', url: 'youtube/analyze/status/42/' })
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('shows the failure message when the background job fails', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderWithAuth(<Search />);
+
+      const urlInput = screen.getByPlaceholderText('https://www.youtube.com/watch?v=...');
+      fireEvent.change(urlInput, { target: { value: 'https://www.youtube.com/watch?v=test' } });
+
+      axiosInstance
+        .mockResolvedValueOnce({ status: 202, data: { job_id: 7, status: 'pending' } })
+        .mockResolvedValueOnce({
+          status: 404,
+          data: { status: 'failed', msg: 'Video not found. It may be private, deleted, or the URL is incorrect.' },
+        });
+
+      await act(async () => {
+        fireEvent.click(screen.getByDisplayValue('Analyze Video'));
+      });
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000);
+      });
+
+      await vi.waitFor(() => {
+        expect(
+          screen.getByText(/Video not found\. It may be private, deleted, or the URL is incorrect\./i)
+        ).toBeInTheDocument();
+      });
+      expect(mockNavigate).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

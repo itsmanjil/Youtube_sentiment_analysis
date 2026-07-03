@@ -98,11 +98,31 @@ def main() -> None:
     parser.add_argument("--random_seed", type=int, default=42)
     parser.add_argument("--dedupe", action="store_true", default=True, help="Remove duplicate texts.")
     parser.add_argument("--include_columns", default=None, help="Comma-separated extra columns to keep.")
+    parser.add_argument(
+        "--allow_train_split",
+        action="store_true",
+        help=(
+            "Allow sampling the gold set from a path that looks like the training "
+            "split. Off by default: an earlier gold set was sampled from train.csv "
+            "(31.7%% train-split overlap, see gold_set_train_membership.py / "
+            "gold_set_evaluation_holdout.py), which the human-annotated set is "
+            "meant to be independent of. Sample from the held-out test split instead."
+        ),
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input_csv)
     if not input_path.exists():
         raise FileNotFoundError(f"Input CSV not found: {input_path}")
+    if "train" in input_path.name.lower() and not args.allow_train_split:
+        raise ValueError(
+            f"Refusing to sample the gold set from {input_path.name!r}, which "
+            "looks like a training split. A gold set sampled from training data "
+            "risks label-memorization overlap with the models it's meant to "
+            "independently evaluate. Point --input_csv at the held-out test "
+            "split (e.g. data/test.csv) instead, or pass --allow_train_split to "
+            "override."
+        )
 
     output_path = (
         Path(args.output_csv)
@@ -294,7 +314,7 @@ def main() -> None:
                 writer.writerow(record)
                 row_count += 1
 
-    print("\n✅ Gold set template created")
+    print("\nGold set template created")
     print(f"   Input:  {input_path}")
     print(f"   Output: {output_path}")
     print(f"   Rows:   {row_count}")

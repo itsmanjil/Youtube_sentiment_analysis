@@ -45,6 +45,9 @@ export const AuthProvider = ({ children }) => {
 
   let loginUser = async (email, password) => {
     try {
+      // The refresh token is set as an httpOnly cookie by the backend
+      // (core/auth_cookies.py) — it's never present in `data` here, and
+      // axios.js sends withCredentials so the cookie round-trips correctly.
       let response = await axiosInstance.post("token/", {
         email: email,
         password: password,
@@ -52,7 +55,7 @@ export const AuthProvider = ({ children }) => {
 
       let data = response.data;
 
-      if (response.status === 200 && storeSession(data)) {
+      if (response.status === 200 && storeSession({ access: data?.access })) {
         SetIsError(false);
         navigate("/dashboard", { replace: true });
         return;
@@ -65,14 +68,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   let logoutUser = async (redirectTo = "/") => {
-    const refreshToken = authToken?.refresh;
-    if (refreshToken) {
-      try {
-        await axiosInstance.post("user/logout/", {
-          refresh: refreshToken,
-        });
-      } catch {}
-    }
+    try {
+      // No body needed — the refresh cookie is attached automatically.
+      await axiosInstance.post("user/logout/", {});
+    } catch {}
 
     clearSession();
     setLoading(false);
@@ -80,28 +79,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   let updateToken = async () => {
-    if (!authToken?.refresh) {
-      if (!hasValidAccessToken(authToken)) {
-        clearSession();
-      }
-      setLoading(false);
-      return false;
-    }
-
     try {
-      let response = await axiosInstance.post("token/refresh/", {
-        refresh: authToken.refresh,
-      });
+      // No body needed — the refresh cookie is attached automatically, and
+      // the backend writes the rotated refresh token back to that cookie.
+      let response = await axiosInstance.post("token/refresh/", {});
       let data = response.data;
 
       if (response.status === 200 && data?.access) {
-        const nextAuthToken = {
-          ...authToken,
-          ...data,
-          refresh: data.refresh || authToken.refresh,
-        };
         SetIsError(false);
-        const stored = storeSession(nextAuthToken);
+        const stored = storeSession({ access: data.access });
         setLoading(false);
         return stored;
       }
@@ -141,13 +127,11 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      if (authToken.refresh) {
-        await updateToken();
-        return;
-      }
-
-      clearSession();
-      setLoading(false);
+      // Access is missing/expired but we have a prior authToken record —
+      // there may still be a valid httpOnly refresh cookie, so attempt a
+      // refresh rather than assuming the session is dead (updateToken()
+      // itself clears the session and redirects to /signin on failure).
+      await updateToken();
     };
 
     initializeAuth();
@@ -155,7 +139,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (!authToken?.refresh) {
+    if (!authToken) {
       return undefined;
     }
 

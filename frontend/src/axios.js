@@ -15,6 +15,11 @@ const baseURL = normalizeBaseUrl(import.meta.env?.VITE_API_URL) || "/api/";
 const axiosInstance = axios.create({
   baseURL: baseURL,
   timeout: 1000 * 120,
+  // Required so the browser sends/accepts the httpOnly refresh-token cookie
+  // (backend: core/auth_cookies.py) on cross-origin requests to the Django
+  // dev server; the backend pairs this with CORS_ALLOW_CREDENTIALS=True and
+  // an explicit CORS_ALLOWED_ORIGINS list (never a wildcard).
+  withCredentials: true,
   validateStatus: (status) => {
     // handling our own errors less than 500 status
     return status < 500;

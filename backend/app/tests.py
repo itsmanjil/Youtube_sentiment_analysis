@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 from django.core.exceptions import ImproperlyConfigured
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
@@ -21,7 +21,7 @@ from .analysis_utils import (
     bootstrap_confidence_intervals,
     normalize_probs,
 )
-from .models import YouTubeVideo, YouTubeAnalysis, YouTubeComment
+from .models import AnalysisJob, YouTubeVideo, YouTubeAnalysis, YouTubeComment
 from .youtube_preprocessor import YouTubePreprocessor
 from src.sentiment import SentimentResult
 from research.transformers.model_registry import get_encoder_spec
@@ -570,6 +570,135 @@ class YouTubeAnalysisAPITests(APITestCase):
         body = response.json()
         self.assertEqual(body['status'], 'unhealthy')
         self.assertIn('missing', body['checks']['model_artifacts'])
+
+
+class AnalysisJobAsyncAPITests(APITestCase):
+    """
+    ANALYSIS_RUN_SYNC defaults to True in the test environment (see
+    core/settings.py) so the bulk of the analyze-endpoint tests above can
+    assert on the response body directly, exactly like the pre-job-queue
+    behavior. These tests explicitly flip that off to cover the actual
+    async/background-job path (app/models.py::AnalysisJob) that runs in
+    dev/production.
+    """
+
+    def setUp(self):
+        self.user = NewUser.objects.create_user(
+            email='async@example.com',
+            user_name='asyncuser',
+            first_name='Async',
+            last_name='User',
+            password='testpassword123',
+        )
+        self.client.force_authenticate(user=self.user)
+        self.analyze_url = reverse('app:youtube_analyze')
+
+    def _mock_fetcher_with_comments(self, mock_fetcher, comments=None):
+        mock_fetcher_instance = mock_fetcher.return_value
+        mock_fetcher_instance.extract_video_id.return_value = 'HLUamwXQ218'
+        mock_fetcher_instance.fetch_video_metadata.return_value = MOCK_VIDEO_METADATA
+        mock_fetcher_instance.fetch_comments.return_value = comments or MOCK_COMMENTS_RAW
+        return mock_fetcher_instance
+
+    @staticmethod
+    def _run_thread_target_immediately(target=None, args=(), daemon=None):
+        """
+        Stand-in for threading.Thread that runs the target synchronously in
+        the calling (test) thread instead of a real background thread, so
+        assertions don't need to poll/sleep for a race-prone real thread to
+        finish — the job is fully done by the time `.start()` returns.
+        """
+
+        class _ImmediateThread:
+            def start(self):
+                target(*args)
+
+        return _ImmediateThread()
+
+    @override_settings(ANALYSIS_RUN_SYNC=False)
+    @patch('app.views.threading.Thread')
+    @patch('app.views.YouTubeFetcher')
+    @patch('app.views.get_sentiment_engine')
+    def test_analyze_video_returns_202_with_job_id_when_async(
+        self, mock_get_engine, mock_fetcher, mock_thread_cls
+    ):
+        mock_thread_cls.side_effect = self._run_thread_target_immediately
+        self._mock_fetcher_with_comments(mock_fetcher)
+        mock_get_engine.return_value = MockSentimentEngine()
+
+        response = self.client.post(
+            self.analyze_url,
+            {"video_url": "https://www.youtube.com/watch?v=HLUamwXQ218"},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertIn("job_id", response.data)
+        self.assertEqual(response.data["status"], AnalysisJob.STATUS_PENDING)
+
+        job = AnalysisJob.objects.get(id=response.data["job_id"])
+        self.assertEqual(job.status, AnalysisJob.STATUS_DONE)
+        self.assertEqual(job.user, self.user)
+        self.assertIn("sentiment_data", job.result)
+
+    @override_settings(ANALYSIS_RUN_SYNC=False)
+    @patch('app.views.threading.Thread')
+    def test_analyze_video_job_failure_recorded_on_job_not_response(self, mock_thread_cls):
+        mock_thread_cls.side_effect = self._run_thread_target_immediately
+
+        response = self.client.post(self.analyze_url, {}, format='json')
+
+        # Parameter validation still happens synchronously before a job is
+        # even created — a missing video_url is a 400 with no job_id, same
+        # as the fully-synchronous path.
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn("job_id", response.data)
+
+    @override_settings(ANALYSIS_RUN_SYNC=False)
+    @patch('app.views.threading.Thread')
+    @patch('app.views.YouTubeFetcher')
+    def test_analyze_video_polling_status_endpoint_reflects_job_result(
+        self, mock_fetcher, mock_thread_cls
+    ):
+        mock_thread_cls.side_effect = self._run_thread_target_immediately
+        mock_fetcher_instance = mock_fetcher.return_value
+        mock_fetcher_instance.extract_video_id.return_value = 'HLUamwXQ218'
+        mock_fetcher_instance.fetch_video_metadata.return_value = None  # video not found
+
+        response = self.client.post(
+            self.analyze_url,
+            {"video_url": "https://www.youtube.com/watch?v=HLUamwXQ218"},
+            format='json',
+        )
+        job_id = response.data["job_id"]
+
+        status_url = reverse('app:analysis_job_status', kwargs={'job_id': job_id})
+        status_response = self.client.get(status_url)
+
+        self.assertEqual(status_response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(status_response.data['status'], AnalysisJob.STATUS_FAILED)
+        self.assertIn('msg', status_response.data)
+
+    def test_job_status_scoped_to_owning_user_not_found_for_others(self):
+        other_user = NewUser.objects.create_user(
+            email='otherasync@example.com',
+            user_name='otherasyncuser',
+            first_name='Other',
+            last_name='User',
+            password='testpassword123',
+        )
+        job = AnalysisJob.objects.create(user=other_user, request_params={})
+
+        status_url = reverse('app:analysis_job_status', kwargs={'job_id': job.id})
+        response = self.client.get(status_url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_job_status_unknown_id_returns_404(self):
+        status_url = reverse('app:analysis_job_status', kwargs={'job_id': 999999})
+        response = self.client.get(status_url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class AnalysisUtilsTests(APITestCase):

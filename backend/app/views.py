@@ -2,6 +2,7 @@
 import json
 import os
 import logging
+import threading
 from collections import Counter
 from pathlib import Path
 
@@ -12,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 from googleapiclient.errors import HttpError
 
-from django.db import connection
+from django.conf import settings
+from django.db import close_old_connections, connection
 from django.db.utils import Error as DjangoDBError
 from django.http import JsonResponse
 from django.utils import timezone
@@ -21,7 +23,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from .models import YouTubeVideo, YouTubeComment, YouTubeAnalysis
+from .models import AnalysisJob, YouTubeVideo, YouTubeComment, YouTubeAnalysis
 from .youtube_fetcher import YouTubeFetcher
 from .youtube_scraper import YouTubeScraper
 from .youtube_preprocessor import YouTubePreprocessor
@@ -290,6 +292,120 @@ def analyze_youtube_video(request):
     if not video_url:
         return Response({"msg": "video_url is required"}, status=400)
 
+    # Every validated input the background job needs, since it runs outside
+    # this request/response cycle (a plain function argument list would work
+    # for the synchronous/test path, but the async path needs this captured
+    # as data anyway to hand to the background thread).
+    params = {
+        "video_url": video_url,
+        "max_comments": max_comments,
+        "use_api": use_api,
+        "filter_spam": filter_spam,
+        "filter_language": filter_language,
+        "bootstrap_samples": bootstrap_samples,
+        "random_seed": random_seed,
+        "aspect_top_n": aspect_top_n,
+        "aspect_min_freq": aspect_min_freq,
+        "confidence_threshold": confidence_threshold,
+        "fuzzy_alpha_cut": fuzzy_alpha_cut,
+        "fuzzy_resolution": fuzzy_resolution,
+        "emoji_mode": emoji_mode,
+        "sentiment_model": sentiment_model,
+        "calibration_profile": calibration_profile,
+        "ensemble_models": ensemble_models,
+        "ensemble_weights_optimization": ensemble_weights_optimization,
+        "ensemble_weights": ensemble_weights,
+        "ensemble_weights_source": ensemble_weights_source,
+        "meta_learner_models": meta_learner_models,
+        "fuzzy_models": fuzzy_models,
+        "fuzzy_mf_type": fuzzy_mf_type,
+        "fuzzy_defuzz_method": fuzzy_defuzz_method,
+        "fuzzy_t_norm": fuzzy_t_norm,
+        "fuzzy_t_conorm": fuzzy_t_conorm,
+        "model_comparison": model_comparison,
+    }
+
+    job = AnalysisJob.objects.create(user=user, request_params=params)
+
+    if settings.ANALYSIS_RUN_SYNC:
+        _execute_analysis_job(job.id)
+        job.refresh_from_db()
+        if job.status == AnalysisJob.STATUS_DONE:
+            return Response(job.result)
+        return Response(
+            {"msg": job.error_message or "Analysis failed due to an internal error."},
+            status=job.error_status or 500,
+        )
+
+    thread = threading.Thread(
+        target=_run_analysis_job_in_thread, args=(job.id,), daemon=True
+    )
+    thread.start()
+    return Response(
+        {
+            "msg": "Analysis started",
+            "job_id": job.id,
+            "status": job.status,
+        },
+        status=202,
+    )
+
+
+def _run_analysis_job_in_thread(job_id):
+    """Thread entry point: ensure this thread's DB connection is closed when
+    the job finishes, since it isn't tied to a request/response cycle where
+    Django would normally do that for us."""
+    close_old_connections()
+    try:
+        _execute_analysis_job(job_id)
+    finally:
+        connection.close()
+
+
+def _fail_job(job, message, http_status):
+    job.status = AnalysisJob.STATUS_FAILED
+    job.error_message = message
+    job.error_status = http_status
+    job.save(update_fields=["status", "error_message", "error_status", "updated_at"])
+
+
+def _execute_analysis_job(job_id):
+    job = AnalysisJob.objects.select_related("user").get(id=job_id)
+    job.status = AnalysisJob.STATUS_RUNNING
+    job.save(update_fields=["status", "updated_at"])
+
+    user = job.user
+    p = job.request_params
+    video_url = p["video_url"]
+    max_comments = p["max_comments"]
+    use_api = p["use_api"]
+    filter_spam = p["filter_spam"]
+    filter_language = p["filter_language"]
+    bootstrap_samples = p["bootstrap_samples"]
+    random_seed = p["random_seed"]
+    aspect_top_n = p["aspect_top_n"]
+    aspect_min_freq = p["aspect_min_freq"]
+    confidence_threshold = p["confidence_threshold"]
+    fuzzy_alpha_cut = p["fuzzy_alpha_cut"]
+    fuzzy_resolution = p["fuzzy_resolution"]
+    emoji_mode = p["emoji_mode"]
+    sentiment_model = p["sentiment_model"]
+    calibration_profile = p["calibration_profile"]
+    ensemble_models = p["ensemble_models"]
+    ensemble_weights_optimization = p["ensemble_weights_optimization"]
+    ensemble_weights = p["ensemble_weights"]
+    ensemble_weights_source = p["ensemble_weights_source"]
+    meta_learner_models = p["meta_learner_models"]
+    # Always None: enforced at the view layer (meta_learner_path overrides
+    # are rejected there with a 400 before a job is ever created).
+    meta_learner_path = None
+    fuzzy_models = p["fuzzy_models"]
+    fuzzy_mf_type = p["fuzzy_mf_type"]
+    fuzzy_defuzz_method = p["fuzzy_defuzz_method"]
+    fuzzy_t_norm = p["fuzzy_t_norm"]
+    fuzzy_t_conorm = p["fuzzy_t_conorm"]
+    model_comparison = p["model_comparison"]
+
     try:
         # Step 1: Fetch comments
         logger.debug("Fetching comments from %s", video_url)
@@ -306,50 +422,44 @@ def analyze_youtube_video(request):
                     message = error_details.get('message', str(e))
 
                     if reason == 'quotaExceeded':
-                        return Response({"msg": "YouTube API daily quota exceeded. Please try again tomorrow or use scraper mode (use_api: false)."}, status=429)
+                        _fail_job(job, "YouTube API daily quota exceeded. Please try again tomorrow or use scraper mode (use_api: false).", 429); return
                     elif reason == 'developerKeyInvalid':
-                        return Response({"msg": "The provided YOUTUBE_API_KEY is invalid. Please check your .env file and ensure it is correct."}, status=401)
+                        _fail_job(job, "The provided YOUTUBE_API_KEY is invalid. Please check your .env file and ensure it is correct.", 401); return
                     elif reason == 'commentsDisabled':
-                        return Response({"msg": "Comments are disabled for this video."}, status=403)
+                        _fail_job(job, "Comments are disabled for this video.", 403); return
                     elif e.resp.status == 404:
-                        return Response({"msg": "Video not found. Please check the URL."}, status=404)
+                        _fail_job(job, "Video not found. Please check the URL.", 404); return
                     else:
-                        return Response({"msg": f"A YouTube API error occurred: {message}"}, status=502)
+                        _fail_job(job, f"A YouTube API error occurred: {message}", 502); return
                 except (json.JSONDecodeError, KeyError, IndexError):
-                     return Response({"msg": f"An unhandled YouTube API error occurred: {str(e)}"}, status=502)
+                     _fail_job(job, f"An unhandled YouTube API error occurred: {str(e)}", 502); return
             except Exception as e:
-                return Response(
-                    {"msg": f"An unexpected error occurred with the YouTube API client: {str(e)}. Please ensure your YOUTUBE_API_KEY is correctly set in the .env file."},
-                    status=502
+                _fail_job(
+                    job,
+                    f"An unexpected error occurred with the YouTube API client: {str(e)}. Please ensure your YOUTUBE_API_KEY is correctly set in the .env file.",
+                    502,
                 )
+                return
         else:
             try:
                 scraper = YouTubeScraper()
                 video_id = scraper.extract_video_id(video_url)
                 if video_id is None:
-                    return Response(
-                        {"msg": f"Invalid YouTube URL: {video_url}"},
-                        status=400,
-                    )
+                    _fail_job(job, f"Invalid YouTube URL: {video_url}", 400)
+                    return
                 video_metadata = scraper.fetch_video_metadata(video_id)
                 comments_raw = scraper.fetch_comments(video_url, max_results=max_comments)
             except Exception as e:
-                return Response(
-                    {"msg": f"Scraper error: {str(e)}"},
-                    status=502
-                )
+                _fail_job(job, f"Scraper error: {str(e)}", 502)
+                return
 
         if not video_metadata:
-            return Response(
-                {"msg": "Video not found. It may be private, deleted, or the URL is incorrect."},
-                status=404,
-            )
+            _fail_job(job, "Video not found. It may be private, deleted, or the URL is incorrect.", 404)
+            return
 
         if not comments_raw:
-            return Response(
-                {"msg": "No comments found for this video"},
-                status=404
-            )
+            _fail_job(job, "No comments found for this video", 404)
+            return
 
         logger.debug("Fetched %s raw comments", len(comments_raw))
 
@@ -389,10 +499,8 @@ def analyze_youtube_video(request):
         )
 
         if not processed_comments:
-            return Response(
-                {"msg": "All comments were filtered out. Try different filter settings."},
-                status=400
-            )
+            _fail_job(job, "All comments were filtered out. Try different filter settings.", 400)
+            return
 
         logger.debug("Processed %s comments after filtering", len(processed_comments))
 
@@ -428,7 +536,8 @@ def analyze_youtube_video(request):
         try:
             engine = get_sentiment_engine(sentiment_model, **engine_kwargs)
         except (ValueError, RuntimeError, ImportError, FileNotFoundError) as exc:
-            return Response({"msg": str(exc)}, status=400)
+            _fail_job(job, str(exc), 400)
+            return
 
         batch_results = engine.batch_analyze(
             [item['processed_text'] for item in processed_comments]
@@ -665,8 +774,9 @@ def analyze_youtube_video(request):
             sentiment_model,
         )
 
-        # Step 9: Return response
-        return Response({
+        # Step 9: Record the result
+        job.status = AnalysisJob.STATUS_DONE
+        job.result = {
             'msg': 'Analysis complete',
             'video': {
                 'id': video.video_id,
@@ -697,7 +807,8 @@ def analyze_youtube_video(request):
             'analysis_meta': analysis_meta,
             'analysis_id': analysis.id,
             'model_used': sentiment_model.upper()
-        })
+        }
+        job.save(update_fields=["status", "result", "updated_at"])
 
     except Exception:
         logger.exception(
@@ -705,10 +816,7 @@ def analyze_youtube_video(request):
             getattr(user, "id", None),
             video_url,
         )
-        return Response(
-            {"msg": "Analysis failed due to an internal error. Please try again later."},
-            status=500
-        )
+        _fail_job(job, "Analysis failed due to an internal error. Please try again later.", 500)
 
 
 # @api_view wraps the function in a dynamically-created APIView subclass and
@@ -716,6 +824,30 @@ def analyze_youtube_video(request):
 # view *class* (via `view.cls`, set by APIView.as_view()), not off the plain
 # function, so this must be assigned here rather than inside the function body.
 analyze_youtube_video.cls.throttle_scope = "analyze"
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_analysis_job_status(request, job_id):
+    """
+    Poll the status of a background `youtube/analyze/` job (see
+    app/models.py::AnalysisJob). Only meaningful when ANALYSIS_RUN_SYNC is
+    False — the synchronous path (tests, or ANALYSIS_RUN_SYNC=true) never
+    returns a job_id to poll in the first place.
+    """
+    try:
+        job = AnalysisJob.objects.get(id=job_id, user=request.user)
+    except AnalysisJob.DoesNotExist:
+        return Response({"msg": "No such analysis job"}, status=404)
+
+    if job.status == AnalysisJob.STATUS_DONE:
+        return Response({"status": job.status, **job.result})
+    if job.status == AnalysisJob.STATUS_FAILED:
+        return Response(
+            {"status": job.status, "msg": job.error_message},
+            status=job.error_status or 500,
+        )
+    return Response({"status": job.status})
 
 
 @api_view(["GET"])

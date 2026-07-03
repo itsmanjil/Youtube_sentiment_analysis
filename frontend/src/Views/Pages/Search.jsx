@@ -120,6 +120,34 @@ function Search() {
     return youtubeRegex.test(url);
   };
 
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  // youtube/analyze/ runs in the background (app/models.py::AnalysisJob) and
+  // returns a job id immediately rather than blocking the request on
+  // possibly minutes of fetch+preprocessing+inference — poll for the result
+  // instead of awaiting one long HTTP call. Bounded to ~6 minutes so a stuck
+  // job fails visibly instead of polling forever.
+  const POLL_INTERVAL_MS = 2000;
+  const MAX_POLL_ATTEMPTS = 180;
+
+  const pollAnalysisJob = async (jobId) => {
+    for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt += 1) {
+      await sleep(POLL_INTERVAL_MS);
+      const statusResp = await axiosInstance({
+        method: "GET",
+        url: `youtube/analyze/status/${jobId}/`,
+      });
+      if (statusResp.data?.status === "done") {
+        return { failed: false, data: statusResp.data };
+      }
+      if (statusResp.data?.status === "failed") {
+        return { failed: true, httpStatus: statusResp.status, data: statusResp.data };
+      }
+      // "pending" or "running" — keep polling.
+    }
+    throw new Error("Analysis timed out waiting for a result.");
+  };
+
   const searchHandler = async (e) => {
     e.preventDefault();
 
@@ -218,12 +246,31 @@ function Search() {
           model_comparison: parsedModelComparison,
         },
       });
-      setIsLoading(false);
+
       if (resp.status >= 400) {
+        setIsLoading(false);
         setSearchError(true);
         setErrorMessage(resolveApiErrorMessage(resp.status, resp.data));
         return;
       }
+
+      if (resp.status === 202 && resp.data?.job_id) {
+        // Background job path (the normal case): keep the loading state up
+        // while polling so the UI doesn't look "done" mid-analysis.
+        const result = await pollAnalysisJob(resp.data.job_id);
+        setIsLoading(false);
+        if (result.failed) {
+          setSearchError(true);
+          setErrorMessage(resolveApiErrorMessage(result.httpStatus, result.data));
+          return;
+        }
+        navigate("/dashboard", { state: result.data });
+        return;
+      }
+
+      // ANALYSIS_RUN_SYNC=true deployments (or the test environment) return
+      // the full result directly with no job to poll.
+      setIsLoading(false);
       navigate("/dashboard", {
         state: resp.data,
       });
