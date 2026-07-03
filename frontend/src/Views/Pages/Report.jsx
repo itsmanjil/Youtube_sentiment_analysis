@@ -1,12 +1,93 @@
 import React, { useState, useEffect } from "react";
 import "./report.css";
-import { useLocation, Link, useNavigate } from "react-router-dom";
+import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
+import axiosInstance from "../../axios";
+
+// Build the same shape navigateToReport() passes via location.state, from a
+// GET /api/youtube/analysis/<video_id>/ response (`{ data: {...} }`). Used
+// when the report page is reached without in-app navigation state — a
+// direct link, a bookmark, or a page refresh, none of which carry React
+// Router state.
+function buildReportStateFromApiResponse(data) {
+  const timelineSource = data.sentiment_timeline;
+  const sentimentTimeline =
+    timelineSource && typeof timelineSource === "object"
+      ? Object.entries(timelineSource)
+          .map(([time, counts]) => ({ time, counts }))
+          .sort((a, b) => new Date(a.time) - new Date(b.time))
+          .map(({ time, counts }) => ({
+            time: new Date(time).toLocaleString(),
+            positive: counts.Positive || 0,
+            negative: counts.Negative || 0,
+            neutral: counts.Neutral || 0,
+          }))
+      : [];
+
+  const analysisMeta = data.analysis_meta ? { ...data.analysis_meta } : {};
+  if (data.calibration && !analysisMeta.calibration) {
+    analysisMeta.calibration = data.calibration;
+  }
+
+  return {
+    // The API doesn't return who ran the analysis; only the in-app
+    // navigation path (which has the JWT on hand) can supply this.
+    user_name: undefined,
+    videoTitle: data.video?.title || "YouTube Video",
+    fetchedDate: data.fetched_date
+      ? new Date(data.fetched_date).toLocaleDateString()
+      : undefined,
+    sentimentBreakdown: [
+      { name: "Negative", value: data.sentiment_data?.Negative || 0 },
+      { name: "Neutral", value: data.sentiment_data?.Neutral || 0 },
+      { name: "Positive", value: data.sentiment_data?.Positive || 0 },
+    ],
+    sentimentTimeline,
+    confidenceStats: data.confidence_stats || null,
+    uncertaintyStats: data.uncertainty_stats || null,
+    confidenceIntervals: data.sentiment_confidence_intervals || null,
+    aspectSentiment: data.aspect_sentiment || [],
+    analysisMeta: Object.keys(analysisMeta).length > 0 ? analysisMeta : null,
+    modelUsed: data.model_used || null,
+  };
+}
 
 export default function Report() {
   const location = useLocation();
+  const { videoId } = useParams();
   const navigate = useNavigate();
 
-  const sentimentData = location.state;
+  const [fetchedData, setFetchedData] = useState(null);
+  const [fetchState, setFetchState] = useState(() => {
+    if (location.state) return "skipped";
+    // No nav state and no id to fetch by: nothing will ever resolve this,
+    // so land on "error" immediately instead of an infinite loading state.
+    return videoId ? "loading" : "error";
+  });
+
+  useEffect(() => {
+    if (location.state || !videoId) {
+      return;
+    }
+    let cancelled = false;
+    axiosInstance({ method: "GET", url: `youtube/analysis/${videoId}/` })
+      .then((resp) => {
+        if (cancelled) return;
+        if (resp.status >= 400 || !resp.data?.data) {
+          setFetchState("error");
+          return;
+        }
+        setFetchedData(buildReportStateFromApiResponse(resp.data.data));
+        setFetchState("done");
+      })
+      .catch(() => {
+        if (!cancelled) setFetchState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [location.state, videoId]);
+
+  const sentimentData = location.state || fetchedData;
   const user_name = sentimentData?.user_name || "Unknown User";
 
   const [totalComments, setTotalComments] = useState(0);
@@ -100,10 +181,12 @@ export default function Report() {
   };
 
   useEffect(() => {
-    if (!sentimentData) {
+    // Only bounce to the dashboard once we know there's no data to show —
+    // not while a direct-link/refresh fetch is still in flight.
+    if (!sentimentData && fetchState !== "loading") {
       navigate("/dashboard");
     }
-  }, [sentimentData, navigate]);
+  }, [sentimentData, fetchState, navigate]);
 
   useEffect(() => {
     if (!sentimentData) {
@@ -118,7 +201,19 @@ export default function Report() {
     setTotalComments(total);
   }, [sentimentData]);
 
-  // Validate that location.state exists
+  // Still fetching the analysis for a direct link / page refresh.
+  if (!sentimentData && fetchState === "loading") {
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-info" role="alert">
+          Loading report...
+        </div>
+      </div>
+    );
+  }
+
+  // No navigation state, and either there was no id to fetch by or the
+  // fetch failed/found nothing.
   if (!sentimentData) {
     return (
       <div className="container mt-5">

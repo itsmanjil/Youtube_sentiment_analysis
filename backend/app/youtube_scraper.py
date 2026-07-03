@@ -1,4 +1,5 @@
 
+import inspect
 import re
 from datetime import datetime, timedelta
 import logging
@@ -216,17 +217,35 @@ class YouTubeScraper:
         sort_mode = 0 if sort_by == 'top' else 1
 
         try:
-            # Note: youtube-comment-downloader returns a generator
-            try:
-                comment_iter = self.downloader.get_comments_from_url(
-                    f'https://www.youtube.com/watch?v={video_id}',
-                    sort_by=sort_mode
+            # Note: youtube-comment-downloader returns a generator. The
+            # `sort_by`/`sort` kwarg name varies across library versions, and
+            # older versions may not accept `language` at all — inspect the
+            # real signature rather than stacking brittle nested try/excepts.
+            #
+            # language='en' forces YouTube to render comment metadata
+            # (relative timestamps, vote counts) in English regardless of the
+            # host machine's locale/IP-geolocation — without it, `time`/
+            # `votes` come back as localized strings (e.g. "1 वर्ष अघि",
+            # "2.6 लाख") that `_parse_relative_time`/`_parse_likes` cannot
+            # parse, silently dropping every comment from the sentiment
+            # timeline and mis-weighting (or zeroing) likes-based ranking.
+            sig_params = inspect.signature(
+                self.downloader.get_comments_from_url
+            ).parameters
+            sort_kwarg = "sort_by" if "sort_by" in sig_params else "sort"
+            kwargs = {sort_kwarg: sort_mode}
+            if "language" in sig_params:
+                kwargs["language"] = "en"
+            else:
+                logger.warning(
+                    "youtube-comment-downloader does not support the "
+                    "'language' argument; comment timestamps/vote counts may "
+                    "be localized to the server's locale."
                 )
-            except TypeError:
-                comment_iter = self.downloader.get_comments_from_url(
-                    f'https://www.youtube.com/watch?v={video_id}',
-                    sort=sort_mode
-                )
+            comment_iter = self.downloader.get_comments_from_url(
+                f'https://www.youtube.com/watch?v={video_id}',
+                **kwargs,
+            )
 
             for comment in comment_iter:
                 if len(comments) >= max_results:

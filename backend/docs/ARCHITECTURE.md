@@ -36,7 +36,7 @@ Django REST Framework API
 
 - `backend/core/urls.py` wires the API surface together.
 - `backend/app/` owns the main analysis endpoints and database models.
-- `backend/users/` owns registration, JWT alias login/logout, and the user profile endpoint.
+- `backend/users/` owns registration, logout, and the user profile endpoint. (JWT login itself is issued by `app_api` at `/api/token/`.)
 - `backend/app_api/` extends SimpleJWT so issued tokens include `user_name` and `is_registered`.
 - `backend/src/` contains reusable preprocessing helpers and sentiment engines.
 
@@ -80,7 +80,7 @@ Signin form
     -> axios request interceptor sends Bearer token
 ```
 
-There is also a compatibility alias at `/api/user/login/`. Logout posts the refresh token to `/api/user/logout/`, which blacklists it server-side.
+Logout posts the refresh token to `/api/user/logout/`, which blacklists it server-side.
 
 ### 2. Analysis Submission Flow
 

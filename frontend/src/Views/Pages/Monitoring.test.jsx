@@ -51,7 +51,7 @@ describe('Monitoring Component', () => {
       },
       video: {
         title: 'Test Video 1',
-        channel_name: 'Test Channel 1',
+        channel: 'Test Channel 1',
         thumbnail_url: 'http://example.com/thumb1.jpg',
         id: 'video1',
       },
@@ -78,7 +78,7 @@ describe('Monitoring Component', () => {
       },
       video: {
         title: 'Test Video 2',
-        channel_name: 'Test Channel 2',
+        channel: 'Test Channel 2',
         id: 'video2',
       },
       total_comments_analyzed: 200,

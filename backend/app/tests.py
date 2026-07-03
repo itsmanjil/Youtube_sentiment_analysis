@@ -547,11 +547,29 @@ class YouTubeAnalysisAPITests(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_health_check_endpoint(self):
+    def test_health_check_endpoint_reports_real_checks(self):
         url = reverse('app:youtube_health_check')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()['data'], 'YouTube Sentiment Analysis API - v2.0')
+        body = response.json()
+        self.assertEqual(body['status'], 'ok')
+        self.assertEqual(body['checks']['database'], 'ok')
+        self.assertEqual(body['checks']['model_artifacts'], 'ok')
+
+    def test_health_check_endpoint_does_not_require_authentication(self):
+        self.client.force_authenticate(user=None)
+        url = reverse('app:youtube_health_check')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_health_check_endpoint_reports_missing_model_artifacts(self):
+        url = reverse('app:youtube_health_check')
+        with patch.object(Path, 'exists', return_value=False):
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        body = response.json()
+        self.assertEqual(body['status'], 'unhealthy')
+        self.assertIn('missing', body['checks']['model_artifacts'])
 
 
 class AnalysisUtilsTests(APITestCase):

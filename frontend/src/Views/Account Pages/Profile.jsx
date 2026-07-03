@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState, useCallback } from "react";
 import Sidenavbar from "../../Components/Sidenavbar";
-import Fixedplugins from "../../Components/Fixedplugins";
 import { Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
@@ -264,7 +263,6 @@ function Profile(props) {
           </div>
         </div>
       </div>
-      <Fixedplugins />
     </>
   );
 }

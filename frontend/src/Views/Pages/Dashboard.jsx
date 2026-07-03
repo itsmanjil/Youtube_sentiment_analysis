@@ -6,7 +6,6 @@ import React, { useContext, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCurrentPng } from "recharts-to-png";
 import Sidenavbar from "../../Components/Sidenavbar";
-import Fixedplugins from "../../Components/Fixedplugins";
 import { Link, useLocation } from "react-router-dom";
 import FileSaver from "file-saver";
 import {
@@ -293,7 +292,11 @@ function Dashboard(props) {
 
   const navigateToReport = () => {
     const { user_name } = authToken?.access ? jwtDecode(authToken.access) : {};
-    navigate(`/report/${videoTitle}`, {
+    // Route by video id (not title): titles can contain slashes/special
+    // characters that break routing, and the id is what the report page
+    // needs to re-fetch the analysis on a direct link or page refresh
+    // (when there's no in-app navigation `state` to read from).
+    navigate(`/report/${videoData?.id}`, {
       state: {
         user_name,
         sentimentBreakdown,
@@ -1366,7 +1369,6 @@ function Dashboard(props) {
           </div>
         )}
       </main>
-      <Fixedplugins />
     </>
   );
 }

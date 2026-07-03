@@ -12,10 +12,12 @@ logger = logging.getLogger(__name__)
 
 from googleapiclient.errors import HttpError
 
+from django.db import connection
+from django.db.utils import Error as DjangoDBError
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
@@ -32,6 +34,7 @@ from src.utils import (
     entropy_from_probs,
     get_runtime_artifact_metadata,
 )
+from src.utils.config import Config
 from src.sentiment import (
     coerce_sentiment_result,
     get_sentiment_engine,
@@ -323,6 +326,11 @@ def analyze_youtube_video(request):
             try:
                 scraper = YouTubeScraper()
                 video_id = scraper.extract_video_id(video_url)
+                if video_id is None:
+                    return Response(
+                        {"msg": f"Invalid YouTube URL: {video_url}"},
+                        status=400,
+                    )
                 video_metadata = scraper.fetch_video_metadata(video_id)
                 comments_raw = scraper.fetch_comments(video_url, max_results=max_comments)
             except Exception as e:
@@ -834,8 +842,46 @@ def get_user_youtube_analyses(request):
         )
 
 
-# Health check endpoint
+# Health check endpoint — unauthenticated so load balancers / uptime
+# monitors can poll it, and backed by real checks rather than a hardcoded
+# string: database reachability and presence of the model artifacts the
+# default (logreg) sentiment engine needs to serve a request.
+#
+# Note: the pinned runtime manifest's "path" field for model artifacts
+# (logreg_model, etc.) is relative to the runtime-artifact directory, not to
+# `Config.MODELS_DIR` where the actual model files live — only the JSON
+# research artifacts resolve correctly via `resolve_runtime_artifact_path`
+# (see the docstring on `_verify_model_artifact_hash_uncached`). So this
+# checks the same default paths `LogRegSentimentEngine` actually loads from.
 @api_view(["GET"])
-@permission_classes((IsAuthenticated,))
+@permission_classes((AllowAny,))
 def index(request):
-    return JsonResponse({"data": "YouTube Sentiment Analysis API - v2.0"})
+    checks = {}
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        checks["database"] = "ok"
+    except DjangoDBError as exc:
+        checks["database"] = f"error: {exc}"
+
+    missing_artifacts = [
+        str(path)
+        for path in (
+            Config.MODELS_DIR / "logreg" / "model.sav",
+            Config.MODELS_DIR / "logreg" / "tfidfVectorizer.pickle",
+        )
+        if not path.exists()
+    ]
+    checks["model_artifacts"] = (
+        "ok" if not missing_artifacts else f"missing: {', '.join(missing_artifacts)}"
+    )
+
+    healthy = all(value == "ok" for value in checks.values())
+    return JsonResponse(
+        {
+            "status": "ok" if healthy else "unhealthy",
+            "checks": checks,
+        },
+        status=200 if healthy else 503,
+    )

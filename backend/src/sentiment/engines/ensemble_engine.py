@@ -198,6 +198,13 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         """
         # Default weights: try optimized weights (pso/nsga2), fall back to empirical
         source = "default"
+        # A caller-supplied dict (e.g. inline JSON `ensemble_weights` from the
+        # API) must also be attributed to "request" — previously only the
+        # list/tuple form below set this, so dict-supplied weights were
+        # silently reported as weights_source="default" even though they came
+        # from the request.
+        if isinstance(weights, dict):
+            source = "request"
         if weights is None:
             opt = getattr(self, "_weights_optimization", None) or "pso"
 

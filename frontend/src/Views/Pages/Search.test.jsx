@@ -128,15 +128,15 @@ describe('Search Component', () => {
     fireEvent.click(screen.getByDisplayValue('Analyze Video'));
 
     await waitFor(() => {
-      expect(screen.getByText(/Max comments must be between 1 and 1000/i)).toBeInTheDocument();
+      expect(screen.getByText(/Max comments must be between 1 and 2000/i)).toBeInTheDocument();
     });
 
     // Test too high
-    fireEvent.change(maxCommentsInput, { target: { value: '1001' } });
+    fireEvent.change(maxCommentsInput, { target: { value: '2001' } });
     fireEvent.click(screen.getByDisplayValue('Analyze Video'));
 
     await waitFor(() => {
-      expect(screen.getByText(/Max comments must be between 1 and 1000/i)).toBeInTheDocument();
+      expect(screen.getByText(/Max comments must be between 1 and 2000/i)).toBeInTheDocument();
     });
   });
 

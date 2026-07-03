@@ -69,7 +69,8 @@ The repo root is intentionally thin. Backend Python manifests live in `backend/`
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.11–3.13 (the pinned `numpy==1.26.4` has no wheels for 3.14+, so
+  `pip install -r requirements.txt` will fail to resolve on 3.14)
 - Node.js 24+ and npm
 
 ### Backend
@@ -80,7 +81,7 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
-python -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('punkt')"
+python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
 python manage.py migrate
 python manage.py runserver
 ```
@@ -130,7 +131,6 @@ All API routes are rooted at `/api/`. DRF defaults to authenticated access, with
 | `POST` | `/api/token/` | Primary JWT login endpoint. |
 | `POST` | `/api/token/refresh/` | Rotate/refresh access tokens. |
 | `POST` | `/api/user/register/` | Create a new user. |
-| `POST` | `/api/user/login/` | JWT alias for clients still using the older path. |
 | `POST` | `/api/user/logout/` | Blacklist a refresh token. |
 | `GET` | `/api/user/me/<id>` | Return the authenticated user's profile and search history. |
 
@@ -141,7 +141,7 @@ All API routes are rooted at `/api/`. DRF defaults to authenticated access, with
 | `POST` | `/api/youtube/analyze/` | Fetch comments, run sentiment analysis, persist the result. |
 | `GET` | `/api/youtube/analysis/<video_id>/` | Fetch one saved analysis scoped to the current user. |
 | `GET` | `/api/youtube/analyses/` | List the current user's saved analyses. |
-| `GET` | `/api/youtube/health/` | Lightweight authenticated API health check. |
+| `GET` | `/api/youtube/health/` | Unauthenticated health check (DB reachability + default model artifacts present). Returns 503 if unhealthy. |
 
 ### Analysis Request Fields
 

@@ -46,7 +46,11 @@ function Search() {
       return apiMessage;
     }
     if (status === 500) {
-      return "Server error. Please check the URL and try again.";
+      // A bare 500 with no API-supplied message (no `apiMessage` above) can
+      // come from our own Django error handler, but also from the Vite dev
+      // proxy returning its own 500 page when the backend is unreachable —
+      // the browser can't tell those apart, so avoid implying a URL problem.
+      return "Server error. The analysis could not be completed — please try again in a moment.";
     }
     if (status === 404) {
       return "Video not found or unavailable.";
@@ -137,10 +141,11 @@ function Search() {
       return;
     }
 
-    // Validate max_comments
-    if (max_comments < 1 || max_comments > 1000) {
+    // Validate max_comments (matches the backend's bound: app/views.py
+    // caps max_comments at 2000 via _parse_bounded_int).
+    if (max_comments < 1 || max_comments > 2000) {
       setHasError(true);
-      setErrorMessage("Max comments must be between 1 and 1000");
+      setErrorMessage("Max comments must be between 1 and 2000");
       return;
     }
 
@@ -351,7 +356,7 @@ function Search() {
                     />
                   </div>
                   <div className="col-md-12 mt-3">
-                    <label className="labels" htmlFor="max-comments">Max Comments (1-1000)</label>
+                    <label className="labels" htmlFor="max-comments">Max Comments (1-2000)</label>
                     <input
                       id="max-comments"
                       name="max_comments"
@@ -359,7 +364,7 @@ function Search() {
                       className="form-control"
                       placeholder="200"
                       min="1"
-                      max="1000"
+                      max="2000"
                       value={max_comments}
                       onChange={(e) => {
                         const parsed = parseInt(e.target.value, 10);

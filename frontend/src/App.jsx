@@ -7,8 +7,6 @@ const Dashboard = lazy(() => import("./Views/Pages/Dashboard"));
 const Signin = lazy(() => import("./Views/Account Pages/Signin"));
 const Register = lazy(() => import("./Views/Account Pages/Register"));
 const Profile = lazy(() => import("./Views/Account Pages/Profile"));
-const Tables = lazy(() => import("./Views/Pages/Tables"));
-const Editprofile = lazy(() => import("./Views/Account Pages/Editprofile"));
 const Homepage = lazy(() => import("./Views/Pages/Homepage"));
 const Search = lazy(() => import("./Views/Pages/Search"));
 const Report = lazy(() => import("./Views/Pages/Report"));
@@ -37,10 +35,8 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />}></Route>
                 <Route path="/monitoring" element={<Monitoring />}></Route>
                 <Route path="/profile" element={<Profile />}></Route>
-                <Route exact path="/report/:name" element={<Report />}></Route>
+                <Route exact path="/report/:videoId" element={<Report />}></Route>
               </Route>
-              <Route exact path="/tables" element={<Tables />}></Route>
-              <Route exact path="/editprofile" element={<Editprofile />}></Route>
             </Routes>
           </Suspense>
         </AuthProvider>

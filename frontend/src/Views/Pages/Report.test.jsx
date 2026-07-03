@@ -1,8 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import Report from './Report';
 import AuthContext from '../../context/AuthContext';
+import axiosInstance from '../../axios';
 import { vi } from 'vitest';
 
 // Mock navigate
@@ -14,6 +15,12 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   };
 });
+
+// Mock axios (Report fetches by id when there's no navigation state, e.g. a
+// direct link or a page refresh).
+vi.mock('../../axios', () => ({
+  default: vi.fn(),
+}));
 
 // Mock CSS import
 vi.mock('./report.css', () => ({}));
@@ -29,6 +36,26 @@ const renderWithContext = (locationState = null, authTokenValue = { access: 'tes
     <MemoryRouter initialEntries={[{ pathname: '/report/test', state: locationState }]}>
       <AuthContext.Provider value={mockAuthContext}>
         <Report />
+      </AuthContext.Provider>
+    </MemoryRouter>
+  );
+};
+
+// Helper for the direct-link/refresh path: renders through an actual
+// `:videoId` route (useParams needs a matching <Route>) with no location
+// state, so Report must fetch from the API.
+const renderAtDirectLink = (videoId = 'abc123', authTokenValue = { access: 'test-token' }) => {
+  const mockAuthContext = {
+    authToken: authTokenValue,
+    logoutUser: vi.fn(),
+  };
+
+  return render(
+    <MemoryRouter initialEntries={[`/report/${videoId}`]}>
+      <AuthContext.Provider value={mockAuthContext}>
+        <Routes>
+          <Route path="/report/:videoId" element={<Report />} />
+        </Routes>
       </AuthContext.Provider>
     </MemoryRouter>
   );
@@ -96,6 +123,46 @@ describe('Report Component', () => {
     renderWithContext(null);
 
     expect(screen.getByText(/No report data available/i)).toBeInTheDocument();
+  });
+
+  test('fetches the analysis by id when reached via a direct link (no navigation state)', async () => {
+    axiosInstance.mockResolvedValue({
+      status: 200,
+      data: {
+        data: {
+          video: { id: 'abc123', title: 'Direct Link Video' },
+          sentiment_data: { Negative: 5, Neutral: 10, Positive: 15 },
+          fetched_date: '2024-02-01T00:00:00Z',
+          model_used: 'LOGREG',
+          analysis_meta: {},
+        },
+      },
+    });
+
+    renderAtDirectLink('abc123');
+
+    expect(screen.getByText(/Loading report/i)).toBeInTheDocument();
+
+    await waitFor(() =>
+      expect(screen.getByText('Direct Link Video')).toBeInTheDocument()
+    );
+    expect(axiosInstance).toHaveBeenCalledWith(
+      expect.objectContaining({ method: 'GET', url: 'youtube/analysis/abc123/' })
+    );
+    await waitFor(() =>
+      expect(screen.getByText('30')).toBeInTheDocument()
+    ); // total comments
+  });
+
+  test('redirects to dashboard when the direct-link fetch fails', async () => {
+    axiosInstance.mockRejectedValue(new Error('Not found'));
+
+    renderAtDirectLink('missing-video');
+
+    await waitFor(() =>
+      expect(screen.getByText(/No report data available/i)).toBeInTheDocument()
+    );
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/dashboard'));
   });
 
   test('renders report with all data sections', () => {

@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
 import Sidenavbar from "../../Components/Sidenavbar";
-import Fixedplugins from "../../Components/Fixedplugins";
 import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
@@ -410,7 +409,7 @@ function Monitoring() {
                                   </h6>
                                   <p className="text-sm text-muted mb-1">
                                     <i className="fas fa-user-circle"></i>{" "}
-                                    {analysis.video?.channel_name || "Unknown Channel"}
+                                    {analysis.video?.channel || "Unknown Channel"}
                                   </p>
                                   <p className="text-xs text-muted mb-0">
                                     <i className="fas fa-clock"></i>{" "}
@@ -544,7 +543,6 @@ function Monitoring() {
           </div>
         </div>
       </main>
-      <Fixedplugins />
     </>
   );
 }
