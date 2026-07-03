@@ -10,12 +10,14 @@ without importing Django settings.
 
 from .classical import (
     ClassicalPreprocessConfig,
+    get_fallback_stopwords,
     preprocess_classical_text,
     preprocess_classical_texts,
 )
 
 __all__ = [
     "ClassicalPreprocessConfig",
+    "get_fallback_stopwords",
     "preprocess_classical_text",
     "preprocess_classical_texts",
 ]

@@ -117,6 +117,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+_IS_TEST_ENVIRONMENT = RUNTIME_SETTINGS["environment"] == "test"
+
 REST_FRAMEWORK = {
 
     'DEFAULT_PERMISSION_CLASSES': [
@@ -125,7 +127,25 @@ REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+
+    # Unthrottled AllowAny endpoints (register/login) and the CPU-heavy
+    # analyze endpoint (YouTube fetch + preprocessing + model inference +
+    # bootstrap resampling) have no cost to hammering them otherwise.
+    # `DEFAULT_THROTTLE_CLASSES` (anon/user) is skipped entirely in the test
+    # environment since `manage.py test` reuses one IP/user across many
+    # requests per run. `analyze` uses an explicit @throttle_classes on the
+    # view (not gated by DEFAULT_THROTTLE_CLASSES), so its rate is always
+    # defined here — just far looser in tests than in dev/production.
+    'DEFAULT_THROTTLE_CLASSES': [] if _IS_TEST_ENVIRONMENT else [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '20/minute',
+        'user': '60/minute',
+        'analyze': '100000/day' if _IS_TEST_ENVIRONMENT else '10/hour',
+    },
 }
 
 SIMPLE_JWT = {

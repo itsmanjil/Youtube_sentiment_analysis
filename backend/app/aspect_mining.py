@@ -13,17 +13,16 @@ transformer-based models such as ASTE-Transformer (Xu et al., 2021).
 import re
 from collections import Counter, defaultdict
 
+from src.preprocessing import get_fallback_stopwords
+
 
 def _get_stopwords():
-    try:
-        from nltk.corpus import stopwords
-        return set(stopwords.words("english"))
-    except Exception:
-        return {
-            "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
-            "has", "he", "in", "is", "it", "its", "of", "on", "that", "the",
-            "to", "was", "were", "will", "with",
-        }
+    # Reuse the vendored, deterministic stopword list from
+    # `src.preprocessing.classical` rather than loading `nltk.corpus.stopwords`
+    # at runtime: whether that corpus is downloaded varies by machine, which
+    # would make the same comment set produce different top-aspect words
+    # depending on environment.
+    return get_fallback_stopwords()
 
 
 def _tokenize(text):

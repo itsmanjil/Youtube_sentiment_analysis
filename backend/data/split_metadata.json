@@ -35,6 +35,8 @@
   },
   "youtube_preprocess": {
     "enabled": true,
+    "primary_text_profile": "classical",
+    "_primary_text_profile_note": "Field added post-hoc: this run predates prepare_hf_dataset.py recording primary_text_profile explicitly. Value inferred from the script's own default ('classical' when youtube_preprocess is enabled, 'normalized' otherwise) and confirmed by train_logreg_youtube.py's metadata (trained on this train.csv's `text` column, which is the classical-profile column).",
     "emoji_mode": "convert",
     "min_words": 3,
     "filter_spam": true,
@@ -56,10 +58,11 @@
     "test_size": 0.2,
     "val_size": 0.2,
     "paths": {
-      "train": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/train.csv",
-      "val": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/val.csv",
-      "test": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv"
+      "train": "data/train.csv",
+      "val": "data/val.csv",
+      "test": "data/test.csv"
     },
+    "_paths_note": "Rewritten to be relative to backend/; the original absolute paths (/Users/deadshot/...) were from the machine that generated this file and are misleading on any other checkout.",
     "rows": {
       "train": 516886,
       "val": 128854,

@@ -373,6 +373,34 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("meta_learner_path overrides are not supported", response.data["msg"])
 
+    def test_analyze_video_rejects_out_of_range_fuzzy_resolution(self):
+        # `fuzzy_resolution` feeds np.linspace(0, 1, resolution) inside the fuzzy
+        # engine; an unbounded value here is a memory-exhaustion vector, so it
+        # must be rejected at the request-validation stage like every other
+        # bounded numeric parameter.
+        data = {
+            "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+            "sentiment_model": "fuzzy_ensemble",
+            "fuzzy_resolution": 2_000_000_000,
+        }
+
+        response = self.client.post(self.analyze_url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("fuzzy_resolution", response.data["msg"])
+
+    def test_analyze_video_rejects_out_of_range_fuzzy_alpha_cut(self):
+        data = {
+            "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+            "sentiment_model": "fuzzy_ensemble",
+            "fuzzy_alpha_cut": 5.0,
+        }
+
+        response = self.client.post(self.analyze_url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("fuzzy_alpha_cut", response.data["msg"])
+
     @patch('app.views.YouTubeFetcher')
     def test_analyze_video_api_error_quota(self, mock_fetcher):
         mock_error_content = b'{"error": {"errors": [{"reason": "quotaExceeded"}], "message": "Quota Exceeded"}}'
@@ -575,6 +603,54 @@ class LiveWiringEngineTests(SimpleTestCase):
         self.assertAlmostEqual(pso_engine.weights["tfidf"], 0.5)
         self.assertAlmostEqual(nsga2_engine.weights["logreg"], 0.7)
 
+    def test_ensemble_temperature_only_applies_to_the_pso_weighted_config(self):
+        # results/temperature_scaling.json's "ensemble" row was fitted against
+        # get_sentiment_engine("ensemble", calibrate=False), whose default
+        # weights_optimization resolves to "pso". Applying that temperature to
+        # an nsga2-weighted or request-supplied-weights blend rescales
+        # probabilities the temperature was never fit on, while still
+        # reporting calibration_applied=True — silently wrong calibration
+        # metadata. Only the pso-sourced config may use the pinned artifact.
+        from src.sentiment.engines.ensemble_engine import EnsembleSentimentEngine
+
+        def _artifact_loader(name):
+            artifacts = {
+                "temperature_scaling": {
+                    "models": [{"model": "ensemble", "temperature": 0.9348}]
+                },
+                "pso_ensemble_weights": {
+                    "weights": {"logreg": 0.2, "svm": 0.3, "tfidf": 0.5}
+                },
+                "multi_objective_ensemble": {
+                    "knee_point": {
+                        "weights": {"logreg": 0.7, "svm": 0.2, "tfidf": 0.1}
+                    }
+                },
+            }
+            return artifacts.get(name, {})
+
+        with patch(
+            "src.sentiment.factory.get_base_engine",
+            return_value=MagicMock(),
+        ), patch(
+            "src.sentiment.engines.ensemble_engine.load_runtime_artifact_json",
+            side_effect=_artifact_loader,
+        ):
+            pso_engine = EnsembleSentimentEngine(weights_optimization="pso")
+            nsga2_engine = EnsembleSentimentEngine(weights_optimization="nsga2")
+            custom_engine = EnsembleSentimentEngine(
+                weights={"logreg": 0.5, "svm": 0.5, "tfidf": 0.0}
+            )
+
+        self.assertTrue(pso_engine.calibration_applied)
+        self.assertAlmostEqual(pso_engine.temperature, 0.9348)
+
+        self.assertFalse(nsga2_engine.calibration_applied)
+        self.assertEqual(nsga2_engine.temperature, 1.0)
+
+        self.assertFalse(custom_engine.calibration_applied)
+        self.assertEqual(custom_engine.temperature, 1.0)
+
     def test_hybrid_dl_runtime_remains_uncalibrated_without_artifact_row(self):
         from src.sentiment.engines.hybrid_dl_engine import HybridDLSentimentEngine
 
@@ -723,6 +799,28 @@ class YouTubePreprocessorTests(SimpleTestCase):
         self.assertNotIn("#", classical)
         self.assertIn("uppercase_ratio", transformer_meta["text_features"])
         self.assertGreaterEqual(transformer_meta["text_features"]["emoji_count"], 1)
+
+
+class YouTubeScraperLikesParsingTests(SimpleTestCase):
+    def _parser(self):
+        from app.youtube_scraper import YouTubeScraper
+        return YouTubeScraper()
+
+    def test_parses_plain_and_abbreviated_vote_strings(self):
+        # `youtube-comment-downloader` returns `votes` as a string (plain
+        # digits or "1.2K"/"3M"-style abbreviations for popular comments),
+        # not an int. Passing that straight through to `item['likes']`
+        # crashes the like-weighting comparison (`likes > 0`) and the
+        # `YouTubeComment.likes` IntegerField save — after the expensive
+        # fetch/preprocess/inference steps have already run.
+        parser = self._parser()
+        self.assertEqual(parser._parse_likes("42"), 42)
+        self.assertEqual(parser._parse_likes("1.2K"), 1200)
+        self.assertEqual(parser._parse_likes("3M"), 3_000_000)
+        self.assertEqual(parser._parse_likes(""), 0)
+        self.assertEqual(parser._parse_likes(None), 0)
+        self.assertEqual(parser._parse_likes("not a number"), 0)
+        self.assertEqual(parser._parse_likes(7), 7)
 
 
 class TransformerTrainingScriptTests(SimpleTestCase):

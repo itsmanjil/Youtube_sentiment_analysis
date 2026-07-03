@@ -28,6 +28,37 @@ def get_expected_sklearn_version(model_name: str) -> Optional[str]:
     return metadata.get("sklearn_version")
 
 
+def check_preprocessing_flag_consistency(model_name: str, engine_preprocess: bool) -> None:
+    """
+    Guard against train/serve preprocessing skew.
+
+    `src/preprocessing/classical.py` was written specifically because this
+    codebase once applied extra preprocessing only at inference time while
+    training scripts used raw text. If the pinned training metadata records
+    which `preprocess` setting the model was trained with, and it disagrees
+    with the `preprocess=` the engine was constructed with, that mismatch
+    would silently reintroduce the same skew — fail loudly instead.
+
+    Does nothing if no metadata file exists (e.g. a custom model_path with no
+    sibling `*_metadata.json`), since there is nothing to check against.
+    """
+    metadata = _read_metadata(model_name)
+    if not metadata:
+        return
+    preprocessing = metadata.get("preprocessing")
+    if not isinstance(preprocessing, dict) or "enabled" not in preprocessing:
+        return
+    expected = bool(preprocessing["enabled"])
+    if expected != bool(engine_preprocess):
+        raise RuntimeError(
+            f"{model_name} was trained with preprocessing.enabled={expected} "
+            f"(see models/{model_name}/{model_name}_metadata.json) but the engine "
+            f"was constructed with preprocess={bool(engine_preprocess)}. Serving "
+            "with a different preprocessing setting than training causes "
+            "train/inference skew. Pass the matching `preprocess` value."
+        )
+
+
 def format_model_load_error(
     model_name: str,
     model_path: Path,

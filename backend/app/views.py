@@ -13,11 +13,13 @@ logger = logging.getLogger(__name__)
 from googleapiclient.errors import HttpError
 
 from django.http import JsonResponse
-from rest_framework.decorators import api_view, permission_classes
+from django.utils import timezone
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 
-from .models import *
+from .models import YouTubeVideo, YouTubeComment, YouTubeAnalysis
 from .youtube_fetcher import YouTubeFetcher
 from .youtube_scraper import YouTubeScraper
 from .youtube_preprocessor import YouTubePreprocessor
@@ -189,6 +191,7 @@ def _get_model_family(model_name):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+@throttle_classes([ScopedRateThrottle])
 def analyze_youtube_video(request):
     user = request.user
 
@@ -224,6 +227,20 @@ def analyze_youtube_video(request):
             maximum=1.0,
             name="confidence_threshold",
         )
+        fuzzy_alpha_cut = _parse_bounded_float(
+            request.data.get("fuzzy_alpha_cut"),
+            0.0,
+            minimum=0.0,
+            maximum=1.0,
+            name="fuzzy_alpha_cut",
+        )
+        fuzzy_resolution = _parse_bounded_int(
+            request.data.get("fuzzy_resolution"),
+            100,
+            minimum=10,
+            maximum=1000,
+            name="fuzzy_resolution",
+        )
     except _InvalidParam as exc:
         return Response({"msg": str(exc)}, status=400)
 
@@ -240,8 +257,6 @@ def analyze_youtube_video(request):
     fuzzy_defuzz_method = request.data.get("fuzzy_defuzz_method")
     fuzzy_t_norm = request.data.get("fuzzy_t_norm")
     fuzzy_t_conorm = request.data.get("fuzzy_t_conorm")
-    fuzzy_alpha_cut = request.data.get("fuzzy_alpha_cut")
-    fuzzy_resolution = request.data.get("fuzzy_resolution")
     model_comparison = request.data.get("model_comparison")
 
     if ensemble_models is None:
@@ -388,27 +403,14 @@ def analyze_youtube_video(request):
             if meta_learner_models:
                 engine_kwargs["base_models"] = meta_learner_models
         elif sentiment_model == "fuzzy_ensemble":
-            alpha_cut = 0.0
-            if fuzzy_alpha_cut is not None:
-                try:
-                    alpha_cut = float(fuzzy_alpha_cut)
-                except (TypeError, ValueError):
-                    alpha_cut = 0.0
-            resolution = 100
-            if fuzzy_resolution is not None:
-                try:
-                    resolution = int(fuzzy_resolution)
-                except (TypeError, ValueError):
-                    resolution = 100
-
             engine_kwargs = {
                 "base_models": fuzzy_models,
                 "mf_type": fuzzy_mf_type or "gaussian",
                 "defuzz_method": fuzzy_defuzz_method or "centroid",
                 "t_norm": fuzzy_t_norm or "min",
                 "t_conorm": fuzzy_t_conorm or "max",
-                "alpha_cut": alpha_cut,
-                "resolution": resolution,
+                "alpha_cut": fuzzy_alpha_cut,
+                "resolution": fuzzy_resolution,
                 "confidence_threshold": confidence_threshold,
             }
         elif _is_transformer_model(sentiment_model):
@@ -439,21 +441,35 @@ def analyze_youtube_video(request):
                 # distinct for uniqueness, whereas multiple '' comments would
                 # collide into a single row and silently overwrite each other.
                 comment_id = item.get('comment_id') or None
-                YouTubeComment.objects.update_or_create(
-                    comment_id=comment_id,
-                    defaults={
-                        'video': video,
-                        'text': item['text'],
-                        'author': item['author'],
-                        'likes': item['likes'],
-                        'published_at': item['published_at'],
-                        'is_reply': item['is_reply'],
-                        'sentiment': item['sentiment'],
-                        'sentiment_score': item['sentiment_score'],
-                        'is_spam': item.get('metadata', {}).get('is_spam', False),
-                        'language': item['metadata']['language']
-                    }
-                )
+                # `published_at` is a non-nullable DateTimeField, but scraper mode
+                # can yield None for unparseable relative timestamps ("2 days
+                # ago"-style strings that don't match any known pattern) — fall
+                # back to now() rather than raising IntegrityError on save.
+                published_at = item['published_at'] or timezone.now()
+                defaults = {
+                    'video': video,
+                    'text': item['text'],
+                    'author': item['author'],
+                    'likes': item['likes'],
+                    'published_at': published_at,
+                    'is_reply': item['is_reply'],
+                    'sentiment': item['sentiment'],
+                    'sentiment_score': item['sentiment_score'],
+                    'is_spam': item.get('metadata', {}).get('is_spam', False),
+                    'language': item['metadata']['language']
+                }
+                if comment_id is None:
+                    # `update_or_create(comment_id=None)` does a `.get(comment_id=None)`
+                    # lookup first; since SQL treats every NULL as distinct for the
+                    # unique constraint but Django's ORM `.get()` does not, the second
+                    # id-less comment in a batch would match the first one's row and
+                    # silently overwrite it instead of inserting a new row.
+                    YouTubeComment.objects.create(comment_id=None, **defaults)
+                else:
+                    YouTubeComment.objects.update_or_create(
+                        comment_id=comment_id,
+                        defaults=defaults,
+                    )
             except Exception as e:
                 logger.warning(
                     "Failed to save comment %s for video %s: %s",
@@ -687,6 +703,13 @@ def analyze_youtube_video(request):
         )
 
 
+# @api_view wraps the function in a dynamically-created APIView subclass and
+# returns `.as_view()`; DRF's ScopedRateThrottle reads `throttle_scope` off the
+# view *class* (via `view.cls`, set by APIView.as_view()), not off the plain
+# function, so this must be assigned here rather than inside the function body.
+analyze_youtube_video.cls.throttle_scope = "analyze"
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_youtube_analysis(request, video_id):
@@ -816,9 +839,3 @@ def get_user_youtube_analyses(request):
 @permission_classes((IsAuthenticated,))
 def index(request):
     return JsonResponse({"data": "YouTube Sentiment Analysis API - v2.0"})
-
-
-# Test endpoint
-@api_view(["GET"])
-def test_endpoint(request):
-    return JsonResponse({"status": "Server is working", "message": "Test successful"})

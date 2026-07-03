@@ -36,6 +36,38 @@ class YouTubeScraper:
 
         return None
 
+    def _parse_likes(self, value):
+        """
+        Normalize a scraper vote/like count to an int.
+
+        `youtube-comment-downloader` returns `votes` as a string that may be
+        a plain number ("42"), a suffixed abbreviation ("1.2K", "3M"), or ""
+        (renders as "0" upstream but is not guaranteed). Downstream code
+        (`views.py` like-weighting, the `YouTubeComment.likes` IntegerField)
+        requires a real int; passing the raw string through causes a
+        TypeError/IntegrityError deep in analysis, well after the (slow)
+        fetch + preprocessing + inference steps have already run.
+        """
+        if isinstance(value, (int, float)):
+            return int(value)
+        if not value:
+            return 0
+        text = str(value).strip().upper().replace(",", "")
+        if not text:
+            return 0
+        multipliers = {"K": 1_000, "M": 1_000_000, "B": 1_000_000_000}
+        suffix = text[-1]
+        if suffix in multipliers:
+            number_part = text[:-1]
+            try:
+                return int(float(number_part) * multipliers[suffix])
+            except ValueError:
+                return 0
+        try:
+            return int(float(text))
+        except ValueError:
+            return 0
+
     def _parse_relative_time(self, time_str):
         """
         Parse relative timestamps like '2 days ago', '1 month ago', etc.
@@ -214,7 +246,7 @@ class YouTubeScraper:
                 comment_data = {
                     'text': comment.get('text', ''),
                     'author': comment.get('author', 'Unknown'),
-                    'likes': comment.get('votes', 0),
+                    'likes': self._parse_likes(comment.get('votes', 0)),
                     'published_at': published_at,
                     'reply_count': 0,  # Not available in scraper
                     'is_reply': is_reply,

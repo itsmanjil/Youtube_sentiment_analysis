@@ -39,7 +39,10 @@ from src.preprocessing import (
     preprocess_classical_texts,
 )
 from src.sentiment.base import SentimentResult, normalize_label, BaseSentimentEngine
-from src.sentiment.engines.artifact_utils import format_model_load_error
+from src.sentiment.engines.artifact_utils import (
+    check_preprocessing_flag_consistency,
+    format_model_load_error,
+)
 
 
 class LogRegSentimentEngine(BaseSentimentEngine):
@@ -117,6 +120,7 @@ class LogRegSentimentEngine(BaseSentimentEngine):
             ) from exc
 
         self._validate_fitted()
+        check_preprocessing_flag_consistency("logreg", self.preprocess)
         self.artifact_verified = {
             "model": verify_model_artifact_hash(model_path, "logreg_model"),
             "vectorizer": verify_model_artifact_hash(vectorizer_path, "logreg_vectorizer"),

@@ -134,6 +134,18 @@ def _get_stopwords() -> set[str]:
     return set(_FALLBACK_STOPWORDS)
 
 
+def get_fallback_stopwords() -> set[str]:
+    """
+    Public accessor for the vendored, deterministic stopword set.
+
+    Other modules that need a stopword list (e.g. `app.aspect_mining`) should
+    use this instead of calling `nltk.corpus.stopwords` directly, so the same
+    comment set produces the same output regardless of whether the NLTK
+    `stopwords` corpus happens to be downloaded on a given machine.
+    """
+    return _get_stopwords()
+
+
 def _expand_negation_contractions(tokens: List[str]) -> List[str]:
     expanded: List[str] = []
     for token in tokens:

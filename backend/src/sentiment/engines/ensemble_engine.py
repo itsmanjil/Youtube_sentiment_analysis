@@ -148,12 +148,17 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         self.base_models = list(self.engines.keys())
         self.weights, self.weights_source = self._normalize_weights(weights)
         self.calibration_enabled = bool(calibrate)
-        if self.calibration_enabled:
+        # The pinned "ensemble" temperature in results/temperature_scaling.json was
+        # fitted against the PSO-weighted ensemble only (research/ci/temperature_scaling.py
+        # constructs get_sentiment_engine("ensemble", calibrate=False), whose default
+        # weights_optimization resolves to "pso"). Applying that temperature to a
+        # differently-weighted blend (nsga2, request-supplied weights, or the
+        # no-artifact-found fallback) rescales probabilities from a distribution the
+        # temperature was never fit on, silently mis-calibrating them while still
+        # reporting calibration_applied=True. Only apply it for the matching config.
+        if self.calibration_enabled and self.weights_source == "pso":
             self.temperature, self.calibration_applied = self._load_temperature("ensemble")
         else:
-            # Used by research/ci/temperature_scaling.py when re-fitting T: avoids
-            # applying the *previous* artifact's temperature before computing the
-            # new one (which would fit T on already-calibrated probabilities).
             self.temperature, self.calibration_applied = 1.0, False
 
     def _load_temperature(self, model_name: str):
