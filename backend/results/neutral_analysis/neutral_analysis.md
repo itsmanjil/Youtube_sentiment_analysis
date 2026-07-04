@@ -1,20 +1,20 @@
 # Neutral-Class Weakness Analysis and Intervention
 
 - Model: `logreg`
-- Val/Test sample size: 2,000 / 2,000
+- Val/Test sample size: 8,000 / 8,000
 - Intervention: scale Neutral probability by `alpha` before argmax
   (prior adjustment / threshold tuning; no retraining).
 - `alpha` selected on validation, reported on held-out test.
 
 ## 1. Error-Direction Analysis (baseline, test split)
 
-Of 632 true-Neutral comments, the baseline `logreg` model:
+Of 2,450 true-Neutral comments, the baseline `logreg` model:
 
 | Outcome | Count | Share |
 |---------|------:|------:|
-| Correct (Neutral) | 378 | 59.8% |
-| Misread as Negative | 153 | 24.2% |
-| Misread as Positive | 101 | 16.0% |
+| Correct (Neutral) | 1,508 | 61.6% |
+| Misread as Negative | 599 | 24.4% |
+| Misread as Positive | 343 | 14.0% |
 
 Neutral errors are split between both polar classes, i.e. the model
 tends to over-commit short, low-signal comments to a polarity rather
@@ -24,39 +24,37 @@ than abstaining to Neutral. This motivates a Neutral-favouring prior.
 
 | alpha | Macro-F1 | Neutral-F1 | Neutral-P | Neutral-R |
 |------:|---------:|-----------:|----------:|----------:|
-| 0.8 | 0.6820 | 0.5806 | 0.6136 | 0.5510 |
-| 0.9 | 0.6882 | 0.5966 | 0.6093 | 0.5844 |
-| 1.0 | 0.6892 | 0.6006 | 0.5945 | 0.6067 |
-| 1.1 | 0.6872 | 0.6025 | 0.5705 | 0.6382 |
-| 1.2 | 0.6888 | 0.6076 | 0.5573 | 0.6679 |
-| 1.3 | 0.6886 | 0.6117 | 0.5459 | 0.6957 |
-| 1.4 | 0.6869 | 0.6121 | 0.5314 | 0.7217 |  <-- selected
-| 1.5 | 0.6825 | 0.6115 | 0.5209 | 0.7403 |
-| 1.6 | 0.6768 | 0.6073 | 0.5088 | 0.7532 |
-| 1.7 | 0.6739 | 0.6068 | 0.5031 | 0.7644 |
-| 1.8 | 0.6681 | 0.6030 | 0.4941 | 0.7737 |
-| 1.9 | 0.6621 | 0.5999 | 0.4862 | 0.7829 |
-| 2.0 | 0.6630 | 0.6083 | 0.4861 | 0.8126 |
+| 0.8 | 0.6847 | 0.5937 | 0.6428 | 0.5516 |
+| 0.9 | 0.6892 | 0.6097 | 0.6279 | 0.5925 |
+| 1.0 | 0.6887 | 0.6153 | 0.6090 | 0.6217 |
+| 1.1 | 0.6881 | 0.6189 | 0.5941 | 0.6459 |
+| 1.2 | 0.6906 | 0.6269 | 0.5842 | 0.6764 |
+| 1.3 | 0.6920 | 0.6336 | 0.5755 | 0.7048 |
+| 1.4 | 0.6912 | 0.6362 | 0.5645 | 0.7286 |
+| 1.5 | 0.6893 | 0.6388 | 0.5570 | 0.7486 |
+| 1.6 | 0.6872 | 0.6405 | 0.5496 | 0.7674 |  <-- selected
+| 1.7 | 0.6841 | 0.6395 | 0.5425 | 0.7787 |
+| 1.8 | 0.6812 | 0.6387 | 0.5356 | 0.7908 |
+| 1.9 | 0.6755 | 0.6342 | 0.5258 | 0.7987 |
+| 2.0 | 0.6714 | 0.6328 | 0.5185 | 0.8117 |
 
-Selected `alpha = 1.4` (maximises validation Neutral-F1 subject
+Selected `alpha = 1.6` (maximises validation Neutral-F1 subject
 to macro-F1 dropping no more than 0.005).
 
 ## 3. Held-Out Test Result (baseline vs intervention)
 
-| Metric | Baseline (alpha=1.0) | Intervention (alpha=1.4) | Delta |
+| Metric | Baseline (alpha=1.0) | Intervention (alpha=1.6) | Delta |
 |--------|---------------------:|-------------------------:|------:|
-| Macro-F1 | 0.6832 | 0.6866 | +0.0034 |
-| Neutral-F1 | 0.6107 | 0.6398 | +0.0291 |
-| Neutral-Precision | 0.6238 | 0.5787 | — |
-| Neutral-Recall | 0.5981 | 0.7152 | — |
+| Macro-F1 | 0.6922 | 0.6814 | -0.0108 |
+| Neutral-F1 | 0.6175 | 0.6326 | +0.0151 |
+| Neutral-Precision | 0.6196 | 0.5486 | — |
+| Neutral-Recall | 0.6155 | 0.7469 | — |
 
 ## 4. Verdict
 
-**The intervention helps.** Neutral-F1 improved by +0.0291 on the
-held-out test set while macro-F1 changed by +0.0034 (within the
-accepted tolerance). The gain comes from recovering Neutral recall on short,
-low-signal comments that the baseline over-committed to a polarity. This is a
-cheap, training-free, deployment-ready adjustment.
+**Mixed result.** Neutral-F1 improved by +0.0151 but macro-F1
+dropped by -0.0108, exceeding tolerance. The Neutral/macro trade-off
+means the intervention is only justified when Neutral recall is the priority.
 
 ## 5. Recommendation
 

@@ -1,6 +1,6 @@
 # Thesis Chapter 5 Polished Draft
 
-Date: 2026-04-02
+Date: 2026-04-02 (updated 2026-07-02)
 
 This document provides a thesis-ready Chapter 5 draft aligned with the pinned
 runtime evidence in `backend/results/runtime/route_a_live_v1/`.
@@ -77,11 +77,15 @@ not currently outperform the strongest full-test models. It therefore should be
 interpreted as an implemented and experimentally relevant CI component, but not
 as the final headline result of the system.
 
-Third, the full-test statistical comparison has not yet been rerun specifically
-for the pinned live `ensemble_nsga2` variant against the live meta-learner.
-Consequently, the current runtime superiority claims for `ensemble_nsga2` should
-be expressed in descriptive and calibration-oriented terms rather than as final
-inferential superiority claims.
+Third, the full-test statistical comparison has since been rerun for the
+pinned live `ensemble_nsga2` variant against the live meta-learner (paired
+bootstrap and Holm-adjusted McNemar, n = 165,110; see
+`results/runtime/route_a_live_v1/live_significance_tests.md`). The calibration
+advantage (ECE difference 95% CI [−0.0126, −0.0084]) is significant, while the
+accuracy/macro-F1 difference is not (CI [−0.0002, +0.0014]). The runtime
+superiority claim for `ensemble_nsga2` is therefore an established inferential
+calibration result, not merely a descriptive one — though it remains scoped to
+calibration rather than accuracy.
 
 Fourth, while runtime artifact pinning substantially improves reproducibility,
 the thesis still depends on disciplined reporting. Any updated claim must cite
@@ -106,14 +110,12 @@ selective prediction, abstention policies, and multi-objective optimization over
 macro-F1, calibration, coverage, and latency.
 
 Another important direction is evaluation under distribution shift. Future work
-should include cross-channel and temporal testing, as well as evaluation on a
-human-labeled gold subset of YouTube comments. This would strengthen construct
-validity and make the thesis claims more robust to noise and label ambiguity.
+should include cross-channel and temporal testing to further strengthen
+construct validity. (Evaluation on a human-labeled gold subset has since been
+completed — see §4.7 — and is no longer future work.)
 
 Additional future work may include:
 
-- rerunning paired significance tests directly on the pinned live runtime model
-  family;
 - adding conformal prediction or selective classification for more rigorous
   uncertainty-aware deployment;
 - conducting domain-adaptive pretraining on large volumes of unlabeled YouTube

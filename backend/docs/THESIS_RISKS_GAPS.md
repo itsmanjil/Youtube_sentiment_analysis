@@ -1,135 +1,106 @@
-# Thesis Risks / Gaps Checklist (YouTube Sentiment Analysis)
+# Threats to Validity
 
-This project is already fairly feature-rich. For a Master's thesis, the main risk is not "missing models" but **threats to validity**: leakage, train/inference skew, non-reproducible preprocessing, and evaluation mistakes that inflate results.
+Status date: 2026-07-02 (updated)
 
-Below is a prioritized checklist you can reuse in a "Threats to Validity" / "Limitations" chapter section.
+For a master's thesis, the main risk is not missing models but threats to
+validity: leakage, train/inference skew, non-reproducible preprocessing, and
+evaluation mistakes that inflate results. This chapter states the principal
+threats and the mitigations applied.
 
-## 1) Data Leakage (Highest Priority)
+## Data Leakage
 
-**Risk:** Exact-duplicate texts (or near-duplicates) appearing across `train/val/test` can inflate test metrics.
+Exact-duplicate or near-duplicate texts appearing across train/val/test can
+inflate test metrics. Mitigations applied: a leakage-checking script
+(`scripts/prepare/check_split_leakage.py`), a split builder
+(`scripts/prepare/prepare_hf_dataset.py`) that drops conflicting-label texts
+and de-duplicates by final model-input text before splitting, and a
+group-aware split by VideoID that reduces within-video topical leakage; split
+provenance is saved to `split_metadata.json`.
 
-**What we did in this repo:**
-- Leakage checking script: `backend/scripts/prepare/check_split_leakage.py`
-- Split builder that **drops conflicting-label texts** + **dedupes by final model-input text** before splitting:
-  `backend/scripts/prepare/prepare_hf_dataset.py`
-- Group-aware split by `VideoID` when available (reduces within-video topical leakage).
-- Split provenance saved to: `backend/data/split_metadata.json`
+**Residual gap:** the current mitigation is exact-text de-duplication. A
+near-duplicate audit (`scripts/prepare/near_duplicate_audit.py`,
+MinHash/SimHash) has been run, but only on the 810-row
+`route_a_benchmark_cpu` smoke split (9 near-duplicate cross-split pairs found,
+status REVIEW) — it has **not** been run on the full 810,850-row corpus used
+for the headline benchmark. Near-duplicate leakage across the full train/val/test
+split is therefore an open, unquantified risk and is reported as a limitation
+rather than a closed item; extending the audit to the full split is
+recommended future work.
 
-**Residual gap:** The current mitigation is **exact-text** dedupe. Near-duplicate leakage (copy/paste with minor edits, templated spam, paraphrases) can still exist. If you have time, add a near-duplicate audit using MinHash/SimHash or sentence embeddings; otherwise, report this as a limitation.
+## Train/Inference Preprocessing Skew
 
-## 2) Train/Inference Preprocessing Skew
+If training data is raw but the serving API cleans aggressively (or vice
+versa), evaluation becomes misleading. Production API preprocessing
+(`app/youtube_preprocessor.py`) is shared with dataset preparation via an
+explicit flag so the same pipeline can be applied at both stages. The residual
+requirement is discipline: if classical preprocessing is enabled during
+training it must also be enabled during inference, or skew is reintroduced.
 
-**Risk:** If training data is "raw" but the API cleans aggressively (or vice versa), you get inconsistent behavior and misleading evaluation.
+## Label Noise / Construct Validity
 
-**Repo reality:**
-- Production API preprocessing is `backend/app/youtube_preprocessor.py` (spam/lang filters optional but enabled by default in `backend/app/views.py`).
-- Dataset preparation can apply the same pipeline via `--youtube_preprocess`:
-  `backend/scripts/prepare/prepare_hf_dataset.py`
+Public sentiment datasets contain sarcasm, topic-dependent sentiment words,
+ambiguous examples, and inconsistent label definitions. Conflicting-label
+texts are dropped during preparation. The principal mitigation is the human
+gold set with chance-corrected agreement (Krippendorff's α = 0.9547), which
+lets the thesis report human-grounded performance and bound the share of
+measured error attributable to the automated labelling scheme. The gold set
+was originally sampled from the training split rather than the held-out test
+split; a post-hoc membership audit
+(`research/ci/gold_set_train_membership.py`) found 95/300 items are exact-text
+training-split members, and a held-out-only re-evaluation
+(`results/gold_set/gold_set_evaluation_holdout.md`) shows no material change
+in the headline gold-set figures, so this does not appear to inflate the
+reported numbers.
 
-**Residual gap:** If you enable the *classical* preprocessing (`backend/src/preprocessing/classical.py`) during training (`backend/train_*.py --preprocess`), you must also enable it during inference (engine `preprocess=True`). Otherwise you reintroduce skew.
+## Evaluation Methodology / Conclusion Validity
 
-## 3) Label Noise / Construct Validity
+Common thesis-killers are tuning on the test set, reporting a single split
+without uncertainty, claiming significance without tests, and comparing
+models trained on different preprocessing or splits. Mitigations: no
+hyperparameter was selected on the test set — hyperparameters and the Neutral
+threshold-tuning α were selected on the validation split only, and every
+number reported against the test split is a read-only evaluation of an
+already-fixed configuration. The test split **is** reused across multiple
+independent read-only analyses (ROC-AUC, confusion matrices, coverage-accuracy,
+significance testing, Neutral analysis) at different sample sizes; this is a
+deliberate reuse of a fixed held-out set for descriptive/inferential reporting,
+not test-set tuning, and is disclosed here rather than glossed as "evaluated
+once." Uncertainty is reported via bootstrap confidence intervals on macro-F1
+and ECE, and via Holm-corrected McNemar tests for paired comparison; group-aware
+splitting is used where VideoID is available.
 
-**Risk:** Public sentiment datasets often contain:
-- sarcasm / irony / context dependence,
-- topic-dependent sentiment words,
-- mislabeled or ambiguous examples,
-- inconsistent label definitions ("Neutral" vs "Mixed/Unclear").
+## External Validity (Domain Shift)
 
-**What we did:**
-- Drop texts with conflicting labels in `prepare_hf_dataset.py` (good first-order cleanup).
+A model strong on a large mixed-topic dataset may not generalise to a
+specific target channel, to newer comments (temporal drift), or to
+non-English/code-mixed comments. The metadata-backed domain-slice evaluation
+quantifies the category and country performance spread, and the English-only
+filtering is stated as an explicit external-validity limitation.
 
-**Gap to address for thesis-grade credibility:**
-- Build a small, human-labeled **gold set** (e.g., 300-1000 comments), compute agreement (Cohen's kappa or Krippendorff's alpha), and report performance on it.
-- Script exists to start annotation: `backend/scripts/prepare/create_gold_set.py`
-- Script to evaluate the gold set + agreement: `backend/research/evaluate_gold_set.py`
+## Bias, Ethics, and Data Governance
 
-## 4) Evaluation Methodology / Conclusion Validity
+Language filtering systematically excludes non-English speakers, and
+aggressive regex cleaning can distort dialects, slang, and named entities.
+YouTube comments can contain personal data or hate speech. The thesis
+documents dataset licensing and source, what is stored and retained, and a
+bias-analysis plan across language, topic category, and toxicity proxies.
 
-**Risk:** Common thesis-killers:
-- tuning hyperparameters on the test set,
-- reporting a single split without uncertainty,
-- claiming significance without tests,
-- comparing models trained on different preprocessing/splits.
+## Reproducibility (Engineering Validity)
 
-**What exists in repo:**
-- Metrics runner(s): `backend/research/experiment_runner.py`
-- Statistical tests + bootstrap CI framework: `backend/research/evaluation_framework.py`,
-  `backend/research/evaluation/statistical_tests.py`
+Split provenance is written to metadata, language detection is made
+deterministic via a fixed seed, and the pipeline supports a command log plus
+a timestamped reproducibility bundle (git commit/dirty state, runtime
+metadata, pip-freeze and environment lock files, and SHA-256 artifact
+checksums covering both configuration files and trained model binaries). This
+is what makes the artifact-pinned claims auditable.
 
-**Gaps to close:**
-- Only tune on `val`, evaluate once on `test`.
-- Report uncertainty: bootstrap CI on macro-F1, plus McNemar for paired comparison.
-- If you use group splitting (`VideoID`), use group-aware CV (GroupKFold) for CV experiments.
+## Claims-vs-Code Discipline
 
-## 5) External Validity (Domain Shift)
-
-**Risk:** A model that performs well on a large mixed-topic dataset may not generalize to:
-- your target channel/topics,
-- newer comments (temporal drift),
-- non-English / code-mixed comments (especially if you filter to English).
-
-**Recommended thesis add-ons:**
-- Cross-domain test: evaluate on comments collected from a small set of videos you choose (and label a subset).
-- Report performance degradation vs the benchmark dataset.
-
-## 6) Bias / Ethics / Data Governance
-
-**Risk areas:**
-- Language filtering systematically excludes non-English speakers.
-- Aggressive regex cleaning can disproportionately distort dialects, slang, named entities.
-- YouTube comments can contain PII / hate speech; thesis should include handling & governance.
-
-**Minimum thesis content:**
-- Dataset licensing/source and what is stored.
-- Whether you persist raw comments; if yes, retention policy and anonymization.
-- A short bias analysis plan (even if small): language, topic category, toxicity proxies.
-
-## 7) Reproducibility (Engineering Validity)
-
-**What helps already:**
-- Split provenance is written to `backend/data/split_metadata.json`.
-- Language detection made deterministic via `DetectorFactory.seed` in `backend/app/youtube_preprocessor.py`.
-
-**Implemented mitigation:**
-- `backend/research/run_thesis_pipeline.py` now supports `--command_log` (default: `results/experiment_command_log.txt`) to append exact executed commands.
-- `backend/research/create_repro_bundle.py` creates a timestamped reproducibility bundle with:
-  - `manifest.json` (git commit/dirty state, runtime, artifact metadata),
-  - `commands.txt` / `commands.sh`,
-  - `pip_freeze.txt` / `python_environment.txt`,
-  - `artifacts.sha256` checksums.
-- Bundle defaults also snapshot environment lock files (`requirements.txt`, `requirements-dl.txt`, `Pipfile`, `Pipfile.lock`) and split provenance (`data/split_metadata.json`) when present.
-
-## 8) “Claims vs Code” Gap (Avoid Overclaiming)
-
-**Risk:** `backend/README_THESIS.md` mentions BERT results and extensive evaluation. Make sure every claim in the thesis is backed by:
-- a runnable script in the repo,
-- stored outputs (metrics JSON / plots),
-- and a documented config.
-
-If a model (e.g., BERT fine-tuning) is not implemented end-to-end, either implement it or explicitly scope it out.
-
-**Current repo-specific guidance:**
-- Use `backend/results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.md` for full-test runtime claims.
-- Use `backend/results/runtime/route_a_live_v1/offline_vs_live_reconciliation.md` to explain why the historical offline `ensemble` row is no longer the right live headline.
-- Phrase the headline as either:
-  - best live macro-F1: `meta_learner`
-  - best live calibrated ensemble: `ensemble_nsga2`
-
-## 9) Scope Discipline for Aspect Analysis and Hybrid DL
-
-**Risk:** The repo contains implemented features that are easy to overstate in a
-thesis if they are described too broadly.
-
-**Current repo reality:**
-- `backend/app/aspect_mining.py` provides a keyword-level aspect proxy, not full
-  aspect-based sentiment analysis.
-- `backend/src/sentiment/engines/hybrid_dl_engine.py` supports the runtime
-  model, but it only marks calibration as applied when a pinned `hybrid_dl`
-  temperature row exists. The current pinned runtime does not contain one.
-
-**Safe thesis wording:**
-- Describe the current aspect feature as exploratory aspect extraction /
-  aspect-level proxy reporting, not ABSA.
-- Describe `hybrid_dl` as wired into the runtime, but not calibrated in the
-  current pinned thesis configuration.
+Every claim in the thesis is backed by a runnable script, stored outputs, and
+a documented configuration. Full-test runtime claims cite the live runtime
+benchmark; the historical generic ensemble row is explicitly superseded by
+the offline-vs-live reconciliation. The headline is phrased as either best
+live macro-F1 (meta_learner) or best live calibrated ensemble
+(ensemble_nsga2), and features that are easy to overstate — keyword-level
+aspect extraction, the uncalibrated hybrid_dl runtime, and the gold set's
+train-split sampling frame — are scoped accordingly.

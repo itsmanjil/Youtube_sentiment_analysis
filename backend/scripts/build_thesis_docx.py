@@ -35,6 +35,7 @@ CHAPTERS = [
     ("Chapter 2  Literature Review",                   "THESIS_LITERATURE_REVIEW.md",          True),
     ("Chapter 3  Methodology and Data",                "LABEL_PROVENANCE.md",                  True),
     ("Chapter 3 (continued)  Exploratory Data Analysis", "THESIS_EDA.md",                      True),
+    ("Chapter 3B  System Design and Implementation",   "THESIS_CHAPTER3B_SYSTEM_DESIGN.md",    True),
     ("Chapter 4  Consolidated Evaluation",             "THESIS_EVALUATION_CONSOLIDATED.md",    True),
     ("Chapter 4 (Discussion)  Results Narrative",      "THESIS_ABSTRACT_CHAPTER4_POLISHED.md", True),
     ("Chapter 5  Conclusion and Future Work",          "THESIS_CHAPTER5_CONCLUSION_FUTURE_WORK.md", True),

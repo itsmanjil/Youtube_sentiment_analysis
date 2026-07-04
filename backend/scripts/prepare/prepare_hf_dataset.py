@@ -321,7 +321,11 @@ def main() -> None:
     df = df[use_cols].copy()
 
     # Normalize + validate
+    rows_before_dropna = int(len(df))
     df = df.dropna(subset=[text_col, label_col])
+    nan_rows_dropped = rows_before_dropna - int(len(df))
+    if nan_rows_dropped:
+        print(f"Dropped {nan_rows_dropped} rows with missing text/label before filtering")
     df = df.rename(columns={text_col: "text", label_col: "label"})
     if group_col:
         df = df.rename(columns={group_col: "__group__"})
@@ -463,6 +467,7 @@ def main() -> None:
             "metadata_columns": metadata_columns,
         },
         "dedupe": {
+            "nan_text_or_label_rows_dropped": nan_rows_dropped,
             "conflicting_texts_dropped": conflicting_count,
             "duplicate_text_rows_removed": removed_duplicates,
         },

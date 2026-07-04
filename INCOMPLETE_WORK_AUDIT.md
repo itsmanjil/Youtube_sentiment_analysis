@@ -1,139 +1,137 @@
 # Incomplete Work Audit — YouTube Sentiment Analysis
 
-**Audit date:** 2026-05-21  
+**Audit date:** 2026-06-02 (regenerated)
 **Project:** YouTube sentiment analysis thesis (Django backend + React frontend + ML research pipeline)
+
+> This file was regenerated after the gold-set annotation, live-runtime significance
+> testing, and environment-pinning work were completed. The prior version (dated
+> 2026-05-21) is superseded; items it listed as **Blocked** are now resolved (see below).
 
 ---
 
 ## What Is Complete
 
-Before listing gaps, here is what the project has firmly finished:
-
-- All P0 thesis checklist items — backend passes 40/40 tests, frontend passes 81/81 tests
+- All P0 thesis checklist items — backend passes its test suite, frontend passes its suite
 - Classical ML pipeline (LogReg, SVM, TF-IDF, meta-learner, PSO/NSGA-II ensemble)
 - Full CI research layer: temperature scaling, neuro-fuzzy gate, selective prediction, entropy gating, Pareto front
-- DeBERTa-v3 model artifact saved (`backend/models/transformers/deberta_v3/`)
-- Dual preprocessing path (`preprocess_for_classical` / `preprocess_for_transformer` in `youtube_preprocessor.py`)
-- Transformer factory aliases added (`modernbert`, `deberta_v3`, `xlm_v`, `mdeberta_v3`)
-- `views.py` handles transformer model routing
-- `Search.jsx` exposes transformer model options in the UI
-- All 6 "Should-do" deliverables completed (effect sizes, error characterization, fold variance, seed sensitivity, preprocessing ablation, Pareto SVGs)
-- Leakage audit, provenance schema, domain shift evaluation
+- Dual preprocessing path (`preprocess_for_classical` / `preprocess_for_transformer`)
+- Leakage audit, provenance schema, domain-shift evaluation
 - Threats to validity, ethics section, thesis abstract, viva defense brief
+- **Human gold set — COMPLETE** (see below)
+- **Live-runtime significance testing — COMPLETE** (see below)
+- **Environment pinning — COMPLETE** (see below)
 
 ---
 
-## Incomplete Work
+## Recently Resolved (since the 2026-05-21 audit)
 
-### 1. Human Gold Set — BLOCKED (P1, last critical thesis gap)
+### 1. Human Gold Set — RESOLVED ✅ (was P1 "Blocked")
 
-**Location:** `backend/data/gold_set_annotator_*.csv`
-
-The gold set tooling is fully built, but the actual human annotation has barely begun:
+The 300-item gold set is now fully and independently annotated:
 
 | File | Rows | Labeled | Status |
 |------|------|---------|--------|
-| `gold_set_annotator_1.csv` | 300 | **4** | Annotation barely started |
-| `gold_set_annotator_2.csv` | 300 | **0** | Completely empty |
-| `gold_set_human_reconciled.csv` | — | — | Does not exist yet |
+| `gold_set_annotator_1.csv` | 300 | 300 | Complete |
+| `gold_set_annotator_2.csv` | 300 | 300 | Complete |
+| `gold_set_human_reconciled.csv` | 300 | 300 | Complete (gold_label + is_disputed) |
 
-Because of this, the current gold set evaluation (`results/gold_set/gold_set_evaluation.md`) runs against **silver labels** (auto-annotated by the PSO ensemble), not real human IAA evidence. The result is misleading — `ensemble_pso` scores 1.000 F1 because it was used to generate the labels it is being tested against.
+Inter-annotator agreement (`results/gold_set/iaa_report.md`): **Krippendorff's α = 0.9547,
+Cohen's/Fleiss' κ = 0.9546, 97.0% percent agreement, 9 disputed items excluded.** The
+gold-set model evaluation (`results/gold_set/gold_set_evaluation.md`) now runs against the
+reconciled **human** labels, replacing the earlier circular silver-label result (where
+`ensemble_pso` trivially scored 1.000 F1 because it generated the labels). Against human
+labels the ensemble scores ~0.70 F1 — a credible, non-circular figure.
 
-The `THESIS_CLAIM_ARTIFACT_AUDIT.md` explicitly marks both **"Human-level sentiment accuracy"** and **"Inter-annotator agreement"** as `Blocked`.
+The thesis Chapter 3 §3, Chapter 4 §4.7, and Appendix Table 13 have been updated to report
+this as a **Supported** claim. (Verify a final read-through after any further edits.)
 
-**What needs to be done:**
-```bash
-cd backend
-python scripts/annotate.py --input data/gold_set_template.csv --output data/gold_set_annotator_1.csv
-python scripts/annotate.py --input data/gold_set_template.csv --output data/gold_set_annotator_2.csv
-python scripts/prepare/merge_annotations.py \
-    --annotator_a data/gold_set_annotator_1.csv \
-    --annotator_b data/gold_set_annotator_2.csv \
-    --output data/gold_set_human_reconciled.csv
-python research/ci/gold_set_evaluation.py
-```
+### 2. Live-Runtime Significance Testing — RESOLVED ✅ (was a documented gap)
+
+The earlier draft stated that no paired significance test had been computed for the pinned
+live `ensemble_nsga2` variant. This is now done:
+`results/runtime/route_a_live_v1/live_significance_tests.{md,json}`
+(script: `research/ci/live_significance_tests.py`). Highlights (n = 165,110; 2,000-resample
+paired bootstrap, seed 42; Holm-adjusted McNemar):
+
+- Every reconstructed model validates **exactly** against the pinned benchmark.
+- NSGA-II ensemble ECE vs meta-learner: −0.0111, 95% CI [−0.0126, −0.0084] (**excludes 0**).
+- NSGA-II vs meta-learner macro-F1: tied (CI [−0.0002, +0.0014]).
+- NSGA-II ECE vs logistic regression: tied (CI [−0.0021, +0.0031]).
+- Meta-learner vs logistic regression macro-F1: +0.0017 (CI [+0.0009, +0.0025], significant).
+
+Thesis §4.6 and §4.5 (Discussion) and the Chapter 4/5 limitations have been updated to report
+the NSGA-II calibration advantage as significance-backed rather than descriptive.
+
+### 3. Environment Pinning — RESOLVED ✅
+
+- `backend/requirements.txt` is now pinned to `backend/Pipfile.lock` versions
+  (scikit-learn 1.8.0, numpy 1.26.4, pandas 3.0.0, scipy 1.17.0, Django 5.2.10, …).
+- `.python-version` corrected from `3.8.18` to `3.11`, consistent with the README ("3.11+")
+  and `Pipfile` (`python_version = "3.11"`).
 
 ---
 
-### 2. Three Missing Evaluation Scripts (from Route A Roadmap)
+## Still Open (non-blocking)
 
-**Location:** `backend/research/evaluation/`
+### A. Two evaluation scripts from the Route A roadmap are still absent
 
-The `ROUTE_A_IMPLEMENTATION_ROADMAP.md` lists these as required for full thesis validation. All three are absent:
+`research/evaluation/` contains `ablation.py`, `calibration.py`, `confusion_matrices.py`,
+`domain_shift.py`, `reliability_diagrams.py`, `roc_auc.py`, `statistical_tests.py`.
+`reliability_diagrams.py` is done (`backend/figures/reliability_diagrams.png`,
+used in the docx as Figure 8). Still missing:
 
 | Script | Purpose | Status |
 |--------|---------|--------|
-| `reliability_diagrams.py` | Calibration plots and tables for the thesis | **Missing** |
-| `conformal.py` | Conformal prediction / set-valued evaluation | **Missing** |
-| `human_gold_analysis.py` | Gold-set agreement and error slices | **Missing** |
+| `conformal.py` | Conformal prediction / set-valued evaluation | **Missing** (optional) |
+| `human_gold_analysis.py` | Gold-set error slices | **Missing** (gold set now exists, so this is now feasible) |
 
-The existing `evaluation/` folder only has: `ablation.py`, `calibration.py`, `domain_shift.py`, `statistical_tests.py`.
+### B. `app_api/models.py` is an empty stub (Low)
 
----
+Contains only a placeholder comment. The `app_api` app has a working JWT view and tests but
+no models. Either populate or remove.
 
-### 3. `app_api/models.py` Is Empty
+### C. `backend/tests/` directory tree is empty (Low)
 
-**Location:** `backend/app_api/models.py`
+`tests/unit`, `tests/integration`, `tests/fixtures` exist but contain no files. All real
+tests live in `app/tests.py`, `app_api/tests.py`, `users/tests.py`. Either populate or remove
+the empty scaffold.
 
-The file contains only a placeholder comment and no model definitions. The `app_api` Django app has a working JWT token view and tests, but the models file was never populated. This is not a thesis-blocker but is a dead stub that should either be filled in or intentionally removed.
+### D. Transformer Route A — future work (Medium, intentional)
 
----
+Only a smoke/CPU DeBERTa-v3 benchmark exists; no full-dataset fine-tuned transformer result is
+claimed, and `ROUTE_A_ENCODER_POSITION.md` flags this as future work. The deployed headline is
+deliberately classical-and-ensemble-first. This is stated honestly in the thesis and is not a
+blocker, but it remains the main avenue for future contribution.
 
-### 4. `backend/tests/` Directory Is Completely Empty
+### E. Local cache artifacts (cosmetic)
 
-**Location:** `backend/tests/integration/` and `backend/tests/unit/`
-
-Both subdirectories exist but contain no Python test files. All backend tests currently live in:
-- `backend/app/tests.py` (1,018 lines, 40 tests)
-- `backend/app_api/tests.py` (JWT tests)
-- `backend/users/tests.py` (user profile + auth tests)
-
-The `tests/` folder structure was set up but never populated. Not a blocker, but the empty directory is misleading.
-
----
-
-### 5. Route A Transformer Pipeline — Partially Done, Not Fully Validated
-
-**Status:** DeBERTa-v3 artifact exists (smoke/CPU run only). Full thesis-grade evaluation is flagged as future work.
-
-Specifically:
-
-- Only a **smoke/CPU benchmark** of DeBERTa-v3 has been run — the result files are `deberta_v3_smoke_metrics.json` and `deberta_v3_benchmark_cpu_metrics.json`
-- No full-dataset (10k+) transformer training benchmark exists
-- ModernBERT, XLM-V, and mDeBERTa-v3 have **no saved model artifacts** — only DeBERTa-v3 is saved
-- `ROUTE_A_ENCODER_POSITION.md` explicitly states: *"Route A encoder work is implemented but should remain future work unless rerun with `transformers`, `torch`, and suitable compute"*
-- The `THESIS_CLAIM_ARTIFACT_AUDIT.md` marks "Transformer-first Route A superiority" as **Future work**
-
-The CI modules (NSGA-II, neuro-fuzzy gate) have not been upgraded to use encoder probability cubes — they still operate on classical model outputs as documented in the roadmap.
-
----
-
-### 6. Final Thesis Text Pass Not Confirmed
-
-The `THESIS_FINAL_CHECKLIST.md` lists as its **Suggested Finish Order item #2**:
-
-> *"Do a final thesis-text pass against the pinned runtime artifacts."*
-
-The `thesis.docx` file is present in the repo root but there is no checklist item marking this pass as done. Given the gold set is incomplete and the human IAA evidence is missing, any thesis chapter referencing gold set validation will need updating once annotation is complete.
+Stray `*.cpython-314.pyc` files exist under `__pycache__/` directories from an earlier Python
+3.14 run. They are already covered by `.gitignore` and are **not** git-tracked, so they will
+not be committed; delete locally with
+`find . -path '*__pycache__*' -name '*.pyc' -delete` if desired.
 
 ---
 
 ## Summary Table
 
-| Item | Location | Severity |
-|------|----------|----------|
-| Human gold set annotation (4/300 done, annotator 2 empty) | `data/gold_set_annotator_*.csv` | **High** — explicitly Blocked in audit |
-| Missing: `reliability_diagrams.py`, `conformal.py`, `human_gold_analysis.py` | `research/evaluation/` | Medium — listed in roadmap |
-| `app_api/models.py` empty | `backend/app_api/models.py` | Low — dead stub |
-| `backend/tests/` directory empty | `backend/tests/` | Low — structural gap |
-| Transformer Route A not fully validated (smoke only, no full run) | `results/deberta_v3_*` | Medium — documented as future work |
-| Final thesis text pass against pinned artifacts | `thesis.docx` | Medium — depends on gold set completion |
+| Item | Location | Severity | Status |
+|------|----------|----------|--------|
+| Human gold set + IAA | `data/gold_set_*`, `results/gold_set/` | was High | **Resolved** |
+| Live-runtime significance tests | `results/runtime/route_a_live_v1/live_significance_tests.*` | was Medium | **Resolved** |
+| Dependency pinning + Python version | `requirements.txt`, `.python-version` | was Medium | **Resolved** |
+| Missing `reliability_diagrams.py` / `conformal.py` / `human_gold_analysis.py` | `research/evaluation/` | Low–Medium | Open |
+| `app_api/models.py` empty | `backend/app_api/models.py` | Low | Open |
+| `backend/tests/` empty | `backend/tests/` | Low | Open |
+| Transformer Route A (smoke only) | `results/deberta_v3_*` | Medium | Future work (intentional) |
 
 ---
 
 ## Recommended Finish Order
 
-1. **Complete human gold set annotation** — annotate both CSV files, run merge + IAA, re-run gold set evaluation with real human labels. This is the only P1 item still blocked.
-2. **Do final thesis text pass** — once gold set is done, update any chapter referencing it and verify all claims in `THESIS_CLAIM_ARTIFACT_AUDIT.md` are met.
-3. **Add missing evaluation scripts** — `reliability_diagrams.py` and `conformal.py` if time allows; `human_gold_analysis.py` is needed after gold set is complete anyway.
-4. **Clean up dead stubs** (`app_api/models.py`, empty `tests/` folder) — low effort, keeps the repo tidy.
+1. **Final thesis text read-through** — confirm every gold-set/IAA and significance reference
+   is internally consistent after the recent edits (the contradictions have been fixed; this is
+   a verification pass).
+2. **Add `reliability_diagrams.py`** and drop one reliability diagram into Chapter 4 §4.5.
+3. **(Optional) `conformal.py` and `human_gold_analysis.py`** to deepen the uncertainty/gold-set
+   analysis.
+4. **Clean up dead stubs** (`app_api/models.py`, empty `tests/`).

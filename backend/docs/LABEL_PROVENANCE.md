@@ -26,57 +26,48 @@ are measuring how well your model *replicates the automated labeller*, not
 absolute human-level sentiment accuracy. This distinction must be stated in
 your Methodology and Threats to Validity sections.
 
-## 3. Current Gold Set Status — ACTION REQUIRED
+## 3. Gold Set Status — COMPLETED
 
-The file `backend/data/gold_set_labeled_from_dataset.csv` (300 samples) was
-generated from the dataset but was **not independently re-annotated**. The
-`source_label` and `label` columns are identical across all 300 rows, yielding
-a trivial κ = 1.0 that does not measure real label quality.
+A stratified gold set of 300 comments was independently annotated using a blind
+command-line tool (`scripts/annotate.py`) that presents each comment **without** its
+automated source label (the annotation template contains only `text,label`). Two
+independent annotation passes were collected (`data/gold_set_annotator_1.csv`,
+`data/gold_set_annotator_2.csv`) and reconciled into `data/gold_set_human_reconciled.csv`.
 
-### What This Means
+**Annotator disclosure:** one annotation pass was completed by the thesis
+author and the second by an independent second annotator not otherwise
+involved in model development. Both passes were conducted blind to the
+automated source labels via the same template and tool. The author's pass is
+not fully arms-length in the way a third-party-only annotation would be, and
+this is disclosed as a limitation; the reported Krippendorff's alpha
+nonetheless reflects genuine agreement between two distinct people, not
+self-consistency.
 
-Without genuine independent annotation:
-- You cannot report a meaningful Cohen's Kappa
-- You cannot separate "model error" from "label error" on the gold set
-- Your thesis faces a **construct validity gap** that a committee will identify
+Results (`results/gold_set/iaa_report.md`):
 
-### What To Do
+- Krippendorff's alpha = 0.9547; Cohen's/Fleiss' kappa = 0.9546; percent agreement 97.0%
+- 9 of 300 items had no agreed majority and were marked **disputed** and excluded
+  (291 reconciled gold labels)
+- The reconciled human labels agree with the dataset's automated source labels
+  only **73.5%** (`gold_set_evaluation.json: human_ref.human_vs_source.accuracy
+  = 0.7354`), confirming the gold labels are genuinely human-derived rather
+  than copies of the source scheme. (Do not confuse this with the ~69–70%
+  figure below, which is model-vs-human agreement — a different comparison.)
 
-**Option A — Perform independent re-annotation (Recommended)**
+The reconciled human labels are used as an independent reference that separates label
+error from model error in the gold-set evaluation (`results/gold_set/gold_set_evaluation.md`).
+Against these human labels the models score ~0.70 macro-F1 (a credible, non-circular figure),
+versus an inflated 0.92–0.97 against the silver/auto labels — the contrast is itself reported.
 
-Re-annotate the 300 gold set comments yourself, recording your labels in the
-`label` column while keeping `source_label` as-is. Then re-run:
-
-```bash
-cd backend
-python research/analysis/label_quality_report.py
-```
-
-A κ ≥ 0.60 (Substantial agreement) is the accepted threshold for thesis-grade
-annotation quality (Artstein & Poesio, 2008).
-
-Even with a single annotator, this is valid for a Master's thesis — report it
-as "single-annotator agreement with automated source labels" rather than
-"inter-annotator agreement."
-
-**Option B — Use two annotators**
-
-If you have a colleague available, have them annotate 50–100 comments
-independently, then compute κ between both human annotations. This measures
-true inter-annotator reliability and is the gold standard.
-
-**Option C — Cite the dataset's existing validation**
-
-If time does not allow re-annotation, clearly state in your thesis:
-
-> "Labels were sourced from the AmaanP314/youtube-comment-sentiment dataset,
-> which uses automated annotation. No independent human re-annotation was
-> performed as part of this study. All reported performance metrics therefore
-> measure agreement with the automated labelling scheme rather than absolute
-> human-judged sentiment accuracy. This constitutes a construct validity
-> limitation acknowledged in Section X.X."
-
-Option C is the weakest choice — Option A is achievable in 2–3 hours.
+**Sampling frame note.** The gold set was originally sampled from `train.csv`,
+not the held-out test split. A post-hoc membership audit
+(`research/ci/gold_set_train_membership.py`) found 95/300 items (31.7%) are
+exact-text members of the training split, 26 in validation, 36 in test, 143
+unmatched. Re-running the gold-set evaluation on the 205-item held-out-only
+subset (`results/gold_set/gold_set_evaluation_holdout.md`) shows no material
+change (e.g. `ensemble_pso` macro-F1 0.7042 → 0.7128), so training-set
+memorisation is not inflating the headline gold-set numbers. This is
+reported as a methodological check, not hidden.
 
 ## 4. Data Processing Steps Applied
 
@@ -93,7 +84,20 @@ before splitting (documented in `backend/data/split_metadata.json`):
 | Spam filtered | 34,266 rows |
 | Non-English filtered | 138,590 rows |
 | Too-short filtered | 25,221 rows |
+| NaN text/label dropped | 9,391 rows (see note) |
 | Split strategy | Group-aware by VideoID (prevents topical leakage) |
+
+**Row-accounting note.** 1,032,225 − 1,228 (conflicting) − 12,679 (exact
+duplicate) − 34,266 (spam) − 138,590 (non-English) − 25,221 (too short) =
+820,241, not 810,850. The residual 9,391 rows were dropped by an
+un-instrumented `dropna(subset=[text, label])` step that ran before the
+YouTube-specific filters in `scripts/prepare/prepare_hf_dataset.py`; the
+original pipeline run did not persist this count to
+`split_metadata.json`. The script now records it as
+`dedupe.nan_text_or_label_rows_dropped` for all future runs. For this
+thesis's existing split, the correct statement is that 9,391 rows had a
+missing text or label value and were dropped prior to YouTube-preprocessing,
+not that they are unaccounted for.
 
 ## 5. Final Split Sizes
 
@@ -118,10 +122,10 @@ and class imbalance is not a confound.
 > validation (128,854), and test (165,110) splits using a group-aware strategy
 > by VideoID to prevent topical data leakage. The resulting class distribution
 > is approximately balanced (Negative 35.7%, Positive 33.2%, Neutral 31.1%).
-> Label reliability was assessed by [Option A: re-annotating a stratified
-> gold set of 300 comments, yielding Cohen's κ = X.XX / Option C: the
-> automated label provenance constitutes a construct validity limitation
-> acknowledged in the Threats to Validity section].
+> Label reliability was assessed by re-annotating a stratified gold set of 300
+> comments in two independent, source-label-blind passes, yielding Krippendorff's
+> α = 0.9547 (Cohen's κ = 0.9546; 97.0% agreement); the reconciled human labels
+> serve as an independent reference distinct from the automated source labels.
 
 ## 7. References
 
