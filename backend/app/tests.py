@@ -1,6 +1,7 @@
 import json
 import pickle
 import sys
+from datetime import timedelta
 from types import ModuleType, SimpleNamespace
 from unittest.mock import patch, MagicMock
 import tempfile
@@ -10,6 +11,7 @@ import numpy as np
 from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework.test import APITestCase
 from rest_framework import status
 from googleapiclient.errors import HttpError
@@ -166,6 +168,14 @@ class YouTubeAnalysisAPITests(APITestCase):
             analysis.analysis_meta["runtime_artifacts"]["version"],
             get_runtime_artifact_version(),
         )
+        # 'filtered.total' must mean "comments actually filtered out" (1, the
+        # spam comment) — not len(comments) fetched (4). The frontend
+        # displays this field labeled "Total Filtered"; the two numbers were
+        # previously conflated across different analyze-related endpoints.
+        self.assertEqual(response.data['filtered']['total'], 1)
+        self.assertEqual(response.data['filtered']['spam'], 1)
+        self.assertEqual(response.data['filtered']['language'], 0)
+        self.assertEqual(response.data['filtered']['short'], 0)
 
     @patch('app.views.YouTubeFetcher')
     @patch('app.views.get_sentiment_engine')
@@ -460,6 +470,9 @@ class YouTubeAnalysisAPITests(APITestCase):
             sentiment_data={'Positive': 10, 'Neutral': 0, 'Negative': 0},
             total_comments_analyzed=10,
             analysis_model='LOGREG',
+            filtered_spam_count=2,
+            filtered_language_count=1,
+            filtered_short_count=3,
         )
 
         url = reverse('app:get_youtube_analysis', kwargs={'video_id': 'v1'})
@@ -468,6 +481,11 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['data']['video']['id'], 'v1')
         self.assertEqual(response.data['data']['model_used'], 'LOGREG')
+        # 'filtered.total' must be present and mean "comments actually
+        # filtered out" (2 + 1 + 3 = 6), consistent with the analyze and
+        # get_user_youtube_analyses endpoints — this endpoint previously
+        # omitted the 'total' key entirely.
+        self.assertEqual(response.data['data']['filtered']['total'], 6)
 
     def test_get_single_analysis_exposes_uncertainty_and_calibration_metadata(self):
         video = YouTubeVideo.objects.create(
@@ -699,6 +717,68 @@ class AnalysisJobAsyncAPITests(APITestCase):
         response = self.client.get(status_url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def _make_abandoned_job(self, *, status_value=AnalysisJob.STATUS_RUNNING):
+        """A job whose worker thread died without ever updating it again —
+        `updated_at` is older than settings.STALE_ANALYSIS_JOB_TIMEOUT."""
+        from django.conf import settings as django_settings
+
+        job = AnalysisJob.objects.create(
+            user=self.user, request_params={}, status=status_value
+        )
+        stale_time = timezone.now() - django_settings.STALE_ANALYSIS_JOB_TIMEOUT - timedelta(minutes=1)
+        AnalysisJob.objects.filter(id=job.id).update(updated_at=stale_time)
+        job.refresh_from_db()
+        return job
+
+    def test_polling_a_stale_running_job_self_heals_to_failed(self):
+        job = self._make_abandoned_job()
+
+        status_url = reverse('app:analysis_job_status', kwargs={'job_id': job.id})
+        response = self.client.get(status_url)
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.data['status'], AnalysisJob.STATUS_FAILED)
+        job.refresh_from_db()
+        self.assertEqual(job.status, AnalysisJob.STATUS_FAILED)
+
+    def test_polling_a_fresh_running_job_is_left_alone(self):
+        job = AnalysisJob.objects.create(
+            user=self.user, request_params={}, status=AnalysisJob.STATUS_RUNNING
+        )
+
+        status_url = reverse('app:analysis_job_status', kwargs={'job_id': job.id})
+        response = self.client.get(status_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['status'], AnalysisJob.STATUS_RUNNING)
+        job.refresh_from_db()
+        self.assertEqual(job.status, AnalysisJob.STATUS_RUNNING)
+
+    def test_sweep_stale_jobs_marks_abandoned_jobs_failed_and_leaves_others(self):
+        stale_running = self._make_abandoned_job(status_value=AnalysisJob.STATUS_RUNNING)
+        stale_pending = self._make_abandoned_job(status_value=AnalysisJob.STATUS_PENDING)
+        fresh_running = AnalysisJob.objects.create(
+            user=self.user, request_params={}, status=AnalysisJob.STATUS_RUNNING
+        )
+        already_done = AnalysisJob.objects.create(
+            user=self.user,
+            request_params={},
+            status=AnalysisJob.STATUS_DONE,
+            result={"msg": "ok"},
+        )
+
+        count = AnalysisJob.sweep_stale_jobs()
+
+        self.assertEqual(count, 2)
+        stale_running.refresh_from_db()
+        stale_pending.refresh_from_db()
+        fresh_running.refresh_from_db()
+        already_done.refresh_from_db()
+        self.assertEqual(stale_running.status, AnalysisJob.STATUS_FAILED)
+        self.assertEqual(stale_pending.status, AnalysisJob.STATUS_FAILED)
+        self.assertEqual(fresh_running.status, AnalysisJob.STATUS_RUNNING)
+        self.assertEqual(already_done.status, AnalysisJob.STATUS_DONE)
 
 
 class AnalysisUtilsTests(APITestCase):
@@ -970,6 +1050,84 @@ class YouTubeScraperLikesParsingTests(SimpleTestCase):
         self.assertEqual(parser._parse_likes(7), 7)
 
 
+class YouTubeFetcherErrorHandlingTests(SimpleTestCase):
+    """
+    Regression guard for a fixed API-key leak: `googleapiclient`'s
+    HttpError.__str__/__repr__ always embeds the full request URI, which for
+    this client includes `key=<YOUTUBE_API_KEY>` as a query parameter (the
+    discovery client is built with `developerKey=`). `YouTubeFetcher` must
+    let `HttpError` propagate unmodified rather than re-wrapping it into
+    `RuntimeError(f"...: {str(e)}")`, which would bake the leaking URI into a
+    new exception message and also bypass the caller's (app/views.py)
+    structured, sanitized error classification.
+
+    These tests construct a real `YouTubeFetcher` with `self.youtube` swapped
+    for a mock resource that raises `HttpError` from `.execute()` — unlike
+    `YouTubeAnalysisAPITests`, which mocks the entire `YouTubeFetcher` class
+    and therefore never exercises these methods' real bodies.
+    """
+
+    def _fetcher_with_mock_resource(self):
+        from app.youtube_fetcher import YouTubeFetcher
+
+        with patch.dict("os.environ", {"YOUTUBE_API_KEY": "test-key"}):
+            with patch("app.youtube_fetcher.build") as mock_build:
+                fetcher = YouTubeFetcher()
+        mock_youtube = MagicMock()
+        fetcher.youtube = mock_youtube
+        return fetcher, mock_youtube
+
+    def _http_error_with_leaking_uri(self):
+        resp = MagicMock(status=403)
+        content = b'{"error": {"errors": [{"reason": "quotaExceeded"}], "message": "Quota Exceeded"}}'
+        return HttpError(
+            resp=resp,
+            content=content,
+            uri="https://www.googleapis.com/youtube/v3/videos?id=abc&key=SECRET_API_KEY",
+        )
+
+    def test_fetch_video_metadata_propagates_raw_http_error(self):
+        fetcher, mock_youtube = self._fetcher_with_mock_resource()
+        mock_youtube.videos.return_value.list.return_value.execute.side_effect = (
+            self._http_error_with_leaking_uri()
+        )
+
+        with self.assertRaises(HttpError):
+            fetcher.fetch_video_metadata("abc12345678")
+
+    def test_fetch_comments_propagates_raw_http_error(self):
+        fetcher, mock_youtube = self._fetcher_with_mock_resource()
+        mock_youtube.commentThreads.return_value.list.return_value.execute.side_effect = (
+            self._http_error_with_leaking_uri()
+        )
+
+        with self.assertRaises(HttpError):
+            fetcher.fetch_comments("https://www.youtube.com/watch?v=abc12345678")
+
+    def test_video_metadata_error_never_becomes_a_key_leaking_runtime_error(self):
+        """
+        The specific regression: before the fix, this failure surfaced as
+        `RuntimeError(f"Failed to fetch video metadata: {str(http_error)}")`,
+        and `str(http_error)` contains the API key. Confirm it's no longer
+        wrapped into any exception whose message embeds the URI/key.
+        """
+        fetcher, mock_youtube = self._fetcher_with_mock_resource()
+        mock_youtube.videos.return_value.list.return_value.execute.side_effect = (
+            self._http_error_with_leaking_uri()
+        )
+
+        try:
+            fetcher.fetch_video_metadata("abc12345678")
+            self.fail("Expected an exception")
+        except RuntimeError as exc:
+            self.fail(
+                f"fetch_video_metadata wrapped HttpError into a RuntimeError "
+                f"that may leak the API key: {exc}"
+            )
+        except HttpError:
+            pass  # Expected: the raw HttpError propagates, unwrapped.
+
+
 class TransformerTrainingScriptTests(SimpleTestCase):
     def test_resolve_text_column_prefers_canonical_text(self):
         resolved = resolve_text_column(
@@ -1168,6 +1326,26 @@ class SettingsResolutionTests(SimpleTestCase):
             settings_data["cors_allowed_origins"],
             ["http://localhost:3000", "http://127.0.0.1:3000"],
         )
+
+    def test_force_test_overrides_a_stray_django_env_in_the_environment(self):
+        # Regression guard: the checked-in backend/.env and .env.example both
+        # default to DJANGO_ENV=development for local `runserver` use. Without
+        # `force_test` winning, running `manage.py test` with that `.env` in
+        # place silently resolves to the "development" environment instead of
+        # "test" — re-enabling real throttling and async job mode mid test
+        # run (this broke 10 of 60 tests before the fix).
+        settings_data = resolve_runtime_settings(
+            {"DJANGO_ENV": "development"},
+            force_test=True,
+        )
+        self.assertEqual(settings_data["environment"], "test")
+
+    def test_force_test_false_preserves_existing_behavior(self):
+        settings_data = resolve_runtime_settings(
+            {"DJANGO_ENV": "development"},
+            force_test=False,
+        )
+        self.assertEqual(settings_data["environment"], "development")
 
 
 class RuntimeArtifactResolverTests(SimpleTestCase):

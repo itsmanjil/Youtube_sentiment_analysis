@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Dict
 
@@ -55,6 +56,20 @@ def main() -> None:
     parser.add_argument("--test", required=True, help="Path to test CSV.")
     parser.add_argument("--text-column", default="text", help="Text column name.")
     parser.add_argument("--output", default=None, help="Optional JSON output path.")
+    parser.add_argument(
+        "--max-overlap-rate",
+        type=float,
+        default=0.0,
+        help=(
+            "Fail (exit 1) if any of the val_in_train/test_in_train/test_in_val "
+            "row-level overlap rates exceeds this fraction (default: 0.0 — the "
+            "committed train/val/test splits currently have exactly 0%% "
+            "duplicate-text overlap, so any overlap at all is a regression). "
+            "Pass a higher value to tolerate a small amount of incidental "
+            "short-text collisions (e.g. \"nice video\") if that's judged "
+            "acceptable for a given dataset."
+        ),
+    )
     args = parser.parse_args()
 
     train_path = Path(args.train)
@@ -95,6 +110,24 @@ def main() -> None:
         Path(args.output).write_text(payload, encoding="utf-8")
     else:
         print(payload)
+
+    # This was previously a purely informational report: it always exited 0
+    # regardless of how much overlap it found, so CI would stay green even
+    # with severe train/test duplicate-text leakage — exactly the failure
+    # mode this script exists to catch. Gate on it for real.
+    violations = [
+        (name, stats["rate"])
+        for name, stats in report["overlap_rows"].items()
+        if stats["rate"] > args.max_overlap_rate
+    ]
+    if violations:
+        details = ", ".join(f"{name}={rate:.4%}" for name, rate in violations)
+        print(
+            f"Leakage check failed: overlap rate exceeds --max-overlap-rate "
+            f"({args.max_overlap_rate:.4%}): {details}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 if __name__ == "__main__":

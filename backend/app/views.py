@@ -413,13 +413,24 @@ def _execute_analysis_job(job_id):
             try:
                 fetcher = YouTubeFetcher()
                 video_id = fetcher.extract_video_id(video_url)
+                if video_id is None:
+                    _fail_job(job, f"Invalid YouTube URL: {video_url}", 400)
+                    return
                 video_metadata = fetcher.fetch_video_metadata(video_id)
                 comments_raw = fetcher.fetch_comments(video_url, max_results=max_comments)
             except HttpError as e:
+                # Never surface str(e)/repr(e) here: HttpError.__str__ always
+                # embeds the full request URL (self.uri), which for this
+                # client includes `key=<YOUTUBE_API_KEY>` as a query
+                # parameter — that would leak the shared API key to whichever
+                # user's request happened to fail.
+                status_code = getattr(e.resp, "status", None)
                 try:
                     error_details = json.loads(e.content).get('error', {})
                     reason = error_details.get('errors', [{}])[0].get('reason')
-                    message = error_details.get('message', str(e))
+                    message = error_details.get('message') or (
+                        f"YouTube API request failed with status {status_code}."
+                    )
 
                     if reason == 'quotaExceeded':
                         _fail_job(job, "YouTube API daily quota exceeded. Please try again tomorrow or use scraper mode (use_api: false).", 429); return
@@ -427,16 +438,35 @@ def _execute_analysis_job(job_id):
                         _fail_job(job, "The provided YOUTUBE_API_KEY is invalid. Please check your .env file and ensure it is correct.", 401); return
                     elif reason == 'commentsDisabled':
                         _fail_job(job, "Comments are disabled for this video.", 403); return
-                    elif e.resp.status == 404:
+                    elif status_code == 404:
                         _fail_job(job, "Video not found. Please check the URL.", 404); return
                     else:
                         _fail_job(job, f"A YouTube API error occurred: {message}", 502); return
-                except (json.JSONDecodeError, KeyError, IndexError):
-                     _fail_job(job, f"An unhandled YouTube API error occurred: {str(e)}", 502); return
-            except Exception as e:
+                except (json.JSONDecodeError, KeyError, IndexError, AttributeError):
+                    logger.warning(
+                        "Unparseable YouTube API error response (status=%s)", status_code
+                    )
+                    _fail_job(
+                        job,
+                        f"A YouTube API error occurred (status {status_code}).",
+                        502,
+                    )
+                    return
+            except ValueError as e:
+                # Local configuration error raised by YouTubeFetcher.__init__
+                # (e.g. missing YOUTUBE_API_KEY) — safe to surface verbatim,
+                # it never touches the network or embeds request details.
+                _fail_job(job, str(e), 502)
+                return
+            except Exception:
+                logger.exception(
+                    "Unexpected error using the YouTube API client for user=%s video_url=%s",
+                    getattr(user, "id", None),
+                    video_url,
+                )
                 _fail_job(
                     job,
-                    f"An unexpected error occurred with the YouTube API client: {str(e)}. Please ensure your YOUTUBE_API_KEY is correctly set in the .env file.",
+                    "An unexpected error occurred with the YouTube API client. Please ensure your YOUTUBE_API_KEY is correctly set in the .env file.",
                     502,
                 )
                 return
@@ -535,8 +565,25 @@ def _execute_analysis_job(job_id):
             }
         try:
             engine = get_sentiment_engine(sentiment_model, **engine_kwargs)
-        except (ValueError, RuntimeError, ImportError, FileNotFoundError) as exc:
+        except ValueError as exc:
+            # "Invalid engine type: ..." — safe, no server-side paths.
             _fail_job(job, str(exc), 400)
+            return
+        except (RuntimeError, ImportError, FileNotFoundError) as exc:
+            # These can embed absolute server-side model/vectorizer paths
+            # (see FileNotFoundError raised by e.g. LogRegSentimentEngine.__init__,
+            # and src.sentiment.engines.artifact_utils.format_model_load_error) —
+            # log the real detail server-side and return a generic message.
+            logger.exception(
+                "Failed to construct sentiment engine %s for user=%s",
+                sentiment_model,
+                getattr(user, "id", None),
+            )
+            _fail_job(
+                job,
+                f"The '{sentiment_model}' model is temporarily unavailable. Please try a different model or try again later.",
+                400,
+            )
             return
 
         batch_results = engine.batch_analyze(
@@ -794,7 +841,16 @@ def _execute_analysis_job(job_id):
                 'spam': filter_stats['filtered_spam'],
                 'language': filter_stats['filtered_language'],
                 'short': filter_stats['filtered_short'],
-                'total': filter_stats['total']
+                # Total comments actually filtered out (spam + language +
+                # short) — NOT filter_stats['total'], which is len(comments)
+                # fetched *before* filtering. Keeping this consistent with
+                # get_user_youtube_analyses()'s 'filtered.total' below, since
+                # the frontend displays this field as "Total Filtered".
+                'total': (
+                    filter_stats['filtered_spam']
+                    + filter_stats['filtered_language']
+                    + filter_stats['filtered_short']
+                ),
             },
             'like_weighted_sentiment': like_weighted[:10],
             'top_words_positive': [{'word': w, 'count': c} for w, c in top_positive[:20]],
@@ -839,6 +895,13 @@ def get_analysis_job_status(request, job_id):
         job = AnalysisJob.objects.get(id=job_id, user=request.user)
     except AnalysisJob.DoesNotExist:
         return Response({"msg": "No such analysis job"}, status=404)
+
+    if job.is_stale():
+        # The background thread almost certainly died without ever
+        # recording a result (process restart/crash/OOM) — resolve it now
+        # instead of leaving the client to poll a job that will never move
+        # out of "running"/"pending".
+        job.mark_stale_failed()
 
     if job.status == AnalysisJob.STATUS_DONE:
         return Response({"status": job.status, **job.result})
@@ -892,7 +955,12 @@ def get_youtube_analysis(request, video_id):
                 'filtered': {
                     'spam': analysis.filtered_spam_count,
                     'language': analysis.filtered_language_count,
-                    'short': analysis.filtered_short_count
+                    'short': analysis.filtered_short_count,
+                    'total': (
+                        analysis.filtered_spam_count
+                        + analysis.filtered_language_count
+                        + analysis.filtered_short_count
+                    ),
                 },
                 'confidence_stats': (analysis.analysis_meta or {}).get('confidence_stats'),
                 'uncertainty_stats': (analysis.analysis_meta or {}).get('uncertainty_stats'),

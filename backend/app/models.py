@@ -1,5 +1,7 @@
 
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from users.models import NewUser
 
 
@@ -97,6 +99,48 @@ class AnalysisJob(models.Model):
 
     def __str__(self):
         return f"AnalysisJob({self.id}, {self.status})"
+
+    def is_stale(self, *, now=None):
+        """
+        True if this job is still pending/running but hasn't been touched
+        (see `_execute_analysis_job`'s `updated_at`-bumping saves) in longer
+        than settings.STALE_ANALYSIS_JOB_TIMEOUT — i.e. its worker thread
+        almost certainly died without ever recording a result.
+        """
+        if self.status not in (self.STATUS_PENDING, self.STATUS_RUNNING):
+            return False
+        now = now or timezone.now()
+        return (now - self.updated_at) > settings.STALE_ANALYSIS_JOB_TIMEOUT
+
+    def mark_stale_failed(self):
+        """Mark an abandoned job failed in place. Caller must have already
+        confirmed `is_stale()`."""
+        self.status = self.STATUS_FAILED
+        self.error_message = (
+            "Analysis did not complete — the background worker appears to "
+            "have stopped unexpectedly. Please try again."
+        )
+        self.error_status = 500
+        self.save(update_fields=["status", "error_message", "error_status", "updated_at"])
+
+    @classmethod
+    def sweep_stale_jobs(cls):
+        """
+        Mark every abandoned pending/running job as failed. Returns the
+        number of jobs updated. Safe to call repeatedly/concurrently — each
+        job is only ever touched by whichever caller's `is_stale()` check
+        observes it first, and marking an already-terminal job is a no-op.
+        """
+        cutoff = timezone.now() - settings.STALE_ANALYSIS_JOB_TIMEOUT
+        stale_jobs = cls.objects.filter(
+            status__in=(cls.STATUS_PENDING, cls.STATUS_RUNNING),
+            updated_at__lt=cutoff,
+        )
+        count = 0
+        for job in stale_jobs:
+            job.mark_stale_failed()
+            count += 1
+        return count
 
 
 class YouTubeAnalysis(models.Model):

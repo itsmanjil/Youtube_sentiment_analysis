@@ -12,10 +12,15 @@ load_dotenv(BASE_DIR / ".env")
 
 from core.settings_utils import env_bool, resolve_database_settings, resolve_runtime_settings
 
-DEFAULT_ENVIRONMENT = "test" if "test" in sys.argv else "production"
+_RUNNING_TESTS = "test" in sys.argv
+DEFAULT_ENVIRONMENT = "test" if _RUNNING_TESTS else "production"
 RUNTIME_SETTINGS = resolve_runtime_settings(
     os.environ,
     default_environment=DEFAULT_ENVIRONMENT,
+    # `manage.py test` is unambiguous proof this is a test run — force it
+    # regardless of a stray DJANGO_ENV in the environment/.env file (see
+    # settings_utils._resolve_environment for why this matters).
+    force_test=_RUNNING_TESTS,
 )
 
 
@@ -127,6 +132,17 @@ _IS_TEST_ENVIRONMENT = RUNTIME_SETTINGS["environment"] == "test"
 # not need to poll a background job; override with ANALYSIS_RUN_SYNC=true/false
 # to force either mode (e.g. for local debugging without a worker thread).
 ANALYSIS_RUN_SYNC = env_bool(os.environ, "ANALYSIS_RUN_SYNC", default=_IS_TEST_ENVIRONMENT)
+
+# An AnalysisJob's background thread can die without ever updating the job
+# row (process restart/crash/OOM — the dev autoreloader alone does this on
+# every code change during an in-flight analysis), leaving it stuck at
+# status="running"/"pending" forever with no server-side record of what
+# happened. Any job whose `updated_at` is older than this is treated as
+# abandoned: `get_analysis_job_status` lazily marks it failed the next time
+# anyone polls it, and `manage.py cleanup_stale_analysis_jobs` (run via an
+# external scheduler) sweeps ones nobody ever polls again. Comfortably above
+# the frontend's own ~6 minute poll timeout (Search.jsx: 180 * 2s).
+STALE_ANALYSIS_JOB_TIMEOUT = timedelta(minutes=15)
 
 REST_FRAMEWORK = {
 

@@ -1,6 +1,5 @@
 
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 import os
 import re
 from datetime import datetime
@@ -36,6 +35,15 @@ class YouTubeFetcher:
         return None
 
     def fetch_comments(self, video_url, max_results=100, order='relevance'):
+        # Raises HttpError (uncaught) on any Google API failure — the caller
+        # (app/views.py::_execute_analysis_job) already has structured error
+        # classification (quota/invalid key/comments disabled/not found)
+        # keyed off HttpError.resp.status and the parsed JSON error body, and
+        # sanitizes what reaches the client. Catching and re-wrapping HttpError
+        # here into a plain RuntimeError(str(e)) would both bypass that
+        # classification and leak the request URL (HttpError.__str__ embeds
+        # `self.uri`, which for this client always includes `key=<API_KEY>`
+        # as a query parameter) straight into an exception message.
         video_id = self.extract_video_id(video_url)
         if not video_id:
             raise ValueError(f"Invalid YouTube URL: {video_url}")
@@ -43,121 +51,107 @@ class YouTubeFetcher:
         comments = []
         next_page_token = None
 
-        try:
-            while len(comments) < max_results:
-                # Fetch comment threads (top-level comments)
-                request = self.youtube.commentThreads().list(
-                    part='snippet,replies',
-                    videoId=video_id,
-                    maxResults=min(100, max_results - len(comments)),
-                    pageToken=next_page_token,
-                    textFormat='plainText',
-                    order=order
-                )
-                response = request.execute()
-                self.quota_used += 1  # 1 unit per request
+        while len(comments) < max_results:
+            # Fetch comment threads (top-level comments)
+            request = self.youtube.commentThreads().list(
+                part='snippet,replies',
+                videoId=video_id,
+                maxResults=min(100, max_results - len(comments)),
+                pageToken=next_page_token,
+                textFormat='plainText',
+                order=order
+            )
+            response = request.execute()
+            self.quota_used += 1  # 1 unit per request
 
-                for item in response['items']:
-                    top_comment = item['snippet']['topLevelComment']['snippet']
+            for item in response['items']:
+                top_comment = item['snippet']['topLevelComment']['snippet']
 
-                    comment_data = {
-                        'text': top_comment['textDisplay'],
-                        'author': top_comment['authorDisplayName'],
-                        'likes': top_comment['likeCount'],
-                        'published_at': top_comment['publishedAt'],
-                        'reply_count': item['snippet']['totalReplyCount'],
-                        'is_reply': False,
-                        'video_id': video_id,
-                        'comment_id': item['snippet']['topLevelComment']['id']
-                    }
-                    comments.append(comment_data)
+                comment_data = {
+                    'text': top_comment['textDisplay'],
+                    'author': top_comment['authorDisplayName'],
+                    'likes': top_comment['likeCount'],
+                    'published_at': top_comment['publishedAt'],
+                    'reply_count': item['snippet']['totalReplyCount'],
+                    'is_reply': False,
+                    'video_id': video_id,
+                    'comment_id': item['snippet']['topLevelComment']['id']
+                }
+                comments.append(comment_data)
 
-                    # Fetch replies if they exist
-                    if 'replies' in item:
-                        for reply in item['replies']['comments']:
-                            if len(comments) >= max_results:
-                                break
+                # Fetch replies if they exist
+                if 'replies' in item:
+                    for reply in item['replies']['comments']:
+                        if len(comments) >= max_results:
+                            break
 
-                            reply_snippet = reply['snippet']
-                            reply_data = {
-                                'text': reply_snippet['textDisplay'],
-                                'author': reply_snippet['authorDisplayName'],
-                                'likes': reply_snippet['likeCount'],
-                                'published_at': reply_snippet['publishedAt'],
-                                'reply_count': 0,
-                                'is_reply': True,
-                                'video_id': video_id,
-                                'comment_id': reply['id']
-                            }
-                            comments.append(reply_data)
+                        reply_snippet = reply['snippet']
+                        reply_data = {
+                            'text': reply_snippet['textDisplay'],
+                            'author': reply_snippet['authorDisplayName'],
+                            'likes': reply_snippet['likeCount'],
+                            'published_at': reply_snippet['publishedAt'],
+                            'reply_count': 0,
+                            'is_reply': True,
+                            'video_id': video_id,
+                            'comment_id': reply['id']
+                        }
+                        comments.append(reply_data)
 
-                    if len(comments) >= max_results:
-                        break
-
-                next_page_token = response.get('nextPageToken')
-                if not next_page_token:
+                if len(comments) >= max_results:
                     break
 
-            return comments[:max_results]
+            next_page_token = response.get('nextPageToken')
+            if not next_page_token:
+                break
 
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise RuntimeError("YouTube API quota exceeded or API key invalid")
-            elif e.resp.status == 404:
-                raise RuntimeError(f"Video not found: {video_id}")
-            elif e.resp.status == 400:
-                raise RuntimeError(f"Invalid request: {str(e)}")
-            else:
-                raise RuntimeError(f"YouTube API error: {str(e)}")
+        return comments[:max_results]
 
     def fetch_video_metadata(self, video_id):
-        try:
-            request = self.youtube.videos().list(
-                part='snippet,statistics',
-                id=video_id
-            )
-            response = request.execute()
-            self.quota_used += 1
+        # Raises HttpError (uncaught) on failure — see the comment at the top
+        # of fetch_comments() for why this must not be wrapped into a
+        # RuntimeError(str(e)) here.
+        request = self.youtube.videos().list(
+            part='snippet,statistics',
+            id=video_id
+        )
+        response = request.execute()
+        self.quota_used += 1
 
-            if not response['items']:
-                return None
+        if not response['items']:
+            return None
 
-            item = response['items'][0]
-            snippet = item['snippet']
-            statistics = item['statistics']
+        item = response['items'][0]
+        snippet = item['snippet']
+        statistics = item['statistics']
 
-            return {
-                'title': snippet['title'],
-                'description': snippet['description'],
-                'channel': snippet['channelTitle'],
-                'channel_id': snippet['channelId'],
-                'published_at': snippet['publishedAt'],
-                'view_count': int(statistics.get('viewCount', 0)),
-                'like_count': int(statistics.get('likeCount', 0)),
-                'comment_count': int(statistics.get('commentCount', 0)),
-                'thumbnail_url': snippet['thumbnails']['high']['url']
-            }
-
-        except HttpError as e:
-            raise RuntimeError(f"Failed to fetch video metadata: {str(e)}")
+        return {
+            'title': snippet['title'],
+            'description': snippet['description'],
+            'channel': snippet['channelTitle'],
+            'channel_id': snippet['channelId'],
+            'published_at': snippet['publishedAt'],
+            'view_count': int(statistics.get('viewCount', 0)),
+            'like_count': int(statistics.get('likeCount', 0)),
+            'comment_count': int(statistics.get('commentCount', 0)),
+            'thumbnail_url': snippet['thumbnails']['high']['url']
+        }
 
     def fetch_channel_videos(self, channel_id, max_results=10):
-        try:
-            request = self.youtube.search().list(
-                part='id',
-                channelId=channel_id,
-                maxResults=max_results,
-                order='date',
-                type='video'
-            )
-            response = request.execute()
-            self.quota_used += 100  # Search costs 100 units
+        # Raises HttpError (uncaught) on failure — see the comment at the top
+        # of fetch_comments() for why this must not be wrapped into a
+        # RuntimeError(str(e)) here.
+        request = self.youtube.search().list(
+            part='id',
+            channelId=channel_id,
+            maxResults=max_results,
+            order='date',
+            type='video'
+        )
+        response = request.execute()
+        self.quota_used += 100  # Search costs 100 units
 
-            video_ids = [item['id']['videoId'] for item in response['items']]
-            return video_ids
-
-        except HttpError as e:
-            raise RuntimeError(f"Failed to fetch channel videos: {str(e)}")
+        return [item['id']['videoId'] for item in response['items']]
 
     def get_quota_used(self):
         return self.quota_used

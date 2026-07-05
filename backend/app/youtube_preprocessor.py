@@ -245,9 +245,16 @@ class YouTubePreprocessor:
                     min_words=1,
                     emoji_mode=kwargs.get('emoji_mode', 'convert'),
                 )
+                # Fall back to '' (not the other profile's `processed_text`)
+                # when a profile-specific re-clean comes back empty: mixing
+                # in the other profile's formatting (e.g. transformer-style
+                # text with case/punctuation intact, into a "classical"
+                # field) would corrupt consumers that assume
+                # processed_text_classical is always lowercased/alpha-only
+                # (the word-cloud in views.py and app/aspect_mining.py).
                 comment_copy['processed_text'] = processed_text
-                comment_copy['processed_text_classical'] = classical_text or processed_text
-                comment_copy['processed_text_transformer'] = transformer_text or processed_text
+                comment_copy['processed_text_classical'] = classical_text or ''
+                comment_copy['processed_text_transformer'] = transformer_text or ''
                 comment_copy['metadata'] = metadata
                 processed.append(comment_copy)
                 stats['processed'] += 1

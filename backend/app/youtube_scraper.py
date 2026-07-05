@@ -285,7 +285,16 @@ class YouTubeScraper:
                     "No comments found. The video may have comments disabled, "
                     "be age-restricted, or the scraper may have been blocked."
                 )
-            raise RuntimeError(f"Scraper error: {str(e)}")
+            # Don't pass the raw exception text to callers (and from there,
+            # to the API client) — yt-dlp/youtube-comment-downloader
+            # exceptions can embed local paths or other internals that
+            # aren't meant for API consumers. Log the real detail server-side
+            # instead.
+            logger.warning("Scraper error for video %s: %s", video_id, e)
+            raise RuntimeError(
+                "The video could not be fetched. It may be private, "
+                "region-locked, or the scraper may have been blocked."
+            )
 
     def fetch_video_metadata(self, video_id):
         """

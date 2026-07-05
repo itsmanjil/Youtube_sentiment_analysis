@@ -40,7 +40,19 @@ def env_list(
 def _resolve_environment(
     env: Mapping[str, str],
     default_environment: str = "production",
+    force_test: bool = False,
 ) -> str:
+    # `force_test` is set when `manage.py test` is literally the running
+    # command (see settings.py: `"test" in sys.argv`) — that's unambiguous
+    # proof this is a test run, so it must win over a stray DJANGO_ENV in a
+    # developer's local `.env` (the checked-in `.env`/`.env.example` both
+    # default to DJANGO_ENV=development for local `runserver` use). Without
+    # this override, running the documented `manage.py test` command with
+    # the documented `.env` setup silently resolves to a non-test
+    # environment, which re-enables real throttling and async job mode
+    # mid-test-suite and breaks tests that assert on direct response bodies.
+    if force_test:
+        return "test"
     value = env.get("DJANGO_ENV", env.get("ENVIRONMENT", default_environment))
     normalized = (value or default_environment).strip().lower()
     return normalized or default_environment
@@ -49,8 +61,11 @@ def _resolve_environment(
 def resolve_runtime_settings(
     env: Mapping[str, str],
     default_environment: str = "production",
+    force_test: bool = False,
 ) -> dict[str, object]:
-    environment = _resolve_environment(env, default_environment=default_environment)
+    environment = _resolve_environment(
+        env, default_environment=default_environment, force_test=force_test
+    )
     debug = env_bool(env, "DEBUG", default=environment in LOCAL_ENVIRONMENTS)
 
     secret_key = (env.get("SECRET_KEY") or "").strip()
