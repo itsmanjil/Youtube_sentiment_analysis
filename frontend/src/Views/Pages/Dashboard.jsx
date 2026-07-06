@@ -485,12 +485,14 @@ function Dashboard(props) {
         {hasSearched && (
           <div className="container-fluid py-4">
             <div className="row">
-              <h6>Analysis results for: {videoTitle}</h6>
-              {videoData && (
-                <p style={{ fontSize: "14px", color: "#666" }}>
-                  Channel: {videoData.channel} | Views: {videoData.view_count?.toLocaleString()} | Likes: {videoData.like_count?.toLocaleString()}
-                </p>
-              )}
+              <div className="col-12 text-break">
+                <h6>Analysis results for: {videoTitle}</h6>
+                {videoData && (
+                  <p style={{ fontSize: "14px", color: "#666" }}>
+                    Channel: {videoData.channel} | Views: {videoData.view_count?.toLocaleString()} | Likes: {videoData.like_count?.toLocaleString()}
+                  </p>
+                )}
+              </div>
               <div className="col-xl-3 col-sm-6 mb-xl-0 mb-4">
                 <div className="card">
                   <div className="card-header p-3 pt-2">
