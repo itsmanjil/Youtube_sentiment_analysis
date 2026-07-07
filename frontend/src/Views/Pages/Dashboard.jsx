@@ -31,9 +31,15 @@ import {
 import axiosInstance from "../../axios";
 import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
+import { SENTIMENT_COLORS, SENTIMENT_TINTS } from "../../utils/sentimentColors";
+import usePageTitle from "../../utils/usePageTitle";
 
-// custom label for pie chart
-const COLORS = ["#FF0000", "#0000FF", "#008001"];
+// Pie/bar cell colors in sentimentArray order: Negative, Neutral, Positive.
+const COLORS = [
+  SENTIMENT_COLORS.Negative,
+  SENTIMENT_COLORS.Neutral,
+  SENTIMENT_COLORS.Positive,
+];
 
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({
@@ -62,6 +68,7 @@ const renderCustomizedLabel = ({
   );
 };
 function Dashboard(props) {
+  usePageTitle("Dashboard");
   const navigate = useNavigate();
   const location = useLocation();
   const { authToken } = useContext(AuthContext);
@@ -377,6 +384,7 @@ function Dashboard(props) {
                     type="button"
                     className="nav-link text-body p-0"
                     id="iconNavbarSidenav"
+                    aria-label="Toggle sidebar navigation"
                     style={{ border: "none", background: "transparent" }}
                   >
                     <div className="sidenav-toggler-inner">
@@ -432,15 +440,15 @@ function Dashboard(props) {
                       </div>
                       <div className="col-xl-3 col-md-6 mb-3">
                         <div className="text-center p-3" style={{ backgroundColor: "white", borderRadius: "8px" }}>
-                          <i className="fas fa-smile" style={{ fontSize: "28px", color: "#2ecc71" }}></i>
-                          <h3 className="mt-2 mb-0" style={{ color: "#2ecc71" }}>{userStats.avgPositive}%</h3>
+                          <i className="fas fa-smile" style={{ fontSize: "28px", color: SENTIMENT_COLORS.Positive }}></i>
+                          <h3 className="mt-2 mb-0" style={{ color: SENTIMENT_COLORS.Positive }}>{userStats.avgPositive}%</h3>
                           <p className="text-sm text-muted mb-0">Avg Positive</p>
                         </div>
                       </div>
                       <div className="col-xl-3 col-md-6 mb-3">
                         <div className="text-center p-3" style={{ backgroundColor: "white", borderRadius: "8px" }}>
-                          <i className="fas fa-frown" style={{ fontSize: "28px", color: "#e74c3c" }}></i>
-                          <h3 className="mt-2 mb-0" style={{ color: "#e74c3c" }}>{userStats.avgNegative}%</h3>
+                          <i className="fas fa-frown" style={{ fontSize: "28px", color: SENTIMENT_COLORS.Negative }}></i>
+                          <h3 className="mt-2 mb-0" style={{ color: SENTIMENT_COLORS.Negative }}>{userStats.avgNegative}%</h3>
                           <p className="text-sm text-muted mb-0">Avg Negative</p>
                         </div>
                       </div>
@@ -691,7 +699,7 @@ function Dashboard(props) {
                                 <p className="text-xs text-muted mb-0">Mean Entropy</p>
                               </div>
                               <div className="col-6">
-                                <h5 className="mb-0" style={{ color: uncertaintyStats.high_uncertainty_ratio > 0.3 ? "#e74c3c" : "#2ecc71" }}>
+                                <h5 className="mb-0" style={{ color: uncertaintyStats.high_uncertainty_ratio > 0.3 ? SENTIMENT_COLORS.Negative : SENTIMENT_COLORS.Positive }}>
                                   {(uncertaintyStats.high_uncertainty_ratio * 100).toFixed(1)}%
                                 </h5>
                                 <p className="text-xs text-muted mb-0">High Uncertainty</p>
@@ -893,6 +901,7 @@ function Dashboard(props) {
                             <button
                               onClick={lineDownload}
                               className="fas fa-download"
+                              aria-label="Download sentiment timeline chart as PNG"
                               style={{
                                 margin: "15px",
                                 border: "none",
@@ -931,7 +940,8 @@ function Dashboard(props) {
                               scaleToFit="true"
                               verticalAnchor="start"
                               textAnchor="end"
-                              interval={0}
+                              interval="preserveStartEnd"
+                              minTickGap={32}
                               angle="-18"
                               tick={{ fontSize: "12px" }}
                               // axisLine={false}
@@ -956,19 +966,24 @@ function Dashboard(props) {
                             <Line
                               type="monotone"
                               dataKey="positive"
-                              stroke="#008001"
+                              stroke={SENTIMENT_COLORS.Positive}
+                              strokeWidth={2}
                               activeDot={{ r: 8 }}
                             />
                             <Line
                               type="monotone"
                               dataKey="negative"
-                              stroke="#FF0000"
+                              stroke={SENTIMENT_COLORS.Negative}
+                              strokeWidth={2}
+                              strokeDasharray="6 3"
                               activeDot={{ r: 8 }}
                             />
                             <Line
                               type="monotone"
                               dataKey="neutral"
-                              stroke="#0000FF"
+                              stroke={SENTIMENT_COLORS.Neutral}
+                              strokeWidth={2}
+                              strokeDasharray="2 3"
                               activeDot={{ r: 8 }}
                             />
                           </LineChart>
@@ -997,6 +1012,7 @@ function Dashboard(props) {
                             <button
                               onClick={pieDownload}
                               className="fas fa-download"
+                              aria-label="Download sentiment pie chart as PNG"
                               style={{
                                 margin: "15px",
                                 border: "none",
@@ -1039,21 +1055,21 @@ function Dashboard(props) {
                             <li>
                               <i
                                 className="fas fa-circle"
-                                style={{ color: "#FF0000" }}
+                                style={{ color: SENTIMENT_COLORS.Negative }}
                               ></i>{" "}
                               : Negative
                             </li>
                             <li>
                               <i
                                 className="fas fa-circle"
-                                style={{ color: "#0000FF" }}
+                                style={{ color: SENTIMENT_COLORS.Neutral }}
                               ></i>{" "}
                               : Neutral
                             </li>
                             <li>
                               <i
                                 className="fas fa-circle"
-                                style={{ color: "#008001" }}
+                                style={{ color: SENTIMENT_COLORS.Positive }}
                               ></i>{" "}
                               : Positive
                             </li>
@@ -1120,7 +1136,7 @@ function Dashboard(props) {
                       <div className="row">
                         {/* Top Positive Comments */}
                         <div className="col-md-6">
-                          <h6 className="text-success mb-3">
+                          <h6 className="mb-3" style={{ color: SENTIMENT_COLORS.Positive }}>
                             <i className="fas fa-thumbs-up"></i> Top Positive Comments
                           </h6>
                           {topComments
@@ -1131,8 +1147,8 @@ function Dashboard(props) {
                                 key={index}
                                 className="card mb-3"
                                 style={{
-                                  backgroundColor: "#f0f9f0",
-                                  border: "1px solid #d4edda",
+                                  backgroundColor: SENTIMENT_TINTS.Positive.bg,
+                                  border: `1px solid ${SENTIMENT_TINTS.Positive.border}`,
                                 }}
                               >
                                 <div className="card-body p-3">
@@ -1146,7 +1162,7 @@ function Dashboard(props) {
                                     <span
                                       className="badge"
                                       style={{
-                                        backgroundColor: "#28a745",
+                                        backgroundColor: SENTIMENT_TINTS.Positive.text,
                                         color: "white",
                                       }}
                                     >
@@ -1164,7 +1180,7 @@ function Dashboard(props) {
 
                         {/* Top Negative Comments */}
                         <div className="col-md-6">
-                          <h6 className="text-danger mb-3">
+                          <h6 className="mb-3" style={{ color: SENTIMENT_COLORS.Negative }}>
                             <i className="fas fa-thumbs-down"></i> Top Negative Comments
                           </h6>
                           {topComments
@@ -1175,8 +1191,8 @@ function Dashboard(props) {
                                 key={index}
                                 className="card mb-3"
                                 style={{
-                                  backgroundColor: "#fff0f0",
-                                  border: "1px solid #f5c6cb",
+                                  backgroundColor: SENTIMENT_TINTS.Negative.bg,
+                                  border: `1px solid ${SENTIMENT_TINTS.Negative.border}`,
                                 }}
                               >
                                 <div className="card-body p-3">
@@ -1190,7 +1206,7 @@ function Dashboard(props) {
                                     <span
                                       className="badge"
                                       style={{
-                                        backgroundColor: "#dc3545",
+                                        backgroundColor: SENTIMENT_TINTS.Negative.text,
                                         color: "white",
                                       }}
                                     >
@@ -1228,15 +1244,15 @@ function Dashboard(props) {
                         {/* Positive Words */}
                         {topWordsPositive.length > 0 && (
                           <div className="col-md-6">
-                            <h6 className="text-success mb-3">
+                            <h6 className="mb-3" style={{ color: SENTIMENT_COLORS.Positive }}>
                               <i className="fas fa-smile"></i> Positive Comment Keywords
                             </h6>
                             <div
                               style={{
-                                backgroundColor: "#f8fff8",
+                                backgroundColor: SENTIMENT_TINTS.Positive.bg,
                                 padding: "20px",
                                 borderRadius: "8px",
-                                border: "1px solid #d4edda",
+                                border: `1px solid ${SENTIMENT_TINTS.Positive.border}`,
                                 minHeight: "200px",
                               }}
                             >
@@ -1247,7 +1263,7 @@ function Dashboard(props) {
                                     key={index}
                                     style={{
                                       fontSize: `${fontSize}px`,
-                                      color: "#28a745",
+                                      color: SENTIMENT_TINTS.Positive.text,
                                       fontWeight: "500",
                                       margin: "5px",
                                       display: "inline-block",
@@ -1266,15 +1282,15 @@ function Dashboard(props) {
                         {/* Negative Words */}
                         {topWordsNegative.length > 0 && (
                           <div className="col-md-6">
-                            <h6 className="text-danger mb-3">
+                            <h6 className="mb-3" style={{ color: SENTIMENT_COLORS.Negative }}>
                               <i className="fas fa-frown"></i> Negative Comment Keywords
                             </h6>
                             <div
                               style={{
-                                backgroundColor: "#fff8f8",
+                                backgroundColor: SENTIMENT_TINTS.Negative.bg,
                                 padding: "20px",
                                 borderRadius: "8px",
-                                border: "1px solid #f5c6cb",
+                                border: `1px solid ${SENTIMENT_TINTS.Negative.border}`,
                                 minHeight: "200px",
                               }}
                             >
@@ -1285,7 +1301,7 @@ function Dashboard(props) {
                                     key={index}
                                     style={{
                                       fontSize: `${fontSize}px`,
-                                      color: "#dc3545",
+                                      color: SENTIMENT_TINTS.Negative.text,
                                       fontWeight: "500",
                                       margin: "5px",
                                       display: "inline-block",
