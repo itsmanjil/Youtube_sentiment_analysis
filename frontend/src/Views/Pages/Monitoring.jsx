@@ -4,8 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
 import axiosInstance from "../../axios";
+import { SENTIMENT_COLORS, SENTIMENT_TINTS } from "../../utils/sentimentColors";
+import usePageTitle from "../../utils/usePageTitle";
 
 function Monitoring() {
+  usePageTitle("Monitoring");
   const navigate = useNavigate();
   const { authToken } = useContext(AuthContext);
 
@@ -169,13 +172,6 @@ function Monitoring() {
     navigate("/dashboard", { state: fallbackState });
   };
 
-  // Sentiment color coding
-  const getSentimentColor = (sentiment) => {
-    if (sentiment === "Positive") return "#008001";
-    if (sentiment === "Negative") return "#FF0000";
-    return "#0000FF";
-  };
-
   // Get dominant sentiment
   const getDominantSentiment = (sentimentData) => {
     const positive = sentimentData?.Positive || 0;
@@ -252,6 +248,7 @@ function Monitoring() {
                     type="button"
                     className="nav-link text-body p-0"
                     id="iconNavbarSidenav"
+                    aria-label="Toggle sidebar navigation"
                     style={{ border: "none", background: "transparent" }}
                   >
                     <div className="sidenav-toggler-inner">
@@ -303,7 +300,7 @@ function Monitoring() {
                 <div className="card-header p-3 pt-2">
                   <div className="text-left pt-1">
                     <p className="text-sm mb-0 text-capitalize">Avg Positive %</p>
-                    <h4 className="mb-0" style={{ color: "#008001" }}>
+                    <h4 className="mb-0" style={{ color: SENTIMENT_COLORS.Positive }}>
                       {stats.avgPositive}%
                     </h4>
                   </div>
@@ -316,7 +313,7 @@ function Monitoring() {
                 <div className="card-header p-3 pt-2">
                   <div className="text-left pt-1">
                     <p className="text-sm mb-0 text-capitalize">Avg Negative %</p>
-                    <h4 className="mb-0" style={{ color: "#FF0000" }}>
+                    <h4 className="mb-0" style={{ color: SENTIMENT_COLORS.Negative }}>
                       {stats.avgNegative}%
                     </h4>
                   </div>
@@ -429,8 +426,9 @@ function Monitoring() {
                                     <span
                                       className="badge"
                                       style={{
-                                        backgroundColor: "#008001",
-                                        color: "white",
+                                        backgroundColor: SENTIMENT_TINTS.Positive.bg,
+                                        color: SENTIMENT_TINTS.Positive.text,
+                                        border: `1px solid ${SENTIMENT_TINTS.Positive.border}`,
                                         marginRight: "5px",
                                       }}
                                     >
@@ -441,8 +439,9 @@ function Monitoring() {
                                     <span
                                       className="badge"
                                       style={{
-                                        backgroundColor: "#FF0000",
-                                        color: "white",
+                                        backgroundColor: SENTIMENT_TINTS.Negative.bg,
+                                        color: SENTIMENT_TINTS.Negative.text,
+                                        border: `1px solid ${SENTIMENT_TINTS.Negative.border}`,
                                         marginRight: "5px",
                                       }}
                                     >
@@ -453,8 +452,9 @@ function Monitoring() {
                                     <span
                                       className="badge"
                                       style={{
-                                        backgroundColor: "#0000FF",
-                                        color: "white",
+                                        backgroundColor: SENTIMENT_TINTS.Neutral.bg,
+                                        color: SENTIMENT_TINTS.Neutral.text,
+                                        border: `1px solid ${SENTIMENT_TINTS.Neutral.border}`,
                                         marginRight: "5px",
                                       }}
                                     >
@@ -471,7 +471,7 @@ function Monitoring() {
                                   {analysis.confidence_stats && (
                                     <div className="text-center mb-2">
                                       <p className="text-xs text-muted mb-0">Confidence</p>
-                                      <p className="text-sm mb-0" style={{ fontWeight: "bold", color: "#3498db" }}>
+                                      <p className="text-sm mb-0" style={{ fontWeight: "bold", color: SENTIMENT_COLORS.Neutral }}>
                                         {((analysis.confidence_stats.mean || 0) * 100).toFixed(0)}%
                                       </p>
                                     </div>
@@ -483,7 +483,7 @@ function Monitoring() {
                                         className="text-sm mb-0"
                                         style={{
                                           fontWeight: "bold",
-                                          color: analysis.uncertainty_stats.high_uncertainty_ratio > 0.3 ? "#e74c3c" : "#2ecc71",
+                                          color: analysis.uncertainty_stats.high_uncertainty_ratio > 0.3 ? SENTIMENT_COLORS.Negative : SENTIMENT_COLORS.Positive,
                                         }}
                                       >
                                         {((analysis.uncertainty_stats.high_uncertainty_ratio || 0) * 100).toFixed(0)}%
@@ -507,7 +507,8 @@ function Monitoring() {
                                     style={{
                                       padding: "10px",
                                       borderRadius: "8px",
-                                      backgroundColor: getSentimentColor(dominantSentiment) + "20",
+                                      backgroundColor: (SENTIMENT_TINTS[dominantSentiment] || SENTIMENT_TINTS.Neutral).bg,
+                                      border: `1px solid ${(SENTIMENT_TINTS[dominantSentiment] || SENTIMENT_TINTS.Neutral).border}`,
                                     }}
                                   >
                                     <p className="text-xs mb-0" style={{ fontWeight: "bold" }}>
@@ -516,7 +517,7 @@ function Monitoring() {
                                     <p
                                       className="text-sm mb-0"
                                       style={{
-                                        color: getSentimentColor(dominantSentiment),
+                                        color: (SENTIMENT_TINTS[dominantSentiment] || SENTIMENT_TINTS.Neutral).text,
                                         fontWeight: "bold",
                                       }}
                                     >
