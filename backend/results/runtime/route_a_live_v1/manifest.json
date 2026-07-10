@@ -1,17 +1,19 @@
 {
  "version": "route_a_live_v1",
  "created_at": "2026-04-02",
+ "updated_at": "2026-07-10",
+ "update_note": "Re-pinned temperature_scaling, pso_ensemble_weights, neuro_fuzzy_gate after fixing: (1) temperature-scaling keep/discard gated on test ECE instead of validation ECE (leakage), (2) a single shared ensemble temperature applied to both PSO and NSGA-II variants instead of a per-variant fit, (3) stale first-commit PSO weights (val macro-F1 0.7617, impossible on this corpus), (4) base-model engines built with calibrate=True inside ensemble/fuzzy/gate-fitting code paths, feeding weight/gate fitting a distribution different from what was served. multi_objective_ensemble.json (NSGA-II knee weights) is unchanged -- only its calibration/temperature and re-derived benchmark numbers moved.",
  "description": "Pinned live runtime artifacts for thesis-facing inference.",
  "artifacts": {
   "temperature_scaling": {
    "path": "temperature_scaling.json",
    "source_path": "results/temperature_scaling.json",
-   "sha256": "f8dc0b048c3d12860e0c83881344e4a8a9b9b7b62750ee73798654e52696e565"
+   "sha256": "015be222fc0f3f4a6c1df7092bb07273b5b8b906c3d6f8adcff206dd962be8d0"
   },
   "pso_ensemble_weights": {
    "path": "pso_ensemble_weights.json",
    "source_path": "results/pso_ensemble_weights.json",
-   "sha256": "52eb7ae6ce95636359b09678ce06afe49325f5a7dfa5773d10a064970716f9b6"
+   "sha256": "fb4d2ea61c3039d48cafb9f23e07ad5fd6763817f6dfc4f1b429e919e1076531"
   },
   "multi_objective_ensemble": {
    "path": "multi_objective_ensemble.json",
@@ -21,7 +23,7 @@
   "neuro_fuzzy_gate": {
    "path": "neuro_fuzzy_gate.json",
    "source_path": "results/neuro_fuzzy_gate.json",
-   "sha256": "ca7e97f032283104135b0c7fb3ad5f798820b48790f086e34732fb005c918af1"
+   "sha256": "12c51e51bf6fee93d327d2aa63c34e159dced66a08af2e3971bd57e09d0de453"
   },
   "logreg_model": {
    "path": "models/logreg/model.sav",

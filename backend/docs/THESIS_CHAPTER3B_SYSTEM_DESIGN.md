@@ -38,10 +38,15 @@ These three are the level-0 learners for both the metaheuristic ensembles
 
 ## 3B.3 Particle Swarm Optimisation (PSO) Ensemble Weighting
 
-**Source:** `research/optimize_ensemble.py` (production driver);
+**Source:** `research/analysis/pso_convergence_analysis.py` (production
+driver -- fits on `data/val.csv`, evaluates on `data/test.csv`, and pins the
+served `results/runtime/route_a_live_v1/pso_ensemble_weights.json`
+artifact via `--pin_dir`);
 `research/computational_intelligence/metaheuristics/pso.py` (generic PSO
 class, used for the standalone metaheuristics module rather than the
-production ensemble pipeline).
+production ensemble pipeline). `research/optimize_ensemble.py` implements
+the same algorithm as an ad-hoc single-CSV CLI and is not what produced the
+pinned artifact.
 
 PSO searches over one continuous weight per base model
 (`logreg`, `svm`, `tfidf`), initialised uniformly in `[0, 1]`, clipped to be
@@ -166,28 +171,50 @@ by a second implementation, `FuzzyEnsembleSentimentEngine`
 (`src/sentiment/engines/fuzzy_engine.py`, method `_nf_gate_blend`), which
 loads `neuro_fuzzy_gate.json` from the pinned runtime manifest whenever its
 configured base models match the fitted gate's `{logreg, svm, tfidf}`
-exactly. This deployed blend re-purposes the fitted `alpha` as a Gaussian
-sharpness term, `exp(−alpha·(c − center)²/(2·width²))`, rather than the
-linear consequent weight (`alpha · μ(c)`) used during fitting in
-`neuro_fuzzy_gate.py`. The two formulas are not algebraically equivalent,
-but both route through the same softmax-normalised, per-model gate
-structure, and the deployed engine is the one that produces the
-`fuzzy_ensemble` row in Chapter 4. If `base_models` does not match the
-fitted gate's model set, `FuzzyEnsembleSentimentEngine` falls back to a
-separate, independently implemented static fuzzy-inference system
-(`research/computational_intelligence/fuzzy/engine_integration.py` —
-Gaussian membership functions, centroid defuzzification, min/max
+exactly. An earlier revision of this document reported that the deployed
+blend re-purposed `alpha` as a Gaussian sharpness term inside the exponent
+rather than the linear consequent weight used during fitting; that
+formula-mismatch bug has since been fixed (see `git log` on
+`src/sentiment/engines/fuzzy_engine.py`) — both the fitting code
+(`research/ci/neuro_fuzzy_gate.py::_fuzzy_activations`) and the deployed
+blend (`fuzzy_engine.py::_nf_gate_blend`) now compute the identical
+`gate_m = Σ_k α_{m,k} · μ_{m,k}(c_m)` (alpha applied outside the exponent
+in both places), so the served `fuzzy_ensemble` row is the gate the fitting
+script actually optimised, not an approximation of it. If `base_models`
+does not match the fitted gate's model set, `FuzzyEnsembleSentimentEngine`
+falls back to a separate, independently implemented static fuzzy-inference
+system (`research/computational_intelligence/fuzzy/engine_integration.py`
+— Gaussian membership functions, centroid defuzzification, min/max
 t-norm/t-conorm) rather than the learned gate described above; the
 `route_a_live_v1` configuration always uses the three matching base
 models, so this fallback path is not exercised in the reported results.
 
-As reported in Chapter 4, the deployed gate rarely overrides the
-underlying base classifier's argmax on this corpus: a direct ablation on
-a 40,000-comment sample (seed 42) shows the argmax changes on only 0.18%
-of comments (71/40,000 — 33 corrections, 21 regressions, 17
-wrong-to-wrong flips), so the resulting `fuzzy_ensemble` behaves close to
-a pass-through of its base model; this is reported as an honest negative
-result rather than concealed (§4.1; `research/ci/fuzzy_gate_ablation.py`).
+A separate leakage bug (fixed in the same pass) also affected this gate:
+the base-model engines it fits against were built with output calibration
+enabled by default, so the gate's confidence inputs and the served
+predictions came from slightly different probability distributions than
+the ones the gate was fitted on. Base models are now built with
+`calibrate=False` inside both the fitting script and the deployed engine
+(matching the same convention already used by the meta-learner and PSO/
+NSGA-II ensembles), and the PSO ensemble weights the gate was implicitly
+compared against were also stale (fitted on a since-abandoned first-commit
+run, not the current data split) — both are now current. Re-fitting the
+gate under the corrected code moved its behaviour substantially: it is no
+longer dominated by TF-IDF (previously the case only because of the
+formula-mismatch bug above) but by LogReg (mean gate weight ≈0.85–0.93
+across sampled comments), and the resulting `fuzzy_ensemble` full-test
+row moved from macro-F1 0.6567 / ECE 0.018516 to macro-F1 0.6940 / ECE
+0.002987 — the best ECE of any row in Table 6, and statistically tied
+with `ensemble_nsga2` on both macro-F1 (bootstrap 95% CI on the
+difference: [-0.00061, +0.00056], excludes-zero: no) and ECE ([-0.00235,
++0.00135], excludes-zero: no; see
+`results/runtime/route_a_live_v1/live_significance_tests.md`). A direct
+ablation against LogReg (now the gate's dominant base model, not TF-IDF)
+on a 40,000-comment sample (seed 42) shows the gate changes the base
+classifier's argmax on 2.74% of comments (1,096/40,000 — 456 corrections,
+412 regressions, 228 wrong-to-wrong flips): a small net-positive edit rate,
+not the near-total pass-through the pre-fix numbers suggested
+(`research/ci/fuzzy_gate_ablation.py --base_model logreg`).
 
 ## 3B.7 Temperature Scaling and Calibration
 

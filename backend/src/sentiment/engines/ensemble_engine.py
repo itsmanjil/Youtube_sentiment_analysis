@@ -122,6 +122,16 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
                     engine_kwargs["preprocess"] = True
                     if self.preprocess_config is not None:
                         engine_kwargs["preprocess_config"] = self.preprocess_config
+                if model in classical_models:
+                    # Ensemble weights (PSO/NSGA-II) are fitted against raw,
+                    # uncalibrated base-model probabilities (see
+                    # research/ci/multi_objective_ensemble.py /
+                    # research/analysis/pso_convergence_analysis.py). Applying a
+                    # per-base-model temperature here would feed the ensemble a
+                    # distribution it was never optimized on, silently shifting
+                    # the served blend away from the fitted weights. Calibration
+                    # is applied once, at the ensemble output, below.
+                    engine_kwargs["calibrate"] = False
                 self.engines[model] = get_base_engine(model, **engine_kwargs)
             except Exception as exc:
                 self.model_errors[model] = str(exc)
@@ -148,16 +158,18 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         self.base_models = list(self.engines.keys())
         self.weights, self.weights_source = self._normalize_weights(weights)
         self.calibration_enabled = bool(calibrate)
-        # The pinned "ensemble" temperature in results/temperature_scaling.json was
-        # fitted against the PSO-weighted ensemble only (research/ci/temperature_scaling.py
-        # constructs get_sentiment_engine("ensemble", calibrate=False), whose default
-        # weights_optimization resolves to "pso"). Applying that temperature to a
-        # differently-weighted blend (nsga2, request-supplied weights, or the
-        # no-artifact-found fallback) rescales probabilities from a distribution the
-        # temperature was never fit on, silently mis-calibrating them while still
-        # reporting calibration_applied=True. Only apply it for the matching config.
-        if self.calibration_enabled and self.weights_source == "pso":
-            self.temperature, self.calibration_applied = self._load_temperature("ensemble")
+        # Temperature is fitted per served ensemble *variant*
+        # (results/temperature_scaling.json rows "ensemble_pso" /
+        # "ensemble_nsga2" — see research/ci/temperature_scaling.py). A PSO-fitted
+        # T applied to the NSGA-II blend (or vice versa) would rescale
+        # probabilities from a distribution it was never fit on, silently
+        # mis-calibrating them while still reporting calibration_applied=True.
+        # Request-supplied or default weights have no matching fitted artifact,
+        # so they are served uncalibrated (T=1.0).
+        if self.calibration_enabled and self.weights_source in ("pso", "nsga2"):
+            self.temperature, self.calibration_applied = self._load_temperature(
+                f"ensemble_{self.weights_source}"
+            )
         else:
             self.temperature, self.calibration_applied = 1.0, False
 

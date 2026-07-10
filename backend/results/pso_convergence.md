@@ -72,11 +72,9 @@ base classifiers (LogReg, SVM, TF-IDF) to maximise Macro-F1 on the validation se
 | Random search (200 trials) | 0.6913 | Random weight sampling |
 | **PSO (20 particles, 40 iters)** | **0.6916** | Bio-inspired optimisation |
 
-**PSO test Macro-F1:** 0.6938
+**PSO test Macro-F1:** 0.6941
 
-> PSO surpasses both baselines, confirming that the weight landscape is
-> non-trivial (random search underperforms) and that PSO's guided search
-> effectively exploits it.
+> PSO beats uniform weighting by +0.0040 val Macro-F1. Against 200-trial random search the margin is +0.0002 — small enough that no significance test was run to claim PSO reliably beats random search on this 3-parameter simplex; the honest reading is that PSO matches or slightly exceeds random search here, and its role in the thesis is as the single-objective baseline that NSGA-II's multi-objective search is compared against (see results/runtime/route_a_live_v1/multi_objective_ensemble.md), not as a method proven superior to random search in isolation.
 
 ## 5. Why PSO Over Grid Search?
 
@@ -107,13 +105,16 @@ evaluations while searching a finer-grained continuous space.
 > We apply Particle Swarm Optimization (Kennedy & Eberhart, 1995) to the
 > ensemble weight optimisation problem, treating the three-dimensional weight
 > vector (LogReg, SVM, TF-IDF) as a continuous search space and maximising
-> validation Macro-F1. A swarm of 20 particles over 40 iterations converges
-> within 10 iterations to a stable optimum (Figure N), yielding weights of
+> validation Macro-F1. A swarm of 20 particles over 40 iterations converges to
+> a stable optimum (see the convergence table above), yielding weights of
 > LogReg=0.880, SVM=0.000,
 > TF-IDF=0.120. PSO achieves a validation Macro-F1
-> of 0.6916, outperforming both uniform weighting (0.6875)
-> and 200-trial random search (0.6913), confirming that the weight
-> landscape has non-trivial structure that PSO exploits effectively.
+> of 0.6916, a +0.0040 improvement over uniform
+> weighting (0.6875). Against 200-trial random search (0.6913) the
+> margin is +0.0002; PSO's role in this thesis is as the
+> single-objective baseline against which the multi-objective NSGA-II ensemble
+> (§4.3 / multi_objective_ensemble.md) is compared, not as a method independently
+> proven superior to random search on this low-dimensional problem.
 
 ## 8. References
 

@@ -2,7 +2,7 @@
   "title": "Live Runtime Benchmark",
   "runtime_artifacts": {
     "version": "route_a_live_v1",
-    "manifest_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/runtime/route_a_live_v1/manifest.json",
+    "manifest_path": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\results\\runtime\\route_a_live_v1\\manifest.json",
     "artifacts": {
       "temperature_scaling": {
         "path": "temperature_scaling.json",
@@ -19,10 +19,38 @@
       "neuro_fuzzy_gate": {
         "path": "neuro_fuzzy_gate.json",
         "sha256": "ca7e97f032283104135b0c7fb3ad5f798820b48790f086e34732fb005c918af1"
+      },
+      "logreg_model": {
+        "path": "models/logreg/model.sav",
+        "sha256": "ecb9588872390c86ee09db5e1254baf531fa24c460cab6bf7ffcd5823188ca18"
+      },
+      "logreg_vectorizer": {
+        "path": "models/logreg/tfidfVectorizer.pickle",
+        "sha256": "107f0d3b6cef61109ce805e83c087845809c3af7d2e1c43f02f060656af88978"
+      },
+      "svm_model": {
+        "path": "models/svm/model.sav",
+        "sha256": "3458002b722c5fee660fc3d0b7a401551f83ac768687a57c6af5bc05cb54e706"
+      },
+      "svm_vectorizer": {
+        "path": "models/svm/tfidfVectorizer.pickle",
+        "sha256": "e98e0b905e431a2e88ae45354865b2b5067f91d606424f523913f16587d7f668"
+      },
+      "tfidf_model": {
+        "path": "models/tfidf/model.sav",
+        "sha256": "2754d376115ce427beefbb2f702a840ddaa9100448269c66288d0f02f6dfaf22"
+      },
+      "tfidf_vectorizer": {
+        "path": "models/tfidf/tfidfVectorizer.pickle",
+        "sha256": "c52b5c906523f993a729a660e68543fb8156c862d75947bb5ed5794e165a812e"
+      },
+      "meta_learner": {
+        "path": "models/meta_learner.pkl",
+        "sha256": "fc82a5c6d39f4937e417e01af6b9763a67978ad93ba92313f02877785550081e"
       }
     }
   },
-  "dataset_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv",
+  "dataset_path": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\data\\test.csv",
   "text_column": "text",
   "label_column": "label",
   "n_samples": 165110,
@@ -31,16 +59,33 @@
       "model": "meta_learner",
       "engine_type": "meta_learner",
       "variant": null,
-      "accuracy": 0.6953,
-      "macro_f1": 0.6945,
-      "ece": 0.015711,
-      "brier": 0.411713,
+      "accuracy": 0.6955,
+      "macro_f1": 0.6946,
+      "ece": 0.018303,
+      "brier": 0.411778,
       "n_samples": 165110,
-      "runtime_seconds": 79.092,
-      "ms_per_sample": 0.479,
+      "runtime_seconds": 30.787,
+      "ms_per_sample": 0.1865,
       "calibration_applied": true,
-      "temperature": 0.9835,
+      "temperature": 1.0,
       "weights_source": null,
+      "nf_gate_active": false,
+      "model_artifact": null
+    },
+    {
+      "model": "ensemble_pso",
+      "engine_type": "ensemble",
+      "variant": "pso",
+      "accuracy": 0.6961,
+      "macro_f1": 0.6941,
+      "ece": 0.006103,
+      "brier": 0.409001,
+      "n_samples": 165110,
+      "runtime_seconds": 29.992,
+      "ms_per_sample": 0.1816,
+      "calibration_applied": true,
+      "temperature": 1.0,
+      "weights_source": "pso",
       "nf_gate_active": false,
       "model_artifact": null
     },
@@ -50,15 +95,32 @@
       "variant": "nsga2",
       "accuracy": 0.6959,
       "macro_f1": 0.694,
-      "ece": 0.004601,
-      "brier": 0.409204,
+      "ece": 0.003919,
+      "brier": 0.409162,
       "n_samples": 165110,
-      "runtime_seconds": 80.75,
-      "ms_per_sample": 0.4891,
+      "runtime_seconds": 29.892,
+      "ms_per_sample": 0.181,
       "calibration_applied": true,
-      "temperature": 0.9348,
+      "temperature": 1.0,
       "weights_source": "nsga2",
       "nf_gate_active": false,
+      "model_artifact": null
+    },
+    {
+      "model": "fuzzy_ensemble",
+      "engine_type": "fuzzy_ensemble",
+      "variant": null,
+      "accuracy": 0.696,
+      "macro_f1": 0.694,
+      "ece": 0.002987,
+      "brier": 0.409288,
+      "n_samples": 165110,
+      "runtime_seconds": 33.599,
+      "ms_per_sample": 0.2035,
+      "calibration_applied": false,
+      "temperature": null,
+      "weights_source": null,
+      "nf_gate_active": true,
       "model_artifact": null
     },
     {
@@ -70,28 +132,11 @@
       "ece": 0.0039,
       "brier": 0.410009,
       "n_samples": 165110,
-      "runtime_seconds": 20.78,
-      "ms_per_sample": 0.1259,
+      "runtime_seconds": 9.409,
+      "ms_per_sample": 0.057,
       "calibration_applied": true,
       "temperature": 1.0311,
       "weights_source": null,
-      "nf_gate_active": false,
-      "model_artifact": null
-    },
-    {
-      "model": "ensemble_pso",
-      "engine_type": "ensemble",
-      "variant": "pso",
-      "accuracy": 0.6872,
-      "macro_f1": 0.6852,
-      "ece": 0.011272,
-      "brier": 0.41949,
-      "n_samples": 165110,
-      "runtime_seconds": 58.019,
-      "ms_per_sample": 0.3514,
-      "calibration_applied": true,
-      "temperature": 0.9348,
-      "weights_source": "pso",
       "nf_gate_active": false,
       "model_artifact": null
     },
@@ -101,13 +146,13 @@
       "variant": null,
       "accuracy": 0.6801,
       "macro_f1": 0.678,
-      "ece": 0.016953,
-      "brier": 0.429259,
+      "ece": 0.01569,
+      "brier": 0.429094,
       "n_samples": 165110,
-      "runtime_seconds": 17.472,
-      "ms_per_sample": 0.1058,
+      "runtime_seconds": 9.071,
+      "ms_per_sample": 0.0549,
       "calibration_applied": true,
-      "temperature": 1.0326,
+      "temperature": 1.0,
       "weights_source": null,
       "nf_gate_active": false,
       "model_artifact": null
@@ -121,29 +166,12 @@
       "ece": 0.017889,
       "brier": 0.449058,
       "n_samples": 165110,
-      "runtime_seconds": 19.621,
-      "ms_per_sample": 0.1188,
+      "runtime_seconds": 9.885,
+      "ms_per_sample": 0.0599,
       "calibration_applied": true,
       "temperature": 1.1306,
       "weights_source": null,
       "nf_gate_active": false,
-      "model_artifact": null
-    },
-    {
-      "model": "fuzzy_ensemble",
-      "engine_type": "fuzzy_ensemble",
-      "variant": null,
-      "accuracy": 0.6622,
-      "macro_f1": 0.6567,
-      "ece": 0.018516,
-      "brier": 0.44892,
-      "n_samples": 165110,
-      "runtime_seconds": 86.398,
-      "ms_per_sample": 0.5233,
-      "calibration_applied": false,
-      "temperature": null,
-      "weights_source": null,
-      "nf_gate_active": true,
       "model_artifact": null
     }
   ],

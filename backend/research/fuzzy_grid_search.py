@@ -128,7 +128,11 @@ def main():
 
     config_idx = 0
     for base_models in base_sets:
-        base_engines = {name: get_sentiment_engine(name) for name in base_models}
+        # calibrate=False: the fuzzy engine's membership functions and
+        # t-norm/t-conorm combination operate on raw base-model probabilities;
+        # matches the same convention used by the neuro-fuzzy gate and
+        # PSO/NSGA-II ensembles (see src/sentiment/engines/ensemble_engine.py).
+        base_engines = {name: get_sentiment_engine(name, calibrate=False) for name in base_models}
 
         for mf_type, defuzz_method, t_norm, t_conorm, alpha_cut, resolution in product(
             mf_types,

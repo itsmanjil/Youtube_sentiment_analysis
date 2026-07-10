@@ -12,7 +12,7 @@
   },
   "results": {
     "pso_val_f1": 0.691554,
-    "pso_test_f1": 0.693829,
+    "pso_test_f1": 0.694129,
     "uniform_val_f1": 0.687544,
     "random_search_val_f1": 0.69135,
     "best_weights": {

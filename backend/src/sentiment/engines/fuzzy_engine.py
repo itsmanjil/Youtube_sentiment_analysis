@@ -99,6 +99,15 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
                     engine_kwargs["preprocess"] = True
                     if self.preprocess_config is not None:
                         engine_kwargs["preprocess_config"] = self.preprocess_config
+                if model in classical_models:
+                    # The neuro-fuzzy gate (research/ci/neuro_fuzzy_gate.py) and the
+                    # static fuzzy-inference fallback are both fitted/defined over
+                    # raw base-model probabilities. Applying a per-base-model
+                    # temperature here would feed either path a distribution it
+                    # was never fit on. Fuzzy output is uncalibrated by design
+                    # (see results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.md,
+                    # "Calibrated: no" for fuzzy_ensemble).
+                    engine_kwargs["calibrate"] = False
                 base_engines[model] = get_base_engine(model, **engine_kwargs)
             except Exception as exc:
                 self.model_errors[model] = str(exc)

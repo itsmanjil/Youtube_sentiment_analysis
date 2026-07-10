@@ -2,9 +2,9 @@
 Coverage-Accuracy Curve Analysis
 ==================================
 
-Compares ALL models (logreg, svm, tfidf, ensemble, meta_learner, neuro-fuzzy)
-on a unified coverage-accuracy curve — the definitive selective-prediction
-benchmark for the thesis CI chapter.
+Compares ALL models (logreg, svm, tfidf, ensemble_pso, ensemble_nsga2,
+meta_learner, fuzzy_ensemble) on a unified coverage-accuracy curve — the
+definitive selective-prediction benchmark for the thesis CI chapter.
 
 Method
 ------
@@ -24,8 +24,21 @@ Summary metric: AUCA (Area Under the Coverage-Accuracy curve, trapezoidal)
 
 Additional metric: AUC-F1 (Area Under the Coverage-F1 curve)
 
-The neuro-fuzzy gate (Fix 5) is included by loading its saved parameters
-from results/neuro_fuzzy_gate.json.
+Revision note (2026-07-10): earlier revisions of this script (a) scored
+`get_sentiment_engine("ensemble")` with no explicit weight-source, which
+silently resolves to the PSO weights internally (see
+`EnsembleSentimentEngine._normalize_weights`) rather than the uniform
+baseline the thesis text described it as, and only ever produced one
+ensemble row instead of both variants; (b) reconstructed the neuro-fuzzy
+gate as a second, standalone `NeuroFuzzyGate` object built from
+`results/neuro_fuzzy_gate.json` relative to `--output`, rather than calling
+the actually-deployed `fuzzy_ensemble` engine — with that file usually
+missing at the expected path, silently dropping the neuro-fuzzy row from
+the report with no error. Both are fixed: every row is now scored by
+calling `get_sentiment_engine(...)` exactly as the live runtime does (the
+same pattern used by `research/ci/confusion_matrices.py` and
+`research/ci/live_runtime_benchmark.py`), with `ensemble_pso`,
+`ensemble_nsga2`, and `fuzzy_ensemble` as explicit, separate rows.
 
 Outputs (backend/results/)
 --------------------------
@@ -47,10 +60,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -61,16 +73,21 @@ sys.path.insert(0, str(BACKEND_ROOT))
 
 from src.sentiment import coerce_sentiment_result, get_sentiment_engine, normalize_label
 from src.utils import SENTIMENT_LABELS, normalize_probs
-from research.ci.neuro_fuzzy_gate import (
-    NeuroFuzzyGate,
-    model_confidence,
-    N_FUZZY_SETS,
-)
 
 LABELS: List[str] = list(SENTIMENT_LABELS)
-BASE_MODELS = ["logreg", "svm", "tfidf", "ensemble", "meta_learner"]
-NF_MODELS   = ["logreg", "svm", "tfidf"]   # neuro-fuzzy gate uses these three
-LOG_C = math.log(len(LABELS))
+
+# (engine_type, display_name) — mirrors the model set in
+# research/ci/confusion_matrices.py and research/ci/live_runtime_benchmark.py
+# so this script's rows can be compared directly against §4.1/§4.3.
+MODEL_SPECS: List[Tuple[str, dict, str]] = [
+    ("logreg", {}, "logreg"),
+    ("svm", {}, "svm"),
+    ("tfidf", {}, "tfidf"),
+    ("ensemble", {"weights_optimization": "pso"}, "ensemble_pso"),
+    ("ensemble", {"weights_optimization": "nsga2"}, "ensemble_nsga2"),
+    ("meta_learner", {}, "meta_learner"),
+    ("fuzzy_ensemble", {}, "fuzzy_ensemble"),
+]
 
 
 # ---------------------------------------------------------------------------
@@ -86,43 +103,17 @@ def load_df(path: str, sample: int | None, seed: int) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
-def score_model(name: str, texts: List[str]) -> np.ndarray:
-    """Returns (n_samples, n_classes) probability matrix."""
-    engine = get_sentiment_engine(name)
+def score_model(engine_type: str, engine_kwargs: dict, display_name: str, texts: List[str]) -> np.ndarray:
+    """Returns (n_samples, n_classes) probability matrix, scored by the exact
+    engine construction used at serving time (see MODEL_SPECS)."""
+    engine = get_sentiment_engine(engine_type, **engine_kwargs)
     results = engine.batch_analyze(texts)
     mat = np.zeros((len(texts), len(LABELS)))
     for i, r in enumerate(results):
-        p = normalize_probs(coerce_sentiment_result(r, name).probs)
+        p = normalize_probs(coerce_sentiment_result(r, display_name).probs)
         for c, lbl in enumerate(LABELS):
             mat[i, c] = p.get(lbl, 0.0)
     return mat
-
-
-def load_neuro_fuzzy_gate(json_path: Path) -> NeuroFuzzyGate | None:
-    """Reconstruct NeuroFuzzyGate from saved JSON parameters."""
-    if not json_path.exists():
-        return None
-    with open(json_path) as fh:
-        data = json.load(fh)
-    mfs = data.get("learned_mfs", [])
-    if not mfs:
-        return None
-
-    gate = NeuroFuzzyGate(n_models=len(NF_MODELS), n_sets=N_FUZZY_SETS)
-    set_order = {"Low": 0, "Medium": 1, "High": 2}
-    model_order = {m: i for i, m in enumerate(NF_MODELS)}
-
-    for row in mfs:
-        m = model_order.get(row["model"])
-        k = set_order.get(row["fuzzy_set"])
-        if m is None or k is None:
-            continue
-        base = m * N_FUZZY_SETS * 3 + k * 3
-        gate.theta[base + 0] = row["center"]
-        gate.theta[base + 1] = math.log(max(row["width"], 1e-6))
-        gate.theta[base + 2] = row["alpha"]
-
-    return gate
 
 
 # ---------------------------------------------------------------------------
@@ -267,12 +258,15 @@ def build_report(
         f"- **{best_lift[0]}** shows the largest accuracy lift at 10% coverage: "
         f"{best_lift[1]:.4f} vs {best_lift[2]:.4f} full coverage "
         f"(+{best_lift[3]:.4f})",
-        f"- Neuro-fuzzy gate AUCA vs static ensemble: "
-        f"{next(r['auca'] for r in summary if r['model']=='neuro_fuzzy'):.4f} vs "
-        f"{next(r['auca'] for r in summary if r['model']=='ensemble'):.4f}"
-        if any(r['model']=='neuro_fuzzy' for r in summary) and
-           any(r['model']=='ensemble' for r in summary) else "",
     ]
+
+    fuzzy_row = next((r for r in summary if r["model"] == "fuzzy_ensemble"), None)
+    nsga2_row = next((r for r in summary if r["model"] == "ensemble_nsga2"), None)
+    if fuzzy_row and nsga2_row:
+        lines.append(
+            f"- `fuzzy_ensemble` AUCA vs `ensemble_nsga2` AUCA: "
+            f"{fuzzy_row['auca']:.4f} vs {nsga2_row['auca']:.4f}"
+        )
     return "\n".join(l for l in lines if l is not None)
 
 
@@ -303,34 +297,18 @@ def main() -> None:
     print(f"  {len(texts):,} samples\n")
 
     # ------------------------------------------------------------------
-    # 2. Score all base models
+    # 2. Score every model via the exact same engine construction used at
+    #    serving time (see MODEL_SPECS) -- no standalone re-implementation.
     # ------------------------------------------------------------------
     prob_matrices: dict[str, np.ndarray] = {}
-    for name in BASE_MODELS:
-        print(f"Scoring {name} …", flush=True)
-        prob_matrices[name] = score_model(name, texts)
+    for engine_type, engine_kwargs, display_name in MODEL_SPECS:
+        print(f"Scoring {display_name} …", flush=True)
+        prob_matrices[display_name] = score_model(engine_type, engine_kwargs, display_name, texts)
 
     # ------------------------------------------------------------------
-    # 3. Neuro-fuzzy gate — load saved parameters and predict
+    # 3. Compute coverage-accuracy curves
     # ------------------------------------------------------------------
-    nf_json = out_dir / "neuro_fuzzy_gate.json"
-    gate = load_neuro_fuzzy_gate(nf_json)
-
-    if gate is not None:
-        print("Loading neuro-fuzzy gate from saved JSON …")
-        # Need probability cube for the 3 base models
-        nf_cube = np.stack([prob_matrices[m] for m in NF_MODELS], axis=0)
-        nf_conf = np.stack([model_confidence(prob_matrices[m]) for m in NF_MODELS], axis=1)
-        nf_probs = gate.predict_probs(nf_conf, nf_cube)
-        prob_matrices["neuro_fuzzy"] = nf_probs
-        print("  Neuro-fuzzy gate loaded OK")
-    else:
-        print(f"  WARNING: {nf_json} not found — neuro-fuzzy gate skipped")
-
-    # ------------------------------------------------------------------
-    # 4. Compute coverage-accuracy curves
-    # ------------------------------------------------------------------
-    all_names = BASE_MODELS + (["neuro_fuzzy"] if "neuro_fuzzy" in prob_matrices else [])
+    all_names = [display_name for _, _, display_name in MODEL_SPECS]
     results: dict = {}
     summary: list = []
 

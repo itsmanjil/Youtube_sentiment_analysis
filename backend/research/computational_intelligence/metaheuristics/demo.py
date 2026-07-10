@@ -2,8 +2,14 @@
 """
 Metaheuristics Demo for Thesis
 
-Demonstrates PSO, MOPSO, and NSGA-II on optimization problems
-relevant to sentiment analysis.
+EXPLORATORY — NOT USED IN REPORTED RESULTS. This script runs PSO, MOPSO, and
+NSGA-II on toy/synthetic optimization problems (e.g. sklearn's
+make_classification) purely to illustrate the algorithms' mechanics. None of
+its output feeds any pinned results/ or results/runtime/ artifact. In
+particular, do not confuse anything produced here with the real ensemble
+weight results, which come from research/analysis/pso_convergence_analysis.py
+and research/ci/multi_objective_ensemble.py running against the actual
+YouTube comment splits.
 
 Usage:
     python -m research.computational_intelligence.metaheuristics.demo

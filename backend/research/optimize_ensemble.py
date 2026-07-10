@@ -1,3 +1,17 @@
+"""
+Standalone PSO ensemble-weight optimizer (exploratory / superseded).
+
+The served `pso_ensemble_weights.json` runtime artifact
+(results/runtime/route_a_live_v1/) is produced by
+research/analysis/pso_convergence_analysis.py --pin_dir ..., which fits on
+the canonical data/val.csv split and evaluates on data/test.csv. This script
+implements the same PSO algorithm but re-splits a single --data CSV
+internally, so it does not exercise the actual val/test provenance the rest
+of the pipeline relies on. It is kept for ad-hoc single-file experimentation
+but is not the production driver despite being named that way in earlier
+docs revisions -- see research/analysis/pso_convergence_analysis.py.
+"""
+
 import argparse
 import json
 import random
@@ -27,7 +41,10 @@ def load_dataset(csv_path):
 def precompute_model_probs(models, texts, *, preprocess: bool = False):
     model_probs = {}
     for model in models:
-        engine_kwargs = {}
+        # calibrate=False: ensemble weights are fitted on raw base-model
+        # probabilities, matching how EnsembleSentimentEngine builds its base
+        # engines at serving time.
+        engine_kwargs = {"calibrate": False}
         if preprocess and model in {"tfidf", "logreg", "svm"}:
             engine_kwargs["preprocess"] = True
         engine = get_sentiment_engine(model, **engine_kwargs)

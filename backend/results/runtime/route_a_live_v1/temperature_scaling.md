@@ -12,7 +12,7 @@ Temperature scaling (Guo et al., 2017) fits a single scalar T per model on the v
 
 **Macro-F1 is unaffected** — temperature scaling preserves the argmax.
 
-**Gating**: NLL minimisation on the validation set is not guaranteed to improve held-out ECE. A fitted T is only *kept* (and served) if it reduces test-set ECE relative to the uncalibrated model; otherwise T is pinned to 1.0 (identity) and the fitted value is reported for reference only. Of 5 models, **1 kept** their fitted temperature and **4 were discarded** as harmful on this run.
+**Gating**: a fitted T is only *kept* (and served) if it reduces **validation**-set ECE relative to the uncalibrated model; otherwise T is pinned to 1.0 (identity) and the fitted value is reported for reference only. This keep/discard decision never inspects the test set — the test-set numbers below are a read-only evaluation of a configuration already fixed on validation. Of 6 models, **2 kept** their fitted temperature and **4 were discarded** as not improving validation ECE on this run.
 
 ## Results (Test Set)
 
@@ -22,11 +22,12 @@ Temperature scaling (Guo et al., 2017) fits a single scalar T per model on the v
 
 | Model | T (fitted) | T (served) | Kept | ECE Before | ECE After | Reduction |
 |-------|------------|------------|------|------------|-----------|-----------|
-| logreg | 1.031 | 1.000 | no | 0.0068 | 0.0068 | +0.0% |
+| logreg | 1.031 | 1.031 | yes | 0.0068 | 0.0074 | -9.1% |
 | svm | 1.033 | 1.000 | no | 0.0126 | 0.0126 | +0.0% |
-| tfidf | 1.131 | 1.000 | no | 0.0131 | 0.0131 | +0.0% |
-| ensemble | 0.935 | 0.935 | yes | 0.0216 | 0.0117 | +46.0% |
-| meta_learner | 0.984 | 1.000 | no | 0.0203 | 0.0203 | +0.0% |
+| tfidf | 1.131 | 1.131 | yes | 0.0131 | 0.0174 | -33.1% |
+| ensemble_pso | 0.990 | 1.000 | no | 0.0073 | 0.0073 | +0.0% |
+| ensemble_nsga2 | 1.001 | 1.000 | no | 0.0060 | 0.0060 | -0.0% |
+| meta_learner | 0.984 | 1.000 | no | 0.0203 | 0.0203 | -0.0% |
 
 ### Brier Score
 
@@ -34,10 +35,11 @@ Temperature scaling (Guo et al., 2017) fits a single scalar T per model on the v
 
 | Model | Brier Before | Brier After | Reduction |
 |-------|--------------|-------------|-----------|
-| logreg | 0.4083 | 0.4083 | +0.0% |
+| logreg | 0.4083 | 0.4084 | -0.0% |
 | svm | 0.4274 | 0.4274 | +0.0% |
-| tfidf | 0.4464 | 0.4464 | +0.0% |
-| ensemble | 0.4113 | 0.4107 | +0.2% |
+| tfidf | 0.4464 | 0.4469 | -0.1% |
+| ensemble_pso | 0.4073 | 0.4073 | +0.0% |
+| ensemble_nsga2 | 0.4075 | 0.4075 | +0.0% |
 | meta_learner | 0.4102 | 0.4102 | +0.0% |
 
 ### Macro-F1 (unchanged by design)
@@ -47,20 +49,21 @@ Temperature scaling (Guo et al., 2017) fits a single scalar T per model on the v
 | logreg | 0.6943 | 0.6943 | +0.0000 |
 | svm | 0.6817 | 0.6817 | +0.0000 |
 | tfidf | 0.6579 | 0.6579 | +0.0000 |
-| ensemble | 0.6938 | 0.6938 | +0.0000 |
+| ensemble_pso | 0.6951 | 0.6951 | +0.0000 |
+| ensemble_nsga2 | 0.6949 | 0.6949 | +0.0000 |
 | meta_learner | 0.6967 | 0.6967 | +0.0000 |
 
 ## Summary
 
-- Models kept (served with fitted T): **1/5**
-- Average ECE reduction among kept models: **46.0%**
-- Average Brier reduction among kept models: **0.2%**
+- Models kept (served with fitted T): **2/6**
+- Average ECE reduction among kept models: **-21.1%**
+- Average Brier reduction among kept models: **-0.1%**
 - Most overconfident model (by fitted T, irrespective of whether kept): **tfidf** (T_fitted=1.131)
-- Largest ECE improvement: **ensemble** (+46.0%)
+- Largest ECE improvement: **svm** (+0.0%)
 
 ## Thesis Interpretation
 
-Temperature scaling provides a lightweight, theoretically-grounded calibration layer that *can* improve probabilistic reliability without retraining — but NLL-optimal T on the validation set is not guaranteed to reduce held-out ECE. In this run, the fitted temperature only improved test-set ECE for 1/5 model(s); for the rest, the fitted T made ECE *worse*, so those models are served uncalibrated (T=1.0) rather than shipping a harmful transform. See the per-model "Kept" column above.
+Temperature scaling provides a lightweight, theoretically-grounded calibration layer that *can* improve probabilistic reliability without retraining — but NLL-optimal T is not guaranteed to reduce ECE on the same split it was fitted on. In this run, the fitted temperature only improved validation-set ECE for 2/6 model(s); for the rest, the fitted T made validation ECE *worse*, so those models are served uncalibrated (T=1.0) rather than shipping a harmful transform. This decision is made entirely on validation data; the test-set ECE/Brier columns above are a read-only check of the already-fixed serving configuration, not part of the gating decision. See the per-model "Kept" column above.
 
 - Classical ML models (TF-IDF + LogReg/SVM) output decision-function scores converted to probabilities via Platt scaling, which can be systematically over- or under-confident depending on the feature space.
 

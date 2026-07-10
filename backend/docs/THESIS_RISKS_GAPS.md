@@ -60,7 +60,23 @@ models trained on different preprocessing or splits. Mitigations: no
 hyperparameter was selected on the test set — hyperparameters and the Neutral
 threshold-tuning α were selected on the validation split only, and every
 number reported against the test split is a read-only evaluation of an
-already-fixed configuration. The test split **is** reused across multiple
+already-fixed configuration.
+
+**Residual gap, found and closed 2026-07-10:** this claim was previously
+false for one hyperparameter. `research/ci/temperature_scaling.py`'s
+keep/discard decision for a fitted calibration temperature was gated on
+whether it improved **test**-set ECE, not validation-set ECE — a genuine
+test-set-tuning leak for that one knob. This has been fixed: the gate now
+uses validation-set ECE only, and test-set ECE is reported purely as a
+read-only evaluation of the resulting configuration (see
+`results/runtime/route_a_live_v1/temperature_scaling.md`, "Gating," and
+`docs/THESIS_VIVA_DEFENSE_BRIEF.md` §0 for the full before/after). No other
+hyperparameter in the pipeline (PSO/NSGA-II weight fitting, the neuro-fuzzy
+gate's L-BFGS-B fit, the Neutral threshold α, classical-model grid search)
+was found to have the same issue on audit — each already used the
+validation split exclusively.
+
+The test split **is** reused across multiple
 independent read-only analyses (ROC-AUC, confusion matrices, coverage-accuracy,
 significance testing, Neutral analysis) at different sample sizes; this is a
 deliberate reuse of a fixed held-out set for descriptive/inferential reporting,

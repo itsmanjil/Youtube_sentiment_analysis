@@ -8,14 +8,21 @@ differences are statistically reliable rather than sampling noise.
 
 Method
 ------
-Base/meta probabilities are produced by the SAME application engines used by
-the deployed runtime (src.sentiment.get_sentiment_engine), so reproduced
-metrics match the pinned benchmark by construction. The PSO and NSGA-II
-ensembles are reconstructed from the *pinned* weight artifacts (knee point /
-pso_ensemble_weights) and the pinned "ensemble" temperature -- identical to the
-EnsembleEngine's weighted soft-voting + p^(1/T) calibration -- which avoids
-re-running the (~7 min) weight optimisation while remaining faithful. Every
-model is validated against the pinned benchmark before any test is reported.
+Every model row -- including both ensemble variants -- is produced by calling
+the SAME application engines used by the deployed runtime
+(src.sentiment.get_sentiment_engine), so reproduced metrics match the pinned
+live benchmark by construction. Earlier revisions of this script manually
+re-implemented the PSO/NSGA-II weighted-voting + temperature-scaling math
+here as a second, independent code path; that duplication silently drifted
+out of sync with a per-ensemble-variant calibration fix in
+src/sentiment/engines/ensemble_engine.py (it applied a single "ensemble"
+temperature to both variants instead of each variant's own fitted T). Calling
+get_sentiment_engine("ensemble", weights_optimization=...) directly instead
+removes that second implementation entirely -- there is now exactly one place
+that knows how ensemble weighting and calibration are combined. This is
+slower (no cached probability cube) but eliminates a class of bugs where the
+two implementations disagree. Every model is validated against the pinned
+live benchmark before any test is reported.
 
 It then computes:
   * paired McNemar tests (Holm-adjusted) on label correctness, and
@@ -53,35 +60,42 @@ LIDX = {l: i for i, l in enumerate(LABELS)}
 NORM = {"positive": "Positive", "neutral": "Neutral", "negative": "Negative"}
 NB = 15
 
+# Reference values from results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.md
+# (accuracy, macro_f1, ece). Update together with that file when either changes.
 PINNED = {
-    "logreg": (0.6946, 0.6928, 0.003900), "svm": (0.6801, 0.6780, 0.016953),
-    "tfidf": (0.6622, 0.6567, 0.017889), "meta_learner": (0.6953, 0.6945, 0.015711),
-    "ensemble_pso": (0.6872, 0.6852, 0.011272), "ensemble_nsga2": (0.6959, 0.6940, 0.004601),
+    "logreg": (0.6946, 0.6928, 0.003900), "svm": (0.6801, 0.6780, 0.015690),
+    "tfidf": (0.6622, 0.6567, 0.017889), "meta_learner": (0.6955, 0.6946, 0.018303),
+    "ensemble_pso": (0.6961, 0.6941, 0.006103), "ensemble_nsga2": (0.6959, 0.6940, 0.003919),
+    "fuzzy_ensemble": (0.6960, 0.6940, 0.002987),
 }
 PAIRS = [("meta_learner", "logreg", "macro_f1"), ("meta_learner", "ensemble_nsga2", "macro_f1"),
          ("ensemble_nsga2", "meta_learner", "ece"), ("ensemble_nsga2", "logreg", "ece"),
-         ("ensemble_nsga2", "ensemble_pso", "ece"), ("ensemble_nsga2", "ensemble_pso", "macro_f1")]
+         ("ensemble_nsga2", "ensemble_pso", "ece"), ("ensemble_nsga2", "ensemble_pso", "macro_f1"),
+         # fuzzy_ensemble's macro-F1/ECE moved a lot once the gate blend formula and
+         # calibration scoping bugs were fixed (see docs/FUZZY_THEORETICAL_GROUNDING.md);
+         # it now claims the best ECE of any row, which needs its own significance check
+         # rather than resting on point estimates alone.
+         ("ensemble_nsga2", "fuzzy_ensemble", "macro_f1"), ("fuzzy_ensemble", "ensemble_nsga2", "ece")]
+
+_ENGINE_SPECS = {
+    "logreg": ("logreg", {}),
+    "svm": ("svm", {}),
+    "tfidf": ("tfidf", {}),
+    "meta_learner": ("meta_learner", {}),
+    "ensemble_pso": ("ensemble", {"weights_optimization": "pso"}),
+    "ensemble_nsga2": ("ensemble", {"weights_optimization": "nsga2"}),
+    "fuzzy_ensemble": ("fuzzy_ensemble", {}),
+}
 
 
 def engine_predict(model, texts, chunk=20000):
-    eng = get_sentiment_engine(model)
+    engine_name, engine_kwargs = _ENGINE_SPECS[model]
+    eng = get_sentiment_engine(engine_name, **engine_kwargs)
     labs, probs = [], []
     for i in range(0, len(texts), chunk):
         for r in eng.batch_analyze(texts[i:i + chunk]):
             labs.append(NORM.get(str(r.label).lower(), r.label)); probs.append(r.probs or {})
     return np.asarray(labs), probs_to_matrix(probs, labels=LABELS)
-
-
-def temp_scale(P, T):
-    if T == 1.0:
-        return P
-    s = np.clip(P, 1e-10, None) ** (1.0 / T); return s / s.sum(1, keepdims=True)
-
-
-def ensemble(weights, base, T):
-    P = sum(weights.get(m, 0.0) * base[m][1] for m in ("logreg", "svm", "tfidf"))
-    P = temp_scale(P / P.sum(1, keepdims=True), T)
-    return np.array(LABELS)[P.argmax(1)], P
 
 
 def fast_f1(yt, yp):
@@ -125,20 +139,18 @@ def main():
 
     df = pd.read_csv(a.data); y = df["label"].astype(str).values
     y_i = np.array([LIDX[v] for v in y]); texts = df["text"].astype(str).tolist()
-    ART = ROOT / "results" / "runtime" / "route_a_live_v1"
 
-    base = {m: engine_predict(m, texts) for m in ("logreg", "svm", "tfidf")}
-    meta = engine_predict("meta_learner", texts)
-    ts = {d["model"]: d["temperature"] for d in json.load(open(ART / "temperature_scaling.json"))["models"]}
-    T = float(ts.get("ensemble", 1.0))
-    nw = json.load(open(ART / "multi_objective_ensemble.json"))["knee_point"]["weights"]
-    pw = json.load(open(ART / "pso_ensemble_weights.json"))["weights"]
-    npred, nprob = ensemble(nw, base, T); ppred, pprob = ensemble(pw, base, T)
-
-    M = {"logreg": base["logreg"], "svm": base["svm"], "tfidf": base["tfidf"],
-         "meta_learner": meta, "ensemble_pso": (ppred, pprob), "ensemble_nsga2": (npred, nprob)}
+    M = {k: engine_predict(k, texts) for k in _ENGINE_SPECS}
     D = {k: dict(pred=v[0], prob=v[1], pred_i=np.array([LIDX.get(x, -1) for x in v[0]]),
                  correct=(v[0] == y)) for k, v in M.items()}
+
+    # Informational only (not used in any computation above): report the
+    # weights/temperatures the two ensemble engines actually resolved, for
+    # the markdown header.
+    pso_engine = get_sentiment_engine("ensemble", weights_optimization="pso")
+    nsga2_engine = get_sentiment_engine("ensemble", weights_optimization="nsga2")
+    pw, nw = pso_engine.weights, nsga2_engine.weights
+    pT, nT = pso_engine.temperature, nsga2_engine.temperature
 
     validation = []
     for k, d in D.items():
@@ -174,11 +186,12 @@ def main():
                        ci_low=float(lo), ci_high=float(hi), excludes_zero=bool(lo > 0 or hi < 0)))
 
     payload = dict(dataset=a.data, n_samples=int(N), bootstrap_resamples=a.bootstrap, seed=a.seed,
-                   runtime_artifact_version="route_a_live_v1", ensemble_temperature=T,
+                   runtime_artifact_version="route_a_live_v1",
+                   pso_temperature=pT, nsga2_temperature=nT,
                    nsga2_weights=nw, pso_weights=pw, validation=validation, mcnemar=rows, bootstrap_ci=bt)
     out = Path(a.output); out.mkdir(parents=True, exist_ok=True)
-    (out / "live_significance_tests.json").write_text(json.dumps(payload, indent=2))
-    (out / "live_significance_tests.md").write_text(build_md(payload))
+    (out / "live_significance_tests.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    (out / "live_significance_tests.md").write_text(build_md(payload), encoding="utf-8")
     print("wrote", out / "live_significance_tests.md")
 
 
@@ -187,9 +200,9 @@ def build_md(p):
     out.append("# Live-Runtime Significance Tests & Bootstrap Confidence Intervals")
     out.append("")
     out.append("- Runtime artifact: `route_a_live_v1`  |  Dataset: `%s` (n = %s)" % (p["dataset"], format(p["n_samples"], ",")))
-    out.append("- Bootstrap: %d resamples (seed %d); ensemble temperature T = %s" % (p["bootstrap_resamples"], p["seed"], p["ensemble_temperature"]))
-    out.append("- NSGA-II knee weights: %s" % json.dumps(p["nsga2_weights"]))
-    out.append("- PSO weights: %s" % json.dumps(p["pso_weights"]))
+    out.append("- Bootstrap: %d resamples (seed %d)" % (p["bootstrap_resamples"], p["seed"]))
+    out.append("- NSGA-II knee weights: %s (served T = %s)" % (json.dumps(p["nsga2_weights"]), p["nsga2_temperature"]))
+    out.append("- PSO weights: %s (served T = %s)" % (json.dumps(p["pso_weights"]), p["pso_temperature"]))
     out.append("")
     out.append("## Reproduction validation (reconstructed vs pinned benchmark)")
     out.append("")

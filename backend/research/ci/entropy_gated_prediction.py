@@ -82,7 +82,12 @@ def load_df(path: str, sample: int | None, seed: int) -> pd.DataFrame:
 
 def score_model(name: str, texts: List[str]) -> np.ndarray:
     """Returns (n_samples, n_classes) probability matrix."""
-    engine = get_sentiment_engine(name)
+    # calibrate=False: the Stage-1 weights (NSGA-II knee point) are fitted on
+    # raw base-model probabilities (research/ci/multi_objective_ensemble.py),
+    # and entropy is computed from whatever probabilities are scored here, so
+    # both stages must use the same uncalibrated distribution the weights and
+    # the entropy threshold sweep were derived against.
+    engine = get_sentiment_engine(name, calibrate=False)
     results = engine.batch_analyze(texts)
     mat = np.zeros((len(texts), len(LABELS)))
     for i, r in enumerate(results):

@@ -1,17 +1,19 @@
 """
 Neuro-Fuzzy Gate Ablation: How Often Does the Gate Override the Base Classifier?
 
-The thesis reports that the neuro-fuzzy-gated ensemble (`fuzzy_ensemble`)
-produces full-test metrics identical to the TF-IDF + Naive-Bayes base
-classifier (`tfidf`), and claims this is because the gate rarely changes the
-argmax label. This script quantifies that claim directly: it loads the fitted
-gate parameters from results/neuro_fuzzy_gate.json, scores all three base
+This script quantifies how often the deployed neuro-fuzzy gate
+(`fuzzy_ensemble`) changes the argmax label relative to a single base
+classifier: it loads the fitted gate parameters from
+results/runtime/route_a_live_v1/neuro_fuzzy_gate.json, scores all three base
 models plus the gate on a fixed sample of the test split, and reports how
 many argmax labels change and in which direction (correction / regression /
-wrong-to-wrong flip).
+wrong-to-wrong flip). The default comparison base model is whichever base
+model the gate weights most heavily (see the alpha values in
+neuro_fuzzy_gate.json) — this has changed across code revisions as the gate's
+blend formula was fixed, so do not assume it is always the same model.
 
 Usage:
-    python research/ci/fuzzy_gate_ablation.py --sample 40000 --seed 42
+    python research/ci/fuzzy_gate_ablation.py --sample 40000 --seed 42 --base_model logreg
 """
 
 import argparse
@@ -38,8 +40,11 @@ def main() -> None:
     ap.add_argument("--test", default="data/test.csv")
     ap.add_argument("--sample", type=int, default=40000)
     ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument("--base_model", default="tfidf",
-                     help="Base classifier the fuzzy_ensemble row is compared against.")
+    ap.add_argument("--base_model", default="logreg",
+                     help="Base classifier the fuzzy_ensemble row is compared against. "
+                          "logreg is the gate's dominant model on this corpus (see "
+                          "learned_mfs alpha weights in neuro_fuzzy_gate.json); tfidf "
+                          "was only the near-pass-through base under the pre-fix gate blend.")
     args = ap.parse_args()
 
     print(f"Loading {args.sample} test-split comments (seed={args.seed})...")
@@ -53,7 +58,13 @@ def main() -> None:
 
     print("Loading deployed fuzzy_ensemble engine (same call as live_runtime_benchmark.py)...")
     fuzzy_engine = get_sentiment_engine("fuzzy_ensemble", base_models=model_names)
-    base_engine = get_sentiment_engine(args.base_model)
+    # calibrate=False: the deployed fuzzy_ensemble engine scores its base models
+    # uncalibrated (src/sentiment/engines/fuzzy_engine.py); match that here so
+    # the standalone base model is compared on the same probability
+    # distribution rather than a calibrated one (calibration is argmax-preserving
+    # so this would not change labels, but keeping both sides on the identical
+    # distribution avoids any ambiguity in what is being compared).
+    base_engine = get_sentiment_engine(args.base_model, calibrate=False)
 
     uses_nf_gate_path = bool(getattr(fuzzy_engine, "_nf_mfs", None))
     print(f"Deployed engine using neuro-fuzzy gate blend path: {uses_nf_gate_path}")

@@ -403,7 +403,13 @@ python research/experiment_runner.py \
 
 ### 3.2 PSO-Optimized Ensemble
 
-Optimize ensemble weights using Particle Swarm Optimization:
+Optimize ensemble weights using Particle Swarm Optimization. **Note:** the
+command below (`research/optimize_ensemble.py`) is a standalone CLI kept for
+ad-hoc experimentation; it is not what produced the served
+`pso_ensemble_weights.json` artifact. To reproduce the actual served PSO
+weights, use `research/analysis/pso_convergence_analysis.py --val data/val.csv
+--test data/test.csv --pin_dir results/runtime/route_a_live_v1/` instead (see
+`docs/THESIS_CHAPTER3B_SYSTEM_DESIGN.md` §3B.3).
 
 ```bash
 python research/optimize_ensemble.py \

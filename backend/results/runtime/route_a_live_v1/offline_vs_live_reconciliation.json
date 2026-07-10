@@ -1,7 +1,7 @@
 {
   "runtime_artifacts": {
     "version": "route_a_live_v1",
-    "manifest_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/runtime/route_a_live_v1/manifest.json",
+    "manifest_path": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\results\\runtime\\route_a_live_v1\\manifest.json",
     "artifacts": {
       "temperature_scaling": {
         "path": "temperature_scaling.json",
@@ -18,10 +18,38 @@
       "neuro_fuzzy_gate": {
         "path": "neuro_fuzzy_gate.json",
         "sha256": "ca7e97f032283104135b0c7fb3ad5f798820b48790f086e34732fb005c918af1"
+      },
+      "logreg_model": {
+        "path": "models/logreg/model.sav",
+        "sha256": "ecb9588872390c86ee09db5e1254baf531fa24c460cab6bf7ffcd5823188ca18"
+      },
+      "logreg_vectorizer": {
+        "path": "models/logreg/tfidfVectorizer.pickle",
+        "sha256": "107f0d3b6cef61109ce805e83c087845809c3af7d2e1c43f02f060656af88978"
+      },
+      "svm_model": {
+        "path": "models/svm/model.sav",
+        "sha256": "3458002b722c5fee660fc3d0b7a401551f83ac768687a57c6af5bc05cb54e706"
+      },
+      "svm_vectorizer": {
+        "path": "models/svm/tfidfVectorizer.pickle",
+        "sha256": "e98e0b905e431a2e88ae45354865b2b5067f91d606424f523913f16587d7f668"
+      },
+      "tfidf_model": {
+        "path": "models/tfidf/model.sav",
+        "sha256": "2754d376115ce427beefbb2f702a840ddaa9100448269c66288d0f02f6dfaf22"
+      },
+      "tfidf_vectorizer": {
+        "path": "models/tfidf/tfidfVectorizer.pickle",
+        "sha256": "c52b5c906523f993a729a660e68543fb8156c862d75947bb5ed5794e165a812e"
+      },
+      "meta_learner": {
+        "path": "models/meta_learner.pkl",
+        "sha256": "fc82a5c6d39f4937e417e01af6b9763a67978ad93ba92313f02877785550081e"
       }
     }
   },
-  "dataset_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv",
+  "dataset_path": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\data\\test.csv",
   "n_samples": 165110,
   "offline_source": "backend/results/thesis_model_performance_youtube_filtered.md",
   "live_source": "backend/results/runtime/<version>/live_runtime_benchmark_full_test.json",
@@ -44,8 +72,8 @@
         "ece": 0.017889,
         "brier": 0.449058,
         "n_samples": 165110,
-        "runtime_seconds": 19.621,
-        "ms_per_sample": 0.1188,
+        "runtime_seconds": 9.885,
+        "ms_per_sample": 0.0599,
         "calibration_applied": true,
         "temperature": 1.1306,
         "weights_source": null,
@@ -77,8 +105,8 @@
         "ece": 0.0039,
         "brier": 0.410009,
         "n_samples": 165110,
-        "runtime_seconds": 20.78,
-        "ms_per_sample": 0.1259,
+        "runtime_seconds": 9.409,
+        "ms_per_sample": 0.057,
         "calibration_applied": true,
         "temperature": 1.0311,
         "weights_source": null,
@@ -107,13 +135,13 @@
         "variant": null,
         "accuracy": 0.6801,
         "macro_f1": 0.678,
-        "ece": 0.016953,
-        "brier": 0.429259,
+        "ece": 0.01569,
+        "brier": 0.429094,
         "n_samples": 165110,
-        "runtime_seconds": 17.472,
-        "ms_per_sample": 0.1058,
+        "runtime_seconds": 9.071,
+        "ms_per_sample": 0.0549,
         "calibration_applied": true,
-        "temperature": 1.0326,
+        "temperature": 1.0,
         "weights_source": null,
         "nf_gate_active": false,
         "model_artifact": null
@@ -121,8 +149,8 @@
       "delta": {
         "accuracy": 0.0,
         "macro_f1": 0.0,
-        "ece": 0.001263,
-        "brier": 0.000165
+        "ece": 0.0,
+        "brier": 0.0
       }
     },
     {
@@ -138,24 +166,24 @@
         "model": "meta_learner",
         "engine_type": "meta_learner",
         "variant": null,
-        "accuracy": 0.6953,
-        "macro_f1": 0.6945,
-        "ece": 0.015711,
-        "brier": 0.411713,
+        "accuracy": 0.6955,
+        "macro_f1": 0.6946,
+        "ece": 0.018303,
+        "brier": 0.411778,
         "n_samples": 165110,
-        "runtime_seconds": 79.092,
-        "ms_per_sample": 0.479,
+        "runtime_seconds": 30.787,
+        "ms_per_sample": 0.1865,
         "calibration_applied": true,
-        "temperature": 0.9835,
+        "temperature": 1.0,
         "weights_source": null,
         "nf_gate_active": false,
         "model_artifact": null
       },
       "delta": {
-        "accuracy": -0.0002,
-        "macro_f1": -0.0001,
-        "ece": -0.002592,
-        "brier": -6.5e-05
+        "accuracy": 0.0,
+        "macro_f1": 0.0,
+        "ece": 0.0,
+        "brier": 0.0
       }
     }
   ],
@@ -174,24 +202,24 @@
         "model": "ensemble_pso",
         "engine_type": "ensemble",
         "variant": "pso",
-        "accuracy": 0.6872,
-        "macro_f1": 0.6852,
-        "ece": 0.011272,
-        "brier": 0.41949,
+        "accuracy": 0.6961,
+        "macro_f1": 0.6941,
+        "ece": 0.006103,
+        "brier": 0.409001,
         "n_samples": 165110,
-        "runtime_seconds": 58.019,
-        "ms_per_sample": 0.3514,
+        "runtime_seconds": 29.992,
+        "ms_per_sample": 0.1816,
         "calibration_applied": true,
-        "temperature": 0.9348,
+        "temperature": 1.0,
         "weights_source": "pso",
         "nf_gate_active": false,
         "model_artifact": null
       },
       "delta": {
-        "accuracy": -0.006,
-        "macro_f1": -0.0057,
-        "ece": -0.007788,
-        "brier": 0.006479
+        "accuracy": 0.0029,
+        "macro_f1": 0.0032,
+        "ece": -0.012957,
+        "brier": -0.00401
       }
     },
     {
@@ -210,13 +238,13 @@
         "variant": "nsga2",
         "accuracy": 0.6959,
         "macro_f1": 0.694,
-        "ece": 0.004601,
-        "brier": 0.409204,
+        "ece": 0.003919,
+        "brier": 0.409162,
         "n_samples": 165110,
-        "runtime_seconds": 80.75,
-        "ms_per_sample": 0.4891,
+        "runtime_seconds": 29.892,
+        "ms_per_sample": 0.181,
         "calibration_applied": true,
-        "temperature": 0.9348,
+        "temperature": 1.0,
         "weights_source": "nsga2",
         "nf_gate_active": false,
         "model_artifact": null
@@ -224,8 +252,8 @@
       "delta": {
         "accuracy": 0.0027,
         "macro_f1": 0.0031,
-        "ece": -0.014459,
-        "brier": -0.003807
+        "ece": -0.015141,
+        "brier": -0.003849
       }
     }
   ],
@@ -234,13 +262,13 @@
       "model": "fuzzy_ensemble",
       "engine_type": "fuzzy_ensemble",
       "variant": null,
-      "accuracy": 0.6622,
-      "macro_f1": 0.6567,
-      "ece": 0.018516,
-      "brier": 0.44892,
+      "accuracy": 0.696,
+      "macro_f1": 0.694,
+      "ece": 0.002987,
+      "brier": 0.409288,
       "n_samples": 165110,
-      "runtime_seconds": 86.398,
-      "ms_per_sample": 0.5233,
+      "runtime_seconds": 33.599,
+      "ms_per_sample": 0.2035,
       "calibration_applied": false,
       "temperature": null,
       "weights_source": null,
@@ -251,6 +279,6 @@
   "conclusions": [
     "Direct same-name models remain numerically aligned on accuracy/macro-F1, with only small calibration drift between offline and live artifacts.",
     "The historical offline `ensemble` row should not be treated as the live runtime default anymore; the live stack now exposes explicit `ensemble_pso` and `ensemble_nsga2` variants.",
-    "The best live ensemble variant is `ensemble_nsga2` with macro-F1 0.6940."
+    "By raw point estimate, `ensemble_pso` has the highest live macro-F1 (0.6941) among ensemble variants (spread across variants: 0.0001). This is a point estimate only -- see `live_significance_tests.md` for whether the gap between variants is statistically significant before calling one variant \"best\"."
   ]
 }

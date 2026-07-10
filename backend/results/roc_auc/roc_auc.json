@@ -8,12 +8,28 @@
   ],
   "results": [
     {
+      "model": "ensemble_pso",
+      "macro": 0.8597,
+      "weighted": 0.8608,
+      "auc_positive": 0.8949,
+      "auc_neutral": 0.8186,
+      "auc_negative": 0.8656
+    },
+    {
       "model": "ensemble_nsga2",
       "macro": 0.8596,
       "weighted": 0.8606,
-      "auc_positive": 0.8948,
-      "auc_neutral": 0.8184,
+      "auc_positive": 0.8949,
+      "auc_neutral": 0.8183,
       "auc_negative": 0.8655
+    },
+    {
+      "model": "fuzzy_ensemble",
+      "macro": 0.8591,
+      "weighted": 0.8602,
+      "auc_positive": 0.8943,
+      "auc_neutral": 0.8182,
+      "auc_negative": 0.8649
     },
     {
       "model": "logreg",
@@ -25,26 +41,18 @@
     },
     {
       "model": "meta_learner",
-      "macro": 0.8577,
-      "weighted": 0.8587,
-      "auc_positive": 0.8922,
+      "macro": 0.8575,
+      "weighted": 0.8585,
+      "auc_positive": 0.8919,
       "auc_neutral": 0.8186,
-      "auc_negative": 0.8623
-    },
-    {
-      "model": "ensemble_pso",
-      "macro": 0.8511,
-      "weighted": 0.8522,
-      "auc_positive": 0.8897,
-      "auc_neutral": 0.806,
-      "auc_negative": 0.8575
+      "auc_negative": 0.8621
     },
     {
       "model": "svm",
-      "macro": 0.8434,
-      "weighted": 0.8446,
-      "auc_positive": 0.8847,
-      "auc_neutral": 0.7954,
+      "macro": 0.8435,
+      "weighted": 0.8447,
+      "auc_positive": 0.8846,
+      "auc_neutral": 0.7956,
       "auc_negative": 0.8501
     },
     {
@@ -54,14 +62,6 @@
       "auc_positive": 0.8684,
       "auc_neutral": 0.7925,
       "auc_negative": 0.8335
-    },
-    {
-      "model": "fuzzy_ensemble",
-      "macro": 0.8314,
-      "weighted": 0.8322,
-      "auc_positive": 0.868,
-      "auc_neutral": 0.7923,
-      "auc_negative": 0.8337
     }
   ]
 }

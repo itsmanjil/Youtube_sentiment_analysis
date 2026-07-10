@@ -99,9 +99,19 @@ def build_reconciliation(
             "the live stack now exposes explicit `ensemble_pso` and `ensemble_nsga2` variants."
         )
         best_live_ensemble = max(ensemble_variants, key=lambda row: float(row["live"]["macro_f1"]))
+        f1_values = [float(row["live"]["macro_f1"]) for row in ensemble_variants]
+        f1_spread = max(f1_values) - min(f1_values)
+        # A raw point-estimate ranking here is a common overclaim: with a small
+        # macro-F1 spread across variants, "best" should not be asserted without
+        # a significance test. See live_significance_tests.md for the paired
+        # bootstrap CI / McNemar test that actually supports (or refutes) a
+        # difference between ensemble_pso and ensemble_nsga2.
         conclusions.append(
-            f"The best live ensemble variant is `{best_live_ensemble['live_model']}` "
-            f"with macro-F1 {best_live_ensemble['live']['macro_f1']:.4f}."
+            f"By raw point estimate, `{best_live_ensemble['live_model']}` has the highest live "
+            f"macro-F1 ({best_live_ensemble['live']['macro_f1']:.4f}) among ensemble variants "
+            f"(spread across variants: {f1_spread:.4f}). This is a point estimate only -- see "
+            "`live_significance_tests.md` for whether the gap between variants is statistically "
+            "significant before calling one variant \"best\"."
         )
 
     return {
@@ -216,8 +226,8 @@ def main() -> None:
     output_json = Path(args.output_json) if args.output_json else output_root / "offline_vs_live_reconciliation.json"
     output_md = Path(args.output_md) if args.output_md else output_root / "offline_vs_live_reconciliation.md"
 
-    output_json.write_text(json.dumps(reconciliation, indent=2) + "\n")
-    output_md.write_text(build_markdown(reconciliation))
+    output_json.write_text(json.dumps(reconciliation, indent=2) + "\n", encoding="utf-8")
+    output_md.write_text(build_markdown(reconciliation), encoding="utf-8")
 
     print(f"Wrote {output_json}")
     print(f"Wrote {output_md}")

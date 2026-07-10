@@ -182,9 +182,9 @@ def run_custom(config_path: str, output_dir: str = None):
 
 
 def demo_pipeline(output_dir: str = None):
-    """Demo the complete thesis pipeline."""
+    """Runs the pipeline on synthetic data only; not part of reported results."""
     print("\n" + "=" * 60)
-    print("THESIS PIPELINE DEMONSTRATION")
+    print("THESIS PIPELINE DEMONSTRATION (SYNTHETIC DATA -- NOT REPORTED RESULTS)")
     print("=" * 60)
     print_smoke_test_warning()
 
@@ -198,6 +198,8 @@ def demo_pipeline(output_dir: str = None):
     config.evaluation.datasets = ['synthetic']
     config.evaluation.allow_synthetic_data = True
     config.model.allow_mock_fallbacks = True
+    if output_dir is None:
+        output_dir = "./results/_demo_synthetic"
     if output_dir:
         config.output_dir = output_dir
 

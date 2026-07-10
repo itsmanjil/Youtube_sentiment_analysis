@@ -830,20 +830,22 @@ class LiveWiringEngineTests(SimpleTestCase):
         self.assertAlmostEqual(pso_engine.weights["tfidf"], 0.5)
         self.assertAlmostEqual(nsga2_engine.weights["logreg"], 0.7)
 
-    def test_ensemble_temperature_only_applies_to_the_pso_weighted_config(self):
-        # results/temperature_scaling.json's "ensemble" row was fitted against
-        # get_sentiment_engine("ensemble", calibrate=False), whose default
-        # weights_optimization resolves to "pso". Applying that temperature to
-        # an nsga2-weighted or request-supplied-weights blend rescales
-        # probabilities the temperature was never fit on, while still
-        # reporting calibration_applied=True — silently wrong calibration
-        # metadata. Only the pso-sourced config may use the pinned artifact.
+    def test_ensemble_temperature_is_scoped_per_weight_variant(self):
+        # results/temperature_scaling.json now fits an independent temperature
+        # per served ensemble variant ("ensemble_pso" / "ensemble_nsga2") since
+        # research/ci/temperature_scaling.py::score_model scores each variant
+        # separately. Applying one variant's temperature to a differently
+        # weighted blend rescales probabilities the temperature was never fit
+        # on, while still reporting calibration_applied=True — silently wrong
+        # calibration metadata. Only the matching variant's row may be used;
+        # a variant with no matching row (nsga2 here) or request-supplied
+        # weights fall back to uncalibrated (T=1.0).
         from src.sentiment.engines.ensemble_engine import EnsembleSentimentEngine
 
         def _artifact_loader(name):
             artifacts = {
                 "temperature_scaling": {
-                    "models": [{"model": "ensemble", "temperature": 0.9348}]
+                    "models": [{"model": "ensemble_pso", "temperature": 0.9348}]
                 },
                 "pso_ensemble_weights": {
                     "weights": {"logreg": 0.2, "svm": 0.3, "tfidf": 0.5}
@@ -872,6 +874,7 @@ class LiveWiringEngineTests(SimpleTestCase):
         self.assertTrue(pso_engine.calibration_applied)
         self.assertAlmostEqual(pso_engine.temperature, 0.9348)
 
+        # No "ensemble_nsga2" row in the mocked artifact -> uncalibrated.
         self.assertFalse(nsga2_engine.calibration_applied)
         self.assertEqual(nsga2_engine.temperature, 1.0)
 

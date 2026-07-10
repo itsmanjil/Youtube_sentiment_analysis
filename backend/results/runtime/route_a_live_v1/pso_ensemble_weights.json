@@ -1,8 +1,15 @@
 {
   "weights": {
-    "logreg": 0.3086664156359348,
-    "svm": 0.6913335843640652,
-    "tfidf": 0.0
+    "logreg": 0.880485,
+    "svm": 0.0,
+    "tfidf": 0.119515
   },
-  "macro_f1": 0.7617
+  "val_macro_f1": 0.6916,
+  "test_macro_f1": 0.6941,
+  "models": [
+    "logreg",
+    "svm",
+    "tfidf"
+  ],
+  "preprocess": false
 }

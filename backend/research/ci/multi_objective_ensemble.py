@@ -102,7 +102,11 @@ def parse_model_names(raw_value: str) -> List[str]:
 def _engine_kwargs(model_name: str, calibration_profile: str) -> dict:
     if model_name in TRANSFORMER_MODELS:
         return {"calibration_profile": calibration_profile}
-    return {}
+    # NSGA-II ensemble weights are fitted on raw base-model probabilities,
+    # matching how EnsembleSentimentEngine builds its base engines at serving
+    # time (src/sentiment/engines/ensemble_engine.py). A calibrated base model
+    # here would optimize weights against a distribution never actually served.
+    return {"calibrate": False}
 
 
 def precompute_probs(

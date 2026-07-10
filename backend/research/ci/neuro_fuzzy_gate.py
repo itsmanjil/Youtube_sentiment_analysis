@@ -152,7 +152,11 @@ def parse_model_names(raw_value: str) -> List[str]:
 def _engine_kwargs(model_name: str, calibration_profile: str) -> dict:
     if model_name in TRANSFORMER_MODELS:
         return {"calibration_profile": calibration_profile}
-    return {}
+    # The neuro-fuzzy gate is fitted on raw base-model probabilities, matching
+    # how FuzzyEnsembleSentimentEngine builds its base engines at serving time
+    # (src/sentiment/engines/fuzzy_engine.py). A calibrated base model here
+    # would fit gate parameters against a distribution never actually served.
+    return {"calibrate": False}
 
 
 def score_model(
@@ -663,15 +667,15 @@ def main() -> None:
     }
 
     json_path = out_dir / "neuro_fuzzy_gate.json"
-    with open(json_path, "w") as fh:
+    with open(json_path, "w", encoding="utf-8") as fh:
         json.dump(output_data, fh, indent=2)
-    print(f"\nSaved JSON → {json_path}")
+    print(f"\nSaved JSON -> {json_path}")
 
     report = build_report(
         gate, fit_info, model_names, val_metrics, test_metrics, static_test_metrics
     )
     md_path = out_dir / "neuro_fuzzy_gate.md"
-    with open(md_path, "w") as fh:
+    with open(md_path, "w", encoding="utf-8") as fh:
         fh.write(report)
     print(f"Saved Markdown → {md_path}")
 

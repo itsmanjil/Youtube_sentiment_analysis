@@ -1,17 +1,25 @@
 """
 Metaheuristics Module for Computational Intelligence
 
-This module provides bio-inspired optimization algorithms for:
-- Hyperparameter tuning
-- Ensemble weight optimization
-- Neural architecture search
-- Feature selection
-
 Algorithms Implemented:
 1. PSO - Particle Swarm Optimization
 2. MOPSO - Multi-Objective PSO
 3. NSGA-II - Non-dominated Sorting Genetic Algorithm II
-4. DE - Differential Evolution
+
+There is no Differential Evolution (DE) implementation in this module or
+anywhere in this repository; an earlier revision of this docstring claimed
+one existed. Do not cite DE as an implemented method.
+
+Only PSO and NSGA-II are load-bearing for reported thesis results (see
+research/analysis/pso_convergence_analysis.py and
+research/ci/multi_objective_ensemble.py, which implement the weighted-voting
+and NSGA-II optimization used in the pinned runtime artifacts directly,
+without going through this module's OptimizationProblem/Optimizer classes).
+MOPSO and the EnsembleWeightOptimizer/FuzzyParameterOptimizer/
+HyperparameterTuner wrapper classes below are exploratory scaffolding: they
+are exercised only by demo.py's synthetic-data demo, are never called by any
+script that produces a results/ or results/runtime/ artifact, and must not be
+read as claimed contributions.
 
 Reference:
 - Kennedy & Eberhart (1995): Particle Swarm Optimization

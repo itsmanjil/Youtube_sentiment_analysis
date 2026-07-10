@@ -70,7 +70,12 @@ from src.utils import SENTIMENT_LABELS, normalize_probs
 from research.evaluation.calibration import compute_calibration_metrics
 
 LABELS: List[str] = list(SENTIMENT_LABELS)
-ALL_MODELS = ["logreg", "svm", "tfidf", "ensemble", "meta_learner"]
+# Each entry is a *served* model configuration. Temperature is a per-served-model
+# output transform, so the two ensemble variants get independent rows instead of
+# sharing a single "ensemble" temperature fitted on the PSO blend only (the old
+# behavior silently left ensemble_nsga2 uncalibrated at serving time).
+ALL_MODELS = ["logreg", "svm", "tfidf", "ensemble_pso", "ensemble_nsga2", "meta_learner"]
+_ENSEMBLE_VARIANTS = {"ensemble_pso": "pso", "ensemble_nsga2": "nsga2"}
 
 
 # ---------------------------------------------------------------------------
@@ -92,7 +97,13 @@ def score_model(name: str, texts: List[str]) -> np.ndarray:
     # script would score models through the previously-fitted temperature (loaded
     # automatically from the pinned runtime artifact), fitting a new T on top of
     # an already-calibrated distribution and silently compounding the scaling.
-    engine = get_sentiment_engine(name, calibrate=False)
+    engine_kwargs = {"calibrate": False}
+    if name in _ENSEMBLE_VARIANTS:
+        engine_name = "ensemble"
+        engine_kwargs["weights_optimization"] = _ENSEMBLE_VARIANTS[name]
+    else:
+        engine_name = name
+    engine = get_sentiment_engine(engine_name, **engine_kwargs)
     results = engine.batch_analyze(texts)
     mat = np.zeros((len(texts), len(LABELS)))
     for i, r in enumerate(results):
@@ -166,42 +177,35 @@ def calibrate_model(
     y_val: List[str],
     y_test: List[str],
 ) -> dict:
-    """Fit T on val, evaluate before/after on test.
+    """Fit T on val, decide whether to keep it using val alone, evaluate on test.
 
     The fitted T is only *kept* (and therefore applied at serving time) if it
-    actually reduces test-set ECE relative to the uncalibrated model. NLL
-    minimisation on the validation set is not guaranteed to improve held-out
-    ECE — for several models here it makes ECE measurably worse (see
-    docs/THESIS_RISKS_GAPS.md / code review) — so shipping a harmful T by
-    default would silently degrade served probabilities.
+    reduces **validation**-set ECE relative to the uncalibrated model. NLL
+    minimisation is not guaranteed to improve ECE on the same split it was
+    computed on, so the val ECE check is a real gate, not a tautology — but
+    critically, this keep/discard decision never inspects the test set. The
+    test-set before/after numbers below are a read-only evaluation of a
+    configuration already fixed on validation, matching the no-test-set-tuning
+    discipline applied everywhere else in the thesis (see
+    docs/THESIS_RISKS_GAPS.md, "Evaluation Methodology").
     """
 
     # Fit temperature on validation set
     T = fit_temperature(val_probs, y_val)
+    val_calibrated = apply_temperature(val_probs, T)
 
-    # Apply to test set
-    test_calibrated = apply_temperature(test_probs, T)
+    # Validation ECE before/after — this is what the keep/discard decision uses.
+    ece_before_val, _ = compute_calibration_metrics(y_val, val_probs, labels=LABELS)
+    ece_after_val_fitted, _ = compute_calibration_metrics(y_val, val_calibrated, labels=LABELS)
+    kept = ece_after_val_fitted < ece_before_val
+    T_final = T if kept else 1.0
 
-    # Metrics before calibration (test)
+    # Test-set metrics are computed for both T=1 and T_final, purely for
+    # reporting; the value of T_final was already fixed above from val alone.
+    test_calibrated = apply_temperature(test_probs, T_final)
     ece_before, brier_before = compute_calibration_metrics(y_test, test_probs, labels=LABELS)
-
-    # Metrics after calibration (test), using the fitted T
-    ece_after_fitted, brier_after_fitted = compute_calibration_metrics(
-        y_test, test_calibrated, labels=LABELS
-    )
-
-    # Only keep T if it actually improves held-out calibration (ECE).
-    kept = ece_after_fitted < ece_before
-    if kept:
-        T_final = T
-        ece_after, brier_after = ece_after_fitted, brier_after_fitted
-        final_probs = test_calibrated
-    else:
-        # Fall back to the identity transform (T=1): no calibration is better
-        # than harmful calibration.
-        T_final = 1.0
-        ece_after, brier_after = ece_before, brier_before
-        final_probs = test_probs
+    ece_after, brier_after = compute_calibration_metrics(y_test, test_calibrated, labels=LABELS)
+    final_probs = test_calibrated if kept else test_probs
 
     # Macro-F1 is argmax-invariant — verify it doesn't change when T != 1
     preds_before = [LABELS[i] for i in test_probs.argmax(axis=1)]
@@ -214,6 +218,8 @@ def calibrate_model(
         "temperature": round(T_final, 4),
         "temperature_fitted": round(T, 4),
         "kept": kept,
+        "ece_before_val": round(ece_before_val, 6),
+        "ece_after_val_fitted": round(ece_after_val_fitted, 6),
         "ece_before": round(ece_before, 6),
         "ece_after": round(ece_after, 6),
         "ece_reduction_pct": round(100 * (ece_before - ece_after) / max(ece_before, 1e-10), 2),
@@ -242,13 +248,14 @@ def build_report(results: List[dict]) -> str:
         "- T < 1: model was underconfident → scaling sharpens probabilities  \n"
         "- T = 1: no change required (already well-calibrated)\n",
         "**Macro-F1 is unaffected** — temperature scaling preserves the argmax.\n",
-        "**Gating**: NLL minimisation on the validation set is not guaranteed to "
-        "improve held-out ECE. A fitted T is only *kept* (and served) if it "
-        f"reduces test-set ECE relative to the uncalibrated model; otherwise "
-        "T is pinned to 1.0 (identity) and the fitted value is reported for "
-        f"reference only. Of {len(results)} models, **{n_kept} kept** their "
-        f"fitted temperature and **{n_discarded} were discarded** as harmful "
-        "on this run.\n",
+        "**Gating**: a fitted T is only *kept* (and served) if it reduces "
+        "**validation**-set ECE relative to the uncalibrated model; otherwise T "
+        "is pinned to 1.0 (identity) and the fitted value is reported for "
+        "reference only. This keep/discard decision never inspects the test "
+        "set — the test-set numbers below are a read-only evaluation of a "
+        f"configuration already fixed on validation. Of {len(results)} models, "
+        f"**{n_kept} kept** their fitted temperature and **{n_discarded} were "
+        "discarded** as not improving validation ECE on this run.\n",
         "## Results (Test Set)\n",
         "### ECE (Expected Calibration Error, 15 bins)\n",
         "*Lower is better. Reduction % = (before − after) / before × 100. "
@@ -322,12 +329,15 @@ def build_report(results: List[dict]) -> str:
         "## Thesis Interpretation\n",
         "Temperature scaling provides a lightweight, theoretically-grounded "
         "calibration layer that *can* improve probabilistic reliability without "
-        "retraining — but NLL-optimal T on the validation set is not guaranteed "
-        "to reduce held-out ECE. In this run, the fitted temperature only "
-        f"improved test-set ECE for {len(kept_results)}/{len(results)} model(s); "
-        "for the rest, the fitted T made ECE *worse*, so those models are served "
-        "uncalibrated (T=1.0) rather than shipping a harmful transform. See the "
-        "per-model \"Kept\" column above.\n",
+        "retraining — but NLL-optimal T is not guaranteed to reduce ECE on the "
+        "same split it was fitted on. In this run, the fitted temperature only "
+        f"improved validation-set ECE for {len(kept_results)}/{len(results)} "
+        "model(s); for the rest, the fitted T made validation ECE *worse*, so "
+        "those models are served uncalibrated (T=1.0) rather than shipping a "
+        "harmful transform. This decision is made entirely on validation data; "
+        "the test-set ECE/Brier columns above are a read-only check of the "
+        "already-fixed serving configuration, not part of the gating decision. "
+        "See the per-model \"Kept\" column above.\n",
         "- Classical ML models (TF-IDF + LogReg/SVM) output decision-function "
         "scores converted to probabilities via Platt scaling, which can be "
         "systematically over- or under-confident depending on the feature space.\n",

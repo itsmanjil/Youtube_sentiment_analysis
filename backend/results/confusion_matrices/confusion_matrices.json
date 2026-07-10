@@ -144,7 +144,7 @@
     },
     {
       "model": "ensemble_pso",
-      "macro_f1": 0.6873,
+      "macro_f1": 0.694,
       "confusion_matrix": {
         "labels": [
           "Negative",
@@ -153,43 +153,43 @@
         ],
         "matrix": [
           [
-            1299,
-            360,
-            165
+            1324,
+            342,
+            158
           ],
           [
-            379,
-            928,
-            230
+            385,
+            933,
+            219
           ],
           [
-            191,
-            227,
-            1221
+            198,
+            216,
+            1225
           ]
         ]
       },
       "prf": {
         "Negative": {
-          "precision": 0.695,
-          "recall": 0.7122,
-          "f1": 0.7035
+          "precision": 0.6943,
+          "recall": 0.7259,
+          "f1": 0.7097
         },
         "Neutral": {
-          "precision": 0.6125,
-          "recall": 0.6038,
-          "f1": 0.6081
+          "precision": 0.6258,
+          "recall": 0.607,
+          "f1": 0.6162
         },
         "Positive": {
-          "precision": 0.7556,
-          "recall": 0.745,
-          "f1": 0.7502
+          "precision": 0.7647,
+          "recall": 0.7474,
+          "f1": 0.7559
         }
       }
     },
     {
       "model": "ensemble_nsga2",
-      "macro_f1": 0.6933,
+      "macro_f1": 0.6937,
       "confusion_matrix": {
         "labels": [
           "Negative",
@@ -198,8 +198,8 @@
         ],
         "matrix": [
           [
-            1321,
-            343,
+            1322,
+            342,
             160
           ],
           [
@@ -209,32 +209,32 @@
           ],
           [
             196,
-            217,
-            1226
+            216,
+            1227
           ]
         ]
       },
       "prf": {
         "Negative": {
-          "precision": 0.6953,
-          "recall": 0.7242,
-          "f1": 0.7095
+          "precision": 0.6954,
+          "recall": 0.7248,
+          "f1": 0.7098
         },
         "Neutral": {
-          "precision": 0.6247,
+          "precision": 0.6255,
           "recall": 0.6064,
-          "f1": 0.6154
+          "f1": 0.6158
         },
         "Positive": {
-          "precision": 0.7624,
-          "recall": 0.748,
-          "f1": 0.7552
+          "precision": 0.7626,
+          "recall": 0.7486,
+          "f1": 0.7555
         }
       }
     },
     {
       "model": "meta_learner",
-      "macro_f1": 0.696,
+      "macro_f1": 0.6964,
       "confusion_matrix": {
         "labels": [
           "Negative",
@@ -243,43 +243,43 @@
         ],
         "matrix": [
           [
-            1278,
-            381,
+            1279,
+            380,
             165
           ],
           [
-            345,
-            973,
+            346,
+            972,
             219
           ],
           [
-            169,
-            234,
-            1236
+            170,
+            231,
+            1238
           ]
         ]
       },
       "prf": {
         "Negative": {
-          "precision": 0.7132,
-          "recall": 0.7007,
-          "f1": 0.7069
+          "precision": 0.7125,
+          "recall": 0.7012,
+          "f1": 0.7068
         },
         "Neutral": {
-          "precision": 0.6127,
-          "recall": 0.6331,
-          "f1": 0.6227
+          "precision": 0.614,
+          "recall": 0.6324,
+          "f1": 0.6231
         },
         "Positive": {
-          "precision": 0.763,
-          "recall": 0.7541,
-          "f1": 0.7585
+          "precision": 0.7633,
+          "recall": 0.7553,
+          "f1": 0.7593
         }
       }
     },
     {
       "model": "fuzzy_ensemble",
-      "macro_f1": 0.6543,
+      "macro_f1": 0.6927,
       "confusion_matrix": {
         "labels": [
           "Negative",
@@ -288,37 +288,37 @@
         ],
         "matrix": [
           [
-            1374,
-            303,
-            147
+            1336,
+            334,
+            154
           ],
           [
-            519,
-            788,
-            230
+            396,
+            922,
+            219
           ],
           [
-            303,
-            198,
-            1138
+            205,
+            215,
+            1219
           ]
         ]
       },
       "prf": {
         "Negative": {
-          "precision": 0.6257,
-          "recall": 0.7533,
-          "f1": 0.6836
+          "precision": 0.6897,
+          "recall": 0.7325,
+          "f1": 0.7104
         },
         "Neutral": {
-          "precision": 0.6113,
-          "recall": 0.5127,
-          "f1": 0.5577
+          "precision": 0.6268,
+          "recall": 0.5999,
+          "f1": 0.613
         },
         "Positive": {
-          "precision": 0.7512,
-          "recall": 0.6943,
-          "f1": 0.7216
+          "precision": 0.7657,
+          "recall": 0.7437,
+          "f1": 0.7546
         }
       }
     }

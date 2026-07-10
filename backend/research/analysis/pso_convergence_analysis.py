@@ -60,7 +60,12 @@ def load_df(path: str, sample: int | None, seed: int) -> pd.DataFrame:
 def precompute_probs(models: list, texts: list) -> dict:
     probs = {}
     for model_name in models:
-        engine = get_sentiment_engine(model_name)
+        # calibrate=False: PSO weights must be fitted on raw base-model
+        # probabilities, matching how the served EnsembleSentimentEngine builds
+        # its base engines (see src/sentiment/engines/ensemble_engine.py). A
+        # calibrated base model here would shift the distribution the weights
+        # are optimized against, away from what is actually served.
+        engine = get_sentiment_engine(model_name, calibrate=False)
         results = engine.batch_analyze(texts)
         probs[model_name] = [
             normalize_probs(coerce_sentiment_result(r, model_name).probs)
@@ -250,9 +255,20 @@ def build_markdown(
         "",
         f"**PSO test Macro-F1:** {pso_test_f1:.4f}",
         "",
-        "> PSO surpasses both baselines, confirming that the weight landscape is",
-        "> non-trivial (random search underperforms) and that PSO's guided search",
-        "> effectively exploits it.",
+        (
+            f"> PSO beats uniform weighting by {pso_val_f1 - uniform_f1:+.4f} val Macro-F1. "
+            f"Against 200-trial random search the margin is {pso_val_f1 - random_f1:+.4f} — "
+            "small enough that no significance test was run to claim PSO reliably beats random "
+            "search on this 3-parameter simplex; the honest reading is that PSO matches or "
+            "slightly exceeds random search here, and its role in the thesis is as the "
+            "single-objective baseline that NSGA-II's multi-objective search is compared "
+            "against (see results/runtime/route_a_live_v1/multi_objective_ensemble.md), not "
+            "as a method proven superior to random search in isolation."
+            if abs(pso_val_f1 - random_f1) < 0.001 else
+            "> PSO surpasses both baselines, confirming that the weight landscape is "
+            "non-trivial (random search underperforms) and that PSO's guided search "
+            "effectively exploits it."
+        ),
         "",
         "## 5. Why PSO Over Grid Search?",
         "",
@@ -283,13 +299,16 @@ def build_markdown(
         "> We apply Particle Swarm Optimization (Kennedy & Eberhart, 1995) to the",
         "> ensemble weight optimisation problem, treating the three-dimensional weight",
         "> vector (LogReg, SVM, TF-IDF) as a continuous search space and maximising",
-        "> validation Macro-F1. A swarm of 20 particles over 40 iterations converges",
-        "> within 10 iterations to a stable optimum (Figure N), yielding weights of",
+        f"> validation Macro-F1. A swarm of 20 particles over 40 iterations converges to",
+        f"> a stable optimum (see the convergence table above), yielding weights of",
         f"> LogReg={best_weights.get('logreg', 0):.3f}, SVM={best_weights.get('svm', 0):.3f},",
         f"> TF-IDF={best_weights.get('tfidf', 0):.3f}. PSO achieves a validation Macro-F1",
-        f"> of {pso_val_f1:.4f}, outperforming both uniform weighting ({uniform_f1:.4f})",
-        f"> and 200-trial random search ({random_f1:.4f}), confirming that the weight",
-        "> landscape has non-trivial structure that PSO exploits effectively.",
+        f"> of {pso_val_f1:.4f}, a {pso_val_f1 - uniform_f1:+.4f} improvement over uniform",
+        f"> weighting ({uniform_f1:.4f}). Against 200-trial random search ({random_f1:.4f}) the",
+        f"> margin is {pso_val_f1 - random_f1:+.4f}; PSO's role in this thesis is as the",
+        "> single-objective baseline against which the multi-objective NSGA-II ensemble",
+        "> (§4.3 / multi_objective_ensemble.md) is compared, not as a method independently",
+        "> proven superior to random search on this low-dimensional problem.",
         "",
         "## 8. References",
         "",
@@ -311,10 +330,16 @@ def main():
     parser.add_argument("--val", default="data/val.csv")
     parser.add_argument("--test", default="data/test.csv")
     parser.add_argument("--sample", type=int, default=8000,
-                        help="Rows to use from val set (None = full)")
+                        help="Rows to use from val set for fitting (None = full)")
+    parser.add_argument("--test_sample", type=int, default=None,
+                        help="Optional cap on test rows for the reported test F1 "
+                             "(default: full test split, matching multi_objective_ensemble.py)")
     parser.add_argument("--particles", type=int, default=20)
     parser.add_argument("--iterations", type=int, default=40)
     parser.add_argument("--output", default="results/")
+    parser.add_argument("--pin_dir", default=None,
+                         help="If set, also write the served pso_ensemble_weights.json "
+                              "artifact here (e.g. results/runtime/route_a_live_v1/).")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -323,7 +348,7 @@ def main():
 
     print("Loading data...")
     val_df = load_df(args.val, args.sample, args.seed)
-    test_df = load_df(args.test, args.sample, args.seed)
+    test_df = load_df(args.test, args.test_sample, args.seed)
     print(f"  Val: {len(val_df):,} | Test: {len(test_df):,}")
 
     print("Pre-computing model probabilities (val)...")
@@ -375,7 +400,7 @@ def main():
         "convergence_history": history,
     }
     json_path = out_dir / "pso_convergence.json"
-    json_path.write_text(json.dumps(raw, indent=2))
+    json_path.write_text(json.dumps(raw, indent=2), encoding="utf-8")
     print(f"\nSaved JSON: {json_path}")
 
     # Build + save Markdown
@@ -385,8 +410,30 @@ def main():
         uniform_f1, random_f1, random_weights
     )
     md_path = out_dir / "pso_convergence.md"
-    md_path.write_text(md)
+    md_path.write_text(md, encoding="utf-8")
     print(f"Saved Markdown: {md_path}")
+
+    # Served artifact: consumed at inference time by EnsembleSentimentEngine
+    # (weights_optimization="pso") via src/utils/runtime_artifacts.py. Written
+    # in the same shape as research/optimize_ensemble.py's --output so both
+    # producers are interchangeable.
+    served = {
+        "weights": best_weights,
+        "val_macro_f1": round(pso_val_f1, 4),
+        "test_macro_f1": round(pso_test_f1, 4),
+        "models": MODELS,
+        "preprocess": False,
+    }
+    served_path = out_dir / "pso_ensemble_weights.json"
+    served_path.write_text(json.dumps(served, indent=2), encoding="utf-8")
+    print(f"Saved served weights: {served_path}")
+
+    if args.pin_dir:
+        pin_dir = Path(args.pin_dir)
+        pin_dir.mkdir(parents=True, exist_ok=True)
+        pin_path = pin_dir / "pso_ensemble_weights.json"
+        pin_path.write_text(json.dumps(served, indent=2), encoding="utf-8")
+        print(f"Pinned served weights: {pin_path}")
 
 
 if __name__ == "__main__":

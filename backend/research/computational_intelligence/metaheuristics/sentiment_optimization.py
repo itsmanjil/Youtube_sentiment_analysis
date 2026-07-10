@@ -1,12 +1,18 @@
 """
 Sentiment Analysis Optimization Problems
 
+EXPLORATORY — NOT USED IN REPORTED RESULTS.
+
 This module provides optimization problem definitions specific to
-sentiment analysis, enabling:
-1. Ensemble weight optimization
-2. Fuzzy parameter tuning
-3. Hyperparameter optimization
-4. Multi-objective optimization (accuracy vs speed)
+sentiment analysis (ensemble weight optimization, fuzzy parameter tuning,
+hyperparameter optimization, multi-objective optimization). The classes
+here (EnsembleWeightOptimizer, FuzzyParameterOptimizer, HyperparameterTuner)
+are exercised only by metaheuristics/demo.py's synthetic-data demo. Every
+reported thesis number for ensemble weighting and NSGA-II ensemble
+optimization is instead produced directly by
+research/analysis/pso_convergence_analysis.py and
+research/ci/multi_objective_ensemble.py, which do not import this module.
+Do not cite these classes as having produced any pinned result.
 
 Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """

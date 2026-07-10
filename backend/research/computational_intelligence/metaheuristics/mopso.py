@@ -1,6 +1,14 @@
 """
 Multi-Objective Particle Swarm Optimization (MOPSO)
 
+EXPLORATORY — NOT USED IN REPORTED RESULTS. The thesis's multi-objective
+ensemble optimization result (Macro-F1 / ECE / coverage Pareto front) is
+produced by NSGA-II (research/ci/multi_objective_ensemble.py, class
+NSGA2), not by this MOPSO implementation. MOPSO is exercised only by
+metaheuristics/demo.py's synthetic-data demo and is kept as illustrative
+scaffolding for the "PSO family" background section, not as a claimed
+contribution.
+
 Implementation of MOPSO for problems with multiple conflicting objectives.
 Uses an external archive to maintain the Pareto front.
 
