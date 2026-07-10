@@ -106,6 +106,15 @@ function Dashboard(props) {
     return `${(value * 100).toFixed(1)}%`;
   };
 
+  const sentimentTotalCount =
+    sentimentBreakdown && sentimentBreakdown.length >= 3
+      ? (sentimentBreakdown[0]?.value || 0) +
+        (sentimentBreakdown[1]?.value || 0) +
+        (sentimentBreakdown[2]?.value || 0)
+      : 0;
+  const percentOfTotal = (value) =>
+    sentimentTotalCount > 0 ? `${((value / sentimentTotalCount) * 100).toFixed(1)}% of total` : null;
+
   const ensembleInfo = analysisMeta?.ensemble;
   const ensembleModels = ensembleInfo?.models || [];
   const ensembleWeights = ensembleInfo?.weights || {};
@@ -502,72 +511,66 @@ function Dashboard(props) {
                 )}
               </div>
               <div className="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div className="card">
+                <div className="card h-100" style={{ borderLeft: "4px solid var(--yt-red)" }}>
                   <div className="card-header p-3 pt-2">
-
-                    <div className="text-left pt-1">
-                      <p className="text-sm mb-0 text-capitalize">
-                        Total Comments
-                      </p>
-                      <h4 className="mb-0">
-                        {sentimentBreakdown && sentimentBreakdown.length >= 3
-                          ? (sentimentBreakdown[0]?.value || 0) +
-                            (sentimentBreakdown[1]?.value || 0) +
-                            (sentimentBreakdown[2]?.value || 0)
-                          : 0}
-                      </h4>
-                      {/* pull total comments data into this h4 */}
+                    <div className="d-flex align-items-center">
+                      <i className="fas fa-comments me-2" style={{ fontSize: "20px", color: "var(--yt-red)" }} aria-hidden="true"></i>
+                      <p className="text-sm mb-0 text-capitalize">Total Comments</p>
                     </div>
+                    <h3 className="mb-0 mt-2">{sentimentTotalCount}</h3>
                   </div>
                   <hr className="dark horizontal my-0" />
-
                 </div>
               </div>
               <div className="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div className="card">
+                <div className="card h-100" style={{ borderLeft: `4px solid ${SENTIMENT_COLORS.Positive}` }}>
                   <div className="card-header p-3 pt-2">
-
-                    <div className="text-left pt-1">
-                      <p className="text-sm mb-0 text-capitalize">
-                        Positive Comments
-                      </p>
-                      <h4 className="mb-0">{sentimentBreakdown && sentimentBreakdown[2] ? sentimentBreakdown[2].value : 0}</h4>
-                      {/* pull positive comments data into this h4 */}
+                    <div className="d-flex align-items-center">
+                      <i className="fas fa-thumbs-up me-2" style={{ fontSize: "18px", color: SENTIMENT_COLORS.Positive }} aria-hidden="true"></i>
+                      <p className="text-sm mb-0 text-capitalize">Positive Comments</p>
                     </div>
+                    <h4 className="mb-0 mt-2" style={{ color: SENTIMENT_COLORS.Positive }}>
+                      {sentimentBreakdown && sentimentBreakdown[2] ? sentimentBreakdown[2].value : 0}
+                    </h4>
+                    {percentOfTotal(sentimentBreakdown?.[2]?.value) && (
+                      <p className="text-xs text-muted mb-0">{percentOfTotal(sentimentBreakdown[2].value)}</p>
+                    )}
                   </div>
                   <hr className="dark horizontal my-0" />
-
                 </div>
               </div>
               <div className="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div className="card">
+                <div className="card h-100" style={{ borderLeft: `4px solid ${SENTIMENT_COLORS.Negative}` }}>
                   <div className="card-header p-3 pt-2">
-
-                    <div className="text-left pt-1">
-                      <p className="text-sm mb-0 text-capitalize">
-                        Negative Comments
-                      </p>
-                      <h4 className="mb-0">{sentimentBreakdown && sentimentBreakdown[0] ? sentimentBreakdown[0].value : 0}</h4>
-                      {/* pull negative comments data into this h4 */}
+                    <div className="d-flex align-items-center">
+                      <i className="fas fa-thumbs-down me-2" style={{ fontSize: "18px", color: SENTIMENT_COLORS.Negative }} aria-hidden="true"></i>
+                      <p className="text-sm mb-0 text-capitalize">Negative Comments</p>
                     </div>
+                    <h4 className="mb-0 mt-2" style={{ color: SENTIMENT_COLORS.Negative }}>
+                      {sentimentBreakdown && sentimentBreakdown[0] ? sentimentBreakdown[0].value : 0}
+                    </h4>
+                    {percentOfTotal(sentimentBreakdown?.[0]?.value) && (
+                      <p className="text-xs text-muted mb-0">{percentOfTotal(sentimentBreakdown[0].value)}</p>
+                    )}
                   </div>
                   <hr className="dark horizontal my-0" />
-
                 </div>
               </div>
               <div className="col-xl-3 col-sm-6">
-                <div className="card">
+                <div className="card h-100" style={{ borderLeft: `4px solid ${SENTIMENT_COLORS.Neutral}` }}>
                   <div className="card-header p-3 pt-2">
-
-                    <div className="text-left pt-1">
-                      <p className="text-sm mb-0 text-capitalize">
-                        Neutral Comments
-                      </p>
-                      <h4 className="mb-0">{sentimentBreakdown && sentimentBreakdown[1] ? sentimentBreakdown[1].value : 0}</h4>
+                    <div className="d-flex align-items-center">
+                      <i className="fas fa-minus-circle me-2" style={{ fontSize: "18px", color: SENTIMENT_COLORS.Neutral }} aria-hidden="true"></i>
+                      <p className="text-sm mb-0 text-capitalize">Neutral Comments</p>
                     </div>
+                    <h4 className="mb-0 mt-2" style={{ color: SENTIMENT_COLORS.Neutral }}>
+                      {sentimentBreakdown && sentimentBreakdown[1] ? sentimentBreakdown[1].value : 0}
+                    </h4>
+                    {percentOfTotal(sentimentBreakdown?.[1]?.value) && (
+                      <p className="text-xs text-muted mb-0">{percentOfTotal(sentimentBreakdown[1].value)}</p>
+                    )}
                   </div>
                   <hr className="dark horizontal my-0" />
-
                 </div>
               </div>
             </div>
@@ -954,18 +957,11 @@ function Dashboard(props) {
                               }}
                             />
                             <Tooltip />
-                            <Legend
-                              verticalAlign="top"
-                              align="right"
-                              wrapperStyle={{
-                                left: 0,
-                                top: -20,
-                                paddingBottom: -60,
-                              }}
-                            />
+                            <Legend verticalAlign="top" align="right" />
                             <Line
                               type="monotone"
                               dataKey="positive"
+                              name="Positive"
                               stroke={SENTIMENT_COLORS.Positive}
                               strokeWidth={2}
                               activeDot={{ r: 8 }}
@@ -973,6 +969,7 @@ function Dashboard(props) {
                             <Line
                               type="monotone"
                               dataKey="negative"
+                              name="Negative"
                               stroke={SENTIMENT_COLORS.Negative}
                               strokeWidth={2}
                               strokeDasharray="6 3"
@@ -981,6 +978,7 @@ function Dashboard(props) {
                             <Line
                               type="monotone"
                               dataKey="neutral"
+                              name="Neutral"
                               stroke={SENTIMENT_COLORS.Neutral}
                               strokeWidth={2}
                               strokeDasharray="2 3"
@@ -988,14 +986,6 @@ function Dashboard(props) {
                             />
                           </LineChart>
                         </ResponsiveContainer>
-                        <p
-                          style={{
-                            textAlignVertical: "center",
-                            textAlign: "center",
-                          }}
-                        >
-                          Time
-                        </p>
                       </div>
                     </div>
                   </div>
@@ -1005,7 +995,7 @@ function Dashboard(props) {
                     <div className="card-header pb-0">
                       <div className="row">
                         <div className="col-lg-6 col-7">
-                          <h6>Types of Emotion</h6>
+                          <h6>Sentiment Share</h6>
                         </div>
                         <div className="col-lg-6 col-5 my-auto text-end">
                           <div className="float-lg-end">

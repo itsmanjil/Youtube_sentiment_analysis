@@ -12,8 +12,18 @@ const RegisterForm = () => {
   });
 
   const [formErrors, setFormErrors] = useState([]);
-  const [emailError, setEmailError] = useState({});
-  const [usernameError, setUsernameError] = useState({});
+  // Keyed by field name (user_name/email/password/password2) — holds
+  // whatever per-field validation errors the backend returns (DRF serializer
+  // errors are arrays of strings per field).
+  const [serverErrors, setServerErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const serverFieldError = (field) => {
+    const value = serverErrors[field];
+    if (!value) return null;
+    return Array.isArray(value) ? value.join(" ") : value;
+  };
 
   const { user_name, email, password, password2 } = inputData;
 
@@ -41,18 +51,18 @@ const RegisterForm = () => {
       error.email = "This is not a valid email format!";
     }
     if (!inputData.password) {
-      error.password = "Both password are required";
-    } else if (inputData.password.length < 4) {
-      error.password = "Password must be more than 4 characters";
-    } else if (inputData.password.length > 10) {
-      error.password = "Password cannot exceed more than 10 characters";
+      error.password = "Password is required";
+    } else if (inputData.password.length < 8) {
+      error.password = "Password must be at least 8 characters";
+    } else if (inputData.password.length > 128) {
+      error.password = "Password cannot exceed 128 characters";
     }
     if (!inputData.password2) {
-      error.password2 = "Both password are required";
-    } else if (inputData.password2.length < 4) {
-      error.password2 = "Password must be more than 4 characters";
-    } else if (inputData.password2.length > 10) {
-      error.password2 = "Password cannot exceed more than 10 characters";
+      error.password2 = "Please confirm your password";
+    } else if (inputData.password2.length < 8) {
+      error.password2 = "Password must be at least 8 characters";
+    } else if (inputData.password2.length > 128) {
+      error.password2 = "Password cannot exceed 128 characters";
     }
     if (inputData.password !== inputData.password2) {
       error.password2 = "Password doesn't match!";
@@ -61,6 +71,9 @@ const RegisterForm = () => {
   };
 
   const storeDataHandler = () => {
+    setSubmitError("");
+    setServerErrors({});
+    setIsSubmitting(true);
     axiosInstance
       .post("user/register/", {
         user_name: user_name,
@@ -70,18 +83,19 @@ const RegisterForm = () => {
       })
       .then((res) => {
         if (res.status === 400) {
-          const email = {};
-          const user_name = {};
-          email.error = res.data.email;
-          user_name.error = res.data.user_name;
-          setEmailError(email);
-          setUsernameError(user_name);
+          setServerErrors(res.data || {});
+          setIsSubmitting(false);
+        } else if (res.status >= 200 && res.status < 300) {
+          navigate("/signin", { state: { justRegistered: true } });
         } else {
-          alert("User created");
-          navigate("/signin");
+          setSubmitError(res.data?.message || res.data?.msg || "Registration failed. Please try again.");
+          setIsSubmitting(false);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setSubmitError("Cannot connect to server. Please check your connection and try again.");
+        setIsSubmitting(false);
+      });
   };
 
   const submitHandler = (e) => {
@@ -108,61 +122,88 @@ const RegisterForm = () => {
                   </Link>
                 </p>
                 <form role="form">
+                  {submitError && (
+                    <div className="alert alert-danger" role="alert">{submitError}</div>
+                  )}
                   <div className="input-group input-group-outline mb-3">
                     {/* <label className="form-label">Name</label> */}
                     <input
                       type="text"
                       placeholder="Name"
+                      aria-label="Name"
                       className="form-control"
                       name="user_name"
                       value={user_name}
                       onChange={inputHanlder}
                     />
                   </div>
-                  <p style={{ color: "red" }}>{formErrors.user_name}</p>
-                  <p style={{ color: "red" }}>{usernameError.error}</p>
+                  {(formErrors.user_name || serverFieldError("user_name")) && (
+                    <p className="text-danger text-sm mb-3">
+                      <i className="fas fa-exclamation-circle me-1" aria-hidden="true"></i>
+                      {formErrors.user_name || serverFieldError("user_name")}
+                    </p>
+                  )}
                   <div className="input-group input-group-outline mb-3">
                     {/* <label className="form-label">Email</label> */}
                     <input
                       type="email"
                       placeholder="Email"
+                      aria-label="Email"
                       className="form-control"
                       name="email"
                       value={email}
                       onChange={inputHanlder}
                     />
                   </div>
-                  <p style={{ color: "red" }}>{formErrors.email}</p>
-                  <p style={{ color: "red" }}>{emailError.error}</p>
+                  {(formErrors.email || serverFieldError("email")) && (
+                    <p className="text-danger text-sm mb-3">
+                      <i className="fas fa-exclamation-circle me-1" aria-hidden="true"></i>
+                      {formErrors.email || serverFieldError("email")}
+                    </p>
+                  )}
                   <div className="input-group input-group-outline mb-3">
                     <input
                       type="password"
                       placeholder="Password"
+                      aria-label="Password"
                       className="form-control"
                       name="password"
                       value={password}
                       onChange={inputHanlder}
                     />
                   </div>
-                  <p style={{ color: "red" }}>{formErrors.password}</p>
+                  {(formErrors.password || serverFieldError("password")) && (
+                    <p className="text-danger text-sm mb-3">
+                      <i className="fas fa-exclamation-circle me-1" aria-hidden="true"></i>
+                      {formErrors.password || serverFieldError("password")}
+                    </p>
+                  )}
                   <div className="input-group input-group-outline mb-3">
                     <input
                       type="password"
                       placeholder="Confirm Password"
+                      aria-label="Confirm Password"
                       className="form-control"
                       name="password2"
                       value={password2}
                       onChange={inputHanlder}
                     />
                   </div>
-                  <p style={{ color: "red" }}>{formErrors.password2}</p>
-                  
+                  {(formErrors.password2 || serverFieldError("password2")) && (
+                    <p className="text-danger text-sm mb-3">
+                      <i className="fas fa-exclamation-circle me-1" aria-hidden="true"></i>
+                      {formErrors.password2 || serverFieldError("password2")}
+                    </p>
+                  )}
+
                   <div className="text-center">
                     <button
                       type="submit"
                       className="p-2 mb-2 bg-primary text-white w-100 my-4 mb-2"
-                      onClick={submitHandler}>
-                      Sign Up
+                      onClick={submitHandler}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Signing up..." : "Sign Up"}
                     </button>
                   </div>
                 </form>

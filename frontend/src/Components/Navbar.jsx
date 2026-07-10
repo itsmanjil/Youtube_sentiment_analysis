@@ -7,10 +7,11 @@ import AuthContext from "../context/AuthContext";
 
 export default function Navbar() {
   const [isActive, setActive] = useState("home");
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const { isAuthenticated } = useContext(AuthContext);
 
 
-  
+
   return (
     <>
       {/* Navbar */}
@@ -36,13 +37,24 @@ export default function Navbar() {
             type="button"
             id="navbarSideCollapse"
             aria-label="Toggle navigation"
+            aria-expanded={isNavOpen}
+            onClick={() => setIsNavOpen((open) => !open)}
           >
             <span className="navbar-toggler-icon"></span>
           </button>
 
           <div
-            className="navbar-collapse offcanvas-collapse"
+            className={`navbar-collapse offcanvas-collapse${isNavOpen ? " open" : ""}`}
             id="navbarsExampleDefault"
+            // Inline style (not just the .open class) so this wins regardless
+            // of specificity/order fights with the several CSS frameworks
+            // index.html loads on top of each other.
+            style={isNavOpen ? { visibility: "visible", transform: "translateX(-100%)" } : undefined}
+            onClick={(e) => {
+              if (e.target.closest("a")) {
+                setIsNavOpen(false);
+              }
+            }}
           >
             <ul className="navbar-nav ms-auto navbar-nav-scroll">
               <li className="nav-item">

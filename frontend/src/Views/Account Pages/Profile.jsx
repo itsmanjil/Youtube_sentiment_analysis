@@ -4,8 +4,10 @@ import { Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import AuthContext from "../../context/AuthContext";
 import axiosInstance from "../../axios";
+import usePageTitle from "../../utils/usePageTitle";
 
 function Profile(props) {
+  usePageTitle("Profile");
   const { authToken } = useContext(AuthContext);
   const [user, setUser] = useState({});
   const [searchedList, setSearchedList] = useState([]);
@@ -91,6 +93,7 @@ function Profile(props) {
                     type="button"
                     className="nav-link text-body p-0"
                     id="iconNavbarSidenav"
+                    aria-label="Toggle sidebar navigation"
                     style={{background: 'none', border: 'none', cursor: 'pointer'}}
                   >
                     <div className="sidenav-toggler-inner">
@@ -117,12 +120,14 @@ function Profile(props) {
           <div className="card card-body mx-3 mx-md-4 mt-n6">
             <div className="row gx-4 mb-2">
               <div className="col-auto">
-                <div className="avatar avatar-xl position-relative">
-                  <img
-                    src="../assets/img/bruce-mars.jpg"
-                    alt="profile_image"
-                    className="w-100 border-radius-lg shadow-sm"
-                  />
+                <div
+                  className="avatar avatar-xl position-relative bg-primary d-flex align-items-center justify-content-center border-radius-lg shadow-sm"
+                  style={{ width: "74px", height: "74px" }}
+                  aria-hidden="true"
+                >
+                  <span className="text-white font-weight-bold" style={{ fontSize: "28px" }}>
+                    {(user.user_name || "?").trim().charAt(0).toUpperCase()}
+                  </span>
                 </div>
               </div>
               <div className="col-auto my-auto">
@@ -131,29 +136,8 @@ function Profile(props) {
                     {user.user_name}
                   </h5>
                   <p className="mb-0 font-weight-normal text-sm">
-                    {/* CEO / Co-Founder */}
                     {user.email}
                   </p>
-                </div>
-              </div>
-              <div className="col-lg-4 col-md-6 my-sm-auto ms-sm-auto me-sm-0 mx-auto mt-3">
-                <div className="nav-wrapper position-relative end-0">
-                  <ul className="nav nav-pills nav-fill p-1" role="tablist">
-                    <li className="nav-item">
-                      <Link
-                        to="/"
-                        className="nav-link mb-0 px-0 py-1 active "
-                        aria-selected="true"
-                      >
-                        <i className="material-icons text-lg position-relative">
-                          home
-                        </i>
-                        <span className="ms-1">App</span>
-                      </Link>
-                    </li>
-                    
-                    
-                  </ul>
                 </div>
               </div>
             </div>
@@ -162,58 +146,20 @@ function Profile(props) {
                 <div className="col-12 col-xl-4">
                   <div className="card card-plain h-100">
                     <div className="card-header pb-0 p-3">
-                      <div className="row">
-                        <div className="col-md-8 d-flex align-items-center">
-                          <h6 className="mb-0">Profile Information</h6>
-                        </div>
-                        <div className="col-md-4 text-end">
-                          <Link to="/editprofile">
-                            <i
-                              className="fas fa-user-edit text-secondary text-sm"
-                              data-bs-toggle="tooltip"
-                              data-bs-placement="top"
-                              title="Edit Profile"
-                            ></i>
-                          </Link>
-                        </div>
-                      </div>
+                      <h6 className="mb-0">Profile Information</h6>
                     </div>
                     <div className="card-body p-3">
                       <p className="text-sm">
-                        Welcome to your profile {user.user_name}.
+                        Welcome to your profile{user.user_name ? `, ${user.user_name}` : ""}.
                       </p>
-                      {/* <hr className="horizontal gray-light my-4" /> */}
                       <ul className="list-group">
                         <li className="list-group-item border-0 ps-0 pt-0 text-sm">
                           <strong className="text-dark">Name: </strong> &nbsp;
                           {user.user_name}
                         </li>
-                        <li className="list-group-item border-0 ps-0 text-sm">
+                        <li className="list-group-item border-0 ps-0 pb-0 text-sm">
                           <strong className="text-dark">Email: </strong> &nbsp;
                           {user.email}
-                        </li>
-                        
-                        <li className="list-group-item border-0 ps-0 pb-0">
-                          <strong className="text-dark text-sm">Social: </strong>{" "}
-                          &nbsp;
-                          <a
-                            className="btn btn-facebook btn-simple mb-0 ps-1 pe-2 py-0"
-                            href="www.facebook.com"
-                          >
-                            <i className="fab fa-facebook fa-lg"></i>
-                          </a>
-                          <a
-                            className="btn btn-reddit btn-simple mb-0 ps-1 pe-2 py-0"
-                            href="www.reddit.com"
-                          >
-                            <i className="fab fa-reddit fa-lg"></i>
-                          </a>
-                          <a
-                            className="btn btn-instagram btn-simple mb-0 ps-1 pe-2 py-0"
-                            href="www.instagram.com"
-                          >
-                            <i className="fab fa-instagram fa-lg"></i>
-                          </a>
                         </li>
                       </ul>
                     </div>

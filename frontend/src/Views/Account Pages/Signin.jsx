@@ -1,13 +1,19 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
+// Landing-theme styles (.ex-header, .ex-form-1, .offcanvas-collapse): needed
+// for direct loads of /signin, which otherwise render an unstyled navbar.
+import "../Pages/Homepage.css";
 
 // import Navbar from "../../Components/Navbar";
 import SigninForm from "./SigninForm";
 import AuthContext from "../../context/AuthContext";
+import usePageTitle from "../../utils/usePageTitle";
 
 function Signin() {
+  usePageTitle("Log In");
   const { isAuthenticated, loading } = useContext(AuthContext);
+  const [isNavOpen, setIsNavOpen] = useState(false);
 
   if (!loading && isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
@@ -38,13 +44,21 @@ function Signin() {
             type="button"
             id="navbarSideCollapse"
             aria-label="Toggle navigation"
+            aria-expanded={isNavOpen}
+            onClick={() => setIsNavOpen((open) => !open)}
           >
             <span className="navbar-toggler-icon"></span>
           </button>
 
           <div
-            className="navbar-collapse offcanvas-collapse"
+            className={`navbar-collapse offcanvas-collapse${isNavOpen ? " open" : ""}`}
             id="navbarsExampleDefault"
+            style={isNavOpen ? { visibility: "visible", transform: "translateX(-100%)" } : undefined}
+            onClick={(e) => {
+              if (e.target.closest("a")) {
+                setIsNavOpen(false);
+              }
+            }}
           >
             <ul className="navbar-nav ms-auto navbar-nav-scroll">
               <li className="nav-item">

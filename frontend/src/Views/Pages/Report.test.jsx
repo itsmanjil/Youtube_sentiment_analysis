@@ -313,7 +313,7 @@ describe('Report Component', () => {
   test('back button links to dashboard', () => {
     renderWithContext(mockReportData);
 
-    const backButton = screen.getByRole('link', { name: '' }); // The arrow icon
+    const backButton = screen.getByRole('link', { name: 'Back to dashboard' });
     expect(backButton).toHaveAttribute('href', '/dashboard');
   });
 
@@ -350,11 +350,14 @@ describe('Report Component', () => {
     expect(zeroPercentTexts.length).toBeGreaterThan(0);
   });
 
-  test('displays report number', () => {
+  test('does not display a fabricated report number', () => {
+    // The old template had a hardcoded "Report no.: 001" on every report
+    // regardless of which analysis it was — removed as misleading placeholder
+    // content rather than real data.
     renderWithContext(mockReportData);
 
-    expect(screen.getByText(/Report no\./i)).toBeInTheDocument();
-    expect(screen.getByText('001')).toBeInTheDocument();
+    expect(screen.getByText('Report', { selector: '.graphic-path p' })).toBeInTheDocument();
+    expect(screen.queryByText(/Report no\./i)).not.toBeInTheDocument();
   });
 
   test('displays searched by information', () => {

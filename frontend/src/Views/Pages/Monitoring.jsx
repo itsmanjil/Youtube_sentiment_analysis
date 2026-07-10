@@ -371,7 +371,7 @@ function Monitoring() {
                             <div className="card-body">
                               <div className="row align-items-center">
                                 {/* Video Thumbnail */}
-                                <div className="col-md-2 text-center">
+                                <div className="col-md-6 col-lg-2 text-center">
                                   {analysis.video?.thumbnail_url ? (
                                     <img
                                       src={analysis.video.thumbnail_url}
@@ -400,7 +400,7 @@ function Monitoring() {
                                 </div>
 
                                 {/* Video Info */}
-                                <div className="col-md-4">
+                                <div className="col-md-6 col-lg-4">
                                   <h6 className="mb-1">
                                     {analysis.video?.title || "Untitled Video"}
                                   </h6>
@@ -418,7 +418,7 @@ function Monitoring() {
                                 </div>
 
                                 {/* Sentiment Stats */}
-                                <div className="col-md-3">
+                                <div className="col-md-12 col-lg-3">
                                   <p className="text-sm mb-2">
                                     <strong>Sentiment Breakdown:</strong>
                                   </p>
@@ -467,7 +467,7 @@ function Monitoring() {
                                 </div>
 
                                 {/* Confidence & Uncertainty */}
-                                <div className="col-md-1" style={{ borderLeft: "1px solid #eee", paddingLeft: "12px" }}>
+                                <div className="col-md-6 col-lg-1" style={{ borderLeft: "1px solid #eee", paddingLeft: "12px" }}>
                                   {analysis.confidence_stats && (
                                     <div className="text-center mb-2">
                                       <p className="text-xs text-muted mb-0">Confidence</p>
@@ -501,7 +501,7 @@ function Monitoring() {
                                 </div>
 
                                 {/* Action Button */}
-                                <div className="col-md-2 text-center">
+                                <div className="col-md-6 col-lg-2 text-center">
                                   <div
                                     className="mb-2"
                                     style={{

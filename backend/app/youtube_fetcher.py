@@ -137,6 +137,42 @@ class YouTubeFetcher:
             'thumbnail_url': snippet['thumbnails']['high']['url']
         }
 
+    def search_videos(self, query, max_results=10):
+        # Raises HttpError (uncaught) on failure — see the comment at the top
+        # of fetch_comments() for why this must not be wrapped into a
+        # RuntimeError(str(e)) here.
+        request = self.youtube.search().list(
+            part='snippet',
+            q=query,
+            maxResults=max_results,
+            type='video',
+            safeSearch='none',
+        )
+        response = request.execute()
+        self.quota_used += 100  # Search costs 100 units regardless of maxResults
+
+        results = []
+        for item in response.get('items', []):
+            snippet = item.get('snippet', {})
+            video_id = item.get('id', {}).get('videoId')
+            if not video_id:
+                continue
+            thumbnails = snippet.get('thumbnails', {})
+            thumbnail = (
+                thumbnails.get('medium')
+                or thumbnails.get('default')
+                or thumbnails.get('high')
+                or {}
+            )
+            results.append({
+                'video_id': video_id,
+                'title': snippet.get('title', ''),
+                'channel': snippet.get('channelTitle', ''),
+                'published_at': snippet.get('publishedAt'),
+                'thumbnail_url': thumbnail.get('url'),
+            })
+        return results
+
     def fetch_channel_videos(self, channel_id, max_results=10):
         # Raises HttpError (uncaught) on failure — see the comment at the top
         # of fetch_comments() for why this must not be wrapped into a

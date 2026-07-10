@@ -390,4 +390,102 @@ describe('Search Component', () => {
       vi.useRealTimers();
     }
   });
+
+  describe('video search picker', () => {
+    test('search button is disabled until a query is entered', () => {
+      renderWithAuth(<Search />);
+
+      const searchButton = screen.getByRole('button', { name: 'Search' });
+      expect(searchButton).toBeDisabled();
+
+      const searchInput = screen.getByPlaceholderText('Search YouTube by title or keyword...');
+      fireEvent.change(searchInput, { target: { value: 'rick astley' } });
+      expect(searchButton).not.toBeDisabled();
+    });
+
+    test('searches YouTube and displays results', async () => {
+      renderWithAuth(<Search />);
+
+      const searchInput = screen.getByPlaceholderText('Search YouTube by title or keyword...');
+      fireEvent.change(searchInput, { target: { value: 'rick astley' } });
+
+      axiosInstance.mockResolvedValueOnce({
+        status: 200,
+        data: {
+          data: [
+            {
+              video_id: 'dQw4w9WgXcQ',
+              title: 'Rick Astley - Never Gonna Give You Up',
+              channel: 'Rick Astley',
+              thumbnail_url: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
+            },
+          ],
+        },
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+      await waitFor(() => {
+        expect(axiosInstance).toHaveBeenCalledWith(
+          expect.objectContaining({
+            method: 'GET',
+            url: 'youtube/search/',
+            params: { q: 'rick astley', max_results: 8 },
+          })
+        );
+      });
+
+      expect(await screen.findByText('Rick Astley - Never Gonna Give You Up')).toBeInTheDocument();
+    });
+
+    test('picking a result fills in the video URL and shows a confirmation', async () => {
+      renderWithAuth(<Search />);
+
+      const searchInput = screen.getByPlaceholderText('Search YouTube by title or keyword...');
+      fireEvent.change(searchInput, { target: { value: 'rick astley' } });
+
+      axiosInstance.mockResolvedValueOnce({
+        status: 200,
+        data: {
+          data: [
+            {
+              video_id: 'dQw4w9WgXcQ',
+              title: 'Rick Astley - Never Gonna Give You Up',
+              channel: 'Rick Astley',
+              thumbnail_url: null,
+            },
+          ],
+        },
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+      const resultButton = await screen.findByText('Rick Astley - Never Gonna Give You Up');
+      fireEvent.click(resultButton);
+
+      const urlInput = screen.getByPlaceholderText('https://www.youtube.com/watch?v=...');
+      expect(urlInput.value).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+      expect(screen.getByText(/Selected:/i)).toBeInTheDocument();
+      // The result list collapses once a video is picked.
+      expect(screen.queryByText('Rick Astley', { selector: '.text-muted' })).not.toBeInTheDocument();
+    });
+
+    test('shows an error message when the search request fails', async () => {
+      renderWithAuth(<Search />);
+
+      const searchInput = screen.getByPlaceholderText('Search YouTube by title or keyword...');
+      fireEvent.change(searchInput, { target: { value: 'rick astley' } });
+
+      axiosInstance.mockResolvedValueOnce({
+        status: 429,
+        data: { msg: 'YouTube API daily quota exceeded. Please try again tomorrow.' },
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+      expect(
+        await screen.findByText('YouTube API daily quota exceeded. Please try again tomorrow.')
+      ).toBeInTheDocument();
+    });
+  });
 });

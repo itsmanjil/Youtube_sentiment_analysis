@@ -1,14 +1,17 @@
 import { React, useState, useEffect, useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
 
 const SigninForm = () => {
   let { loginUser } = useContext(AuthContext);
+  const location = useLocation();
+  const justRegistered = Boolean(location.state?.justRegistered);
 
   const [inputData, setInputData] = useState({
     email: "",
     password: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { email, password } = inputData;
 
@@ -23,7 +26,9 @@ const SigninForm = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    loginUser(email, password);
+    setIsSubmitting(true);
+    await loginUser(email, password);
+    setIsSubmitting(false);
   };
 
   return (
@@ -41,16 +46,23 @@ const SigninForm = () => {
                 </p>
 
                 <form role="form" className="text-start">
+                  {justRegistered && !isError && (
+                    <div className="alert alert-success" role="status">
+                      <i className="fas fa-check-circle me-1" aria-hidden="true"></i>
+                      Account created. Log in to continue.
+                    </div>
+                  )}
                   {isError && (
-                    <p style={{ color: "red" }}>
+                    <div className="alert alert-danger" role="alert">
                       Invalid username or password.
-                    </p>
+                    </div>
                   )}
                   <div className="input-group input-group-outline mb-3">
                     {/* <label className="form-label">Email</label> */}
                     <input
                       type="email"
                       placeholder="Email"
+                      aria-label="Email"
                       className="form-control"
                       name="email"
                       value={email}
@@ -62,6 +74,7 @@ const SigninForm = () => {
                     <input
                       type="password"
                       placeholder="Password"
+                      aria-label="Password"
                       className="form-control"
                       name="password"
                       value={password}

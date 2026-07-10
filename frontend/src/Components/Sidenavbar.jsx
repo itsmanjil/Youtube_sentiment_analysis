@@ -55,6 +55,21 @@ function Sidenavbar() {
           </li>
           <li className="nav-item">
             <NavLink
+              to="/search"
+              className={({ isActive }) =>
+                isActive
+                  ? "nav-link text-white active bg-primary"
+                  : "nav-link text-white"
+              }
+            >
+              <div className="text-white text-center me-2 d-flex align-items-center justify-content-center">
+                <i className="material-icons opacity-10">search</i>
+              </div>
+              <span className="nav-link-text ms-1">Analyze Video</span>
+            </NavLink>
+          </li>
+          <li className="nav-item">
+            <NavLink
               to="/monitoring"
               className={({ isActive }) =>
                 isActive
@@ -68,9 +83,9 @@ function Sidenavbar() {
               <span className="nav-link-text ms-1">Monitoring</span>
             </NavLink>
           </li>
-          
-          
-          
+
+
+
           <li className="nav-item mt-3">
             <h6 className="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">
               Account pages
@@ -91,19 +106,19 @@ function Sidenavbar() {
               <span className="nav-link-text ms-1">Profile</span>
             </NavLink>
           </li>
-          <li
-            className="nav-item"
-            style={{ color: "pointer" }}
-            onClick={logoutHandler}
-          >
-            <div className="nav-link text-white" style={{ cursor: "pointer" }}>
+          <li className="nav-item">
+            <button
+              type="button"
+              className="nav-link text-white w-100 border-0 bg-transparent text-start"
+              onClick={logoutHandler}
+            >
               <div className="text-white text-center me-2 d-flex align-items-center justify-content-center">
                 <i className="material-icons opacity-10">logout</i>
               </div>
               <div>
                 <span className="nav-link-text ms-1">Logout</span>
               </div>
-            </div>
+            </button>
           </li>
         </ul>
       </div>

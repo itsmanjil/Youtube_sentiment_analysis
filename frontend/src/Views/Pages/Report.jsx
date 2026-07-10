@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "./report.css";
 import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../../axios";
+import usePageTitle from "../../utils/usePageTitle";
+import { SENTIMENT_COLORS } from "../../utils/sentimentColors";
 
 // Build the same shape navigateToReport() passes via location.state, from a
 // GET /api/youtube/analysis/<video_id>/ response (`{ data: {...} }`). Used
@@ -52,6 +54,7 @@ function buildReportStateFromApiResponse(data) {
 }
 
 export default function Report() {
+  usePageTitle("Report");
   const location = useLocation();
   const { videoId } = useParams();
   const navigate = useNavigate();
@@ -230,9 +233,10 @@ export default function Report() {
         <div className="dropdown float-rg-end pe-4 d-print-none">
           <Link
             to="/dashboard"
+            aria-label="Back to dashboard"
             style={{ textDecoration: "none", color: "black" }}
           >
-            <span className="fa fa-arrow-left text-dark" style={{ fontSize: '28px' }}></span>
+            <span className="fa fa-arrow-left text-dark" aria-hidden="true" style={{ fontSize: '28px' }}></span>
           </Link>
         </div>
 
@@ -258,11 +262,6 @@ export default function Report() {
               <div className="top-left">
                 <div className="graphic-path">
                   <p>Report</p>
-                </div>
-                <div className="position-relative">
-                  <p>
-                    Report no.:<span>001</span>
-                  </p>
                 </div>
               </div>
             </section>
@@ -303,24 +302,39 @@ export default function Report() {
                   <tr>
                     <td>Sentiment</td>
                     <td>Total</td>
+                    <td>Share</td>
                   </tr>
                 </thead>
                 <tbody>
                   {(sentimentData?.sentimentBreakdown || []).map((sentiment, index) => {
                     const label =
                       sentiment.sentiment || sentiment.name || `item-${index}`;
+                    const share =
+                      totalComments > 0 ? `${((sentiment.value / totalComments) * 100).toFixed(1)}%` : "—";
                     return (
                       <tr key={`${label}-${index}`}>
                         <td>
                           <div className="media">
-                            <div className="media-body">
-                              <p className="mt-0 title">
+                            <div className="media-body d-flex align-items-center">
+                              <span
+                                aria-hidden="true"
+                                style={{
+                                  display: "inline-block",
+                                  width: "10px",
+                                  height: "10px",
+                                  borderRadius: "50%",
+                                  marginRight: "8px",
+                                  backgroundColor: SENTIMENT_COLORS[label] || "#999",
+                                }}
+                              ></span>
+                              <p className="mt-0 title mb-0">
                                 {label}
                               </p>
                             </div>
                           </div>
                         </td>
                         <td>{sentiment.value}</td>
+                        <td>{share}</td>
                       </tr>
                     );
                   })}

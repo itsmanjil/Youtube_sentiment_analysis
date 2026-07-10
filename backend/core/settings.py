@@ -170,6 +170,11 @@ REST_FRAMEWORK = {
         'anon': '20/minute',
         'user': '60/minute',
         'analyze': '100000/day' if _IS_TEST_ENVIRONMENT else '10/hour',
+        # search().list costs a flat 100 quota units per call (vs ~1 for the
+        # video-metadata fetch analyze does), so this stays much tighter than
+        # 'user' despite being a lightweight read — a chatty picker UI could
+        # otherwise burn the shared daily YouTube API quota fast.
+        'search': '100000/day' if _IS_TEST_ENVIRONMENT else '30/hour',
     },
 }
 

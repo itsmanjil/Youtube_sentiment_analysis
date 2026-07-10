@@ -1,11 +1,17 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate, Link, NavLink } from "react-router-dom";
+// Landing-theme styles (.ex-header, .offcanvas-collapse, .labels) — must be
+// imported here too, or a direct load of /search renders an unstyled navbar
+// that collapses open over the page content.
+import "./Homepage.css";
 import axiosInstance from "../../axios";
 import { HashLink } from "react-router-hash-link";
 import AuthContext from "../../context/AuthContext";
+import usePageTitle from "../../utils/usePageTitle";
 // import Navbar from "../../Components/Navbar";
 
 function Search() {
+  usePageTitle("Analyze Video");
   function logoutHandler() {
     logoutUser();
   }
@@ -39,6 +45,115 @@ function Search() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchError, setSearchError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [jobStatus, setJobStatus] = useState(null); // "pending" | "running" | null
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [videoResults, setVideoResults] = useState([]);
+  const [isSearchingVideos, setIsSearchingVideos] = useState(false);
+  const [videoSearchError, setVideoSearchError] = useState("");
+  const [selectedVideo, setSelectedVideo] = useState(null);
+
+  // Guards against setState/navigate firing after the user has navigated
+  // away mid-poll (pollAnalysisJob can run for minutes across route changes).
+  const isMountedRef = useRef(true);
+  const elapsedTimerRef = useRef(null);
+  useEffect(() => {
+    // StrictMode's dev-only mount->cleanup->remount cycle runs this cleanup
+    // once before the "real" mount settles; resetting to true here (not just
+    // as the initial ref value) is what makes the ref accurate afterward.
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (elapsedTimerRef.current) {
+        clearInterval(elapsedTimerRef.current);
+      }
+    };
+  }, []);
+
+  const startElapsedTimer = () => {
+    setElapsedSeconds(0);
+    if (elapsedTimerRef.current) {
+      clearInterval(elapsedTimerRef.current);
+    }
+    elapsedTimerRef.current = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
+    }, 1000);
+  };
+
+  const stopElapsedTimer = () => {
+    if (elapsedTimerRef.current) {
+      clearInterval(elapsedTimerRef.current);
+      elapsedTimerRef.current = null;
+    }
+  };
+
+  const formatElapsed = (totalSeconds) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  };
+
+  const resolveVideoSearchErrorMessage = (status, data) => {
+    const apiMessage = data?.msg || data?.message;
+    if (apiMessage) {
+      return apiMessage;
+    }
+    if (status === 429) {
+      return "YouTube search rate limit reached. Please try again later.";
+    }
+    return "Could not search YouTube right now. Please try again, or paste a video URL directly.";
+  };
+
+  const handleVideoSearch = async (e) => {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) {
+      return;
+    }
+    setIsSearchingVideos(true);
+    setVideoSearchError("");
+    setVideoResults([]);
+    try {
+      const resp = await axiosInstance({
+        method: "GET",
+        url: "youtube/search/",
+        params: { q: query, max_results: 8 },
+      });
+      if (resp.status >= 400) {
+        setVideoSearchError(resolveVideoSearchErrorMessage(resp.status, resp.data));
+        return;
+      }
+      setVideoResults(resp.data?.data || []);
+      if (!resp.data?.data || resp.data.data.length === 0) {
+        setVideoSearchError("No videos found for that search.");
+      }
+    } catch (e) {
+      if (e.response) {
+        setVideoSearchError(resolveVideoSearchErrorMessage(e.response.status, e.response.data));
+      } else {
+        setVideoSearchError("Cannot connect to server. Please check if the backend is running.");
+      }
+    } finally {
+      setIsSearchingVideos(false);
+    }
+  };
+
+  const handleSelectVideo = (result) => {
+    setVideoUrl(`https://www.youtube.com/watch?v=${result.video_id}`);
+    setSelectedVideo(result);
+    setVideoResults([]);
+    setVideoSearchError("");
+    if (hasError) {
+      setHasError(false);
+      setErrorMessage("");
+    }
+  };
+
+  const handleClearSelectedVideo = () => {
+    setSelectedVideo(null);
+    setVideoUrl("");
+  };
 
   const resolveApiErrorMessage = (status, data) => {
     const apiMessage = data?.msg || data?.message;
@@ -143,7 +258,10 @@ function Search() {
       if (statusResp.data?.status === "failed") {
         return { failed: true, httpStatus: statusResp.status, data: statusResp.data };
       }
-      // "pending" or "running" — keep polling.
+      // "pending" or "running" — keep polling, surfacing the stage in the UI.
+      if (isMountedRef.current) {
+        setJobStatus(statusResp.data?.status || "running");
+      }
     }
     throw new Error("Analysis timed out waiting for a result.");
   };
@@ -218,6 +336,8 @@ function Search() {
 
     try {
       setIsLoading(true);
+      setJobStatus("submitting");
+      startElapsedTimer();
       const resp = await axiosInstance({
         method: "POST",
         url: "youtube/analyze/",
@@ -248,7 +368,10 @@ function Search() {
       });
 
       if (resp.status >= 400) {
+        if (!isMountedRef.current) return;
         setIsLoading(false);
+        setJobStatus(null);
+        stopElapsedTimer();
         setSearchError(true);
         setErrorMessage(resolveApiErrorMessage(resp.status, resp.data));
         return;
@@ -257,8 +380,15 @@ function Search() {
       if (resp.status === 202 && resp.data?.job_id) {
         // Background job path (the normal case): keep the loading state up
         // while polling so the UI doesn't look "done" mid-analysis.
+        setJobStatus("pending");
         const result = await pollAnalysisJob(resp.data.job_id);
+        // The user may have navigated away during the (possibly minutes-long)
+        // poll — don't update state on an unmounted component or force them
+        // back to /dashboard away from wherever they went.
+        if (!isMountedRef.current) return;
         setIsLoading(false);
+        setJobStatus(null);
+        stopElapsedTimer();
         if (result.failed) {
           setSearchError(true);
           setErrorMessage(resolveApiErrorMessage(result.httpStatus, result.data));
@@ -270,12 +400,18 @@ function Search() {
 
       // ANALYSIS_RUN_SYNC=true deployments (or the test environment) return
       // the full result directly with no job to poll.
+      if (!isMountedRef.current) return;
       setIsLoading(false);
+      setJobStatus(null);
+      stopElapsedTimer();
       navigate("/dashboard", {
         state: resp.data,
       });
     } catch (e) {
+      if (!isMountedRef.current) return;
       setIsLoading(false);
+      setJobStatus(null);
+      stopElapsedTimer();
       setSearchError(true);
 
       if (e.code === 'ECONNABORTED') {
@@ -313,13 +449,21 @@ function Search() {
             type="button"
             id="navbarSideCollapse"
             aria-label="Toggle navigation"
+            aria-expanded={isNavOpen}
+            onClick={() => setIsNavOpen((open) => !open)}
           >
             <span className="navbar-toggler-icon"></span>
           </button>
 
           <div
-            className="navbar-collapse offcanvas-collapse"
+            className={`navbar-collapse offcanvas-collapse${isNavOpen ? " open" : ""}`}
             id="navbarsExampleDefault"
+            style={isNavOpen ? { visibility: "visible", transform: "translateX(-100%)" } : undefined}
+            onClick={(e) => {
+              if (e.target.closest("a")) {
+                setIsNavOpen(false);
+              }
+            }}
           >
             <ul className="navbar-nav ms-auto navbar-nav-scroll">
               <li className="nav-item">
@@ -386,8 +530,123 @@ function Search() {
                     {errorMessage}
                   </div>
                 )}
+                {isLoading && (
+                  <div className="alert alert-info d-flex align-items-center" role="status" aria-live="polite">
+                    <div className="spinner-border spinner-border-sm text-primary me-3 flex-shrink-0" role="status" aria-hidden="true"></div>
+                    <div>
+                      <div className="fw-bold">
+                        {jobStatus === "pending" && "Queued — waiting for a worker to pick this up..."}
+                        {jobStatus === "running" && "Analyzing comments..."}
+                        {(jobStatus === "submitting" || !jobStatus) && "Submitting video for analysis..."}
+                      </div>
+                      <div className="text-sm text-muted mt-1">
+                        Elapsed: {formatElapsed(elapsedSeconds)} — larger comment counts can take a few minutes.
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="row mt-3">
                   <div className="col-md-12">
+                    <label className="labels" htmlFor="video-search">Find a video (optional)</label>
+                    <div className="d-flex" style={{ gap: "8px" }}>
+                      <input
+                        id="video-search"
+                        type="text"
+                        className="form-control"
+                        placeholder="Search YouTube by title or keyword..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleVideoSearch(e);
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-primary flex-shrink-0"
+                        onClick={handleVideoSearch}
+                        disabled={isSearchingVideos || !searchQuery.trim()}
+                      >
+                        {isSearchingVideos ? "Searching..." : "Search"}
+                      </button>
+                    </div>
+                    <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
+                      Search YouTube instead of pasting a link — pick a result below to fill in the video URL.
+                    </p>
+                    {videoSearchError && (
+                      <div className="alert alert-danger mt-2" role="alert">
+                        {videoSearchError}
+                      </div>
+                    )}
+                    {videoResults.length > 0 && (
+                      <div className="list-group mt-2" style={{ maxHeight: "320px", overflowY: "auto" }}>
+                        {videoResults.map((result) => (
+                          <button
+                            type="button"
+                            key={result.video_id}
+                            className="list-group-item list-group-item-action d-flex align-items-center text-start"
+                            onClick={() => handleSelectVideo(result)}
+                          >
+                            {result.thumbnail_url ? (
+                              <img
+                                src={result.thumbnail_url}
+                                alt=""
+                                aria-hidden="true"
+                                style={{
+                                  width: "80px",
+                                  height: "45px",
+                                  objectFit: "cover",
+                                  borderRadius: "4px",
+                                  marginRight: "12px",
+                                  flexShrink: 0,
+                                }}
+                              />
+                            ) : (
+                              <div
+                                aria-hidden="true"
+                                style={{
+                                  width: "80px",
+                                  height: "45px",
+                                  backgroundColor: "#e0e0e0",
+                                  borderRadius: "4px",
+                                  marginRight: "12px",
+                                  flexShrink: 0,
+                                }}
+                              ></div>
+                            )}
+                            <div>
+                              <div className="fw-semibold" style={{ fontSize: "14px" }}>
+                                {result.title}
+                              </div>
+                              <div className="text-muted" style={{ fontSize: "12px" }}>
+                                {result.channel}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {selectedVideo && (
+                      <div
+                        className="alert alert-success mt-2 d-flex justify-content-between align-items-center"
+                        role="status"
+                      >
+                        <span>
+                          <i className="fas fa-check-circle me-1" aria-hidden="true"></i>
+                          Selected: {selectedVideo.title}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary"
+                          onClick={handleClearSelectedVideo}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="col-md-12 mt-3">
                     <label className="labels" htmlFor="video-url">YouTube Video URL</label>
                     <input
                       id="video-url"
@@ -398,6 +657,9 @@ function Search() {
                       value={video_url}
                       onChange={(e) => {
                         setVideoUrl(e.target.value);
+                        if (selectedVideo) {
+                          setSelectedVideo(null);
+                        }
                       }}
                       required
                     />

@@ -590,6 +590,77 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertIn('missing', body['checks']['model_artifacts'])
 
 
+class YouTubeSearchAPITests(APITestCase):
+    def setUp(self):
+        self.user = NewUser.objects.create_user(
+            email='searchuser@example.com',
+            user_name='searchuser',
+            first_name='Search',
+            last_name='User',
+            password='testpassword123',
+        )
+        self.client.force_authenticate(user=self.user)
+        self.search_url = reverse('app:youtube_search')
+
+    @patch('app.views.YouTubeFetcher')
+    def test_search_success(self, mock_fetcher):
+        mock_fetcher.return_value.search_videos.return_value = [
+            {
+                'video_id': 'abc123',
+                'title': 'Some Video',
+                'channel': 'Some Channel',
+                'published_at': '2026-01-01T00:00:00Z',
+                'thumbnail_url': 'https://i.ytimg.com/vi/abc123/mqdefault.jpg',
+            }
+        ]
+
+        response = self.client.get(self.search_url, {'q': 'test query'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['data']), 1)
+        self.assertEqual(response.data['data'][0]['video_id'], 'abc123')
+        mock_fetcher.return_value.search_videos.assert_called_once_with('test query', max_results=8)
+
+    @patch('app.views.YouTubeFetcher')
+    def test_search_respects_max_results_param(self, mock_fetcher):
+        mock_fetcher.return_value.search_videos.return_value = []
+
+        response = self.client.get(self.search_url, {'q': 'test', 'max_results': 3})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_fetcher.return_value.search_videos.assert_called_once_with('test', max_results=3)
+
+    def test_search_requires_query(self):
+        response = self.client.get(self.search_url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_search_rejects_overlong_query(self):
+        response = self.client.get(self.search_url, {'q': 'x' * 101})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_search_rejects_out_of_range_max_results(self):
+        response = self.client.get(self.search_url, {'q': 'test', 'max_results': 100})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('app.views.YouTubeFetcher')
+    def test_search_quota_exceeded(self, mock_fetcher):
+        mock_error_content = b'{"error": {"errors": [{"reason": "quotaExceeded"}], "message": "Quota Exceeded"}}'
+        mock_resp = MagicMock(status=403)
+        mock_fetcher.return_value.search_videos.side_effect = HttpError(
+            resp=mock_resp, content=mock_error_content
+        )
+
+        response = self.client.get(self.search_url, {'q': 'test'})
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn("quota exceeded", response.data['msg'])
+
+    def test_search_requires_authentication(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get(self.search_url, {'q': 'test'})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
 class AnalysisJobAsyncAPITests(APITestCase):
     """
     ANALYSIS_RUN_SYNC defaults to True in the test environment (see

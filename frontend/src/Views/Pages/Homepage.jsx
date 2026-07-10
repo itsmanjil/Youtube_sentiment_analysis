@@ -4,8 +4,10 @@ import { Link } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 import Navbar from "../../Components/Navbar";
 import AuthContext from "../../context/AuthContext";
+import usePageTitle from "../../utils/usePageTitle";
 // css from StyleSheet.css - bg color change garnu pare change from there
 function Homepage() {
+  usePageTitle();
   const { isAuthenticated } = useContext(AuthContext);
   return (
     <div data-bs-spy="scroll" data-bs-target="#navbarExample">
@@ -134,38 +136,6 @@ function Homepage() {
                 </p>
               </div>
               <div className="footer-col second"></div>
-              <div className="footer-col third">
-                <span className="fa-stack">
-                  <a href="#your-link">
-                    <i className="fas fa-circle fa-stack-2x"></i>
-                    <i className="fab fa-facebook-f fa-stack-1x"></i>
-                  </a>
-                </span>
-                <span className="fa-stack">
-                  <a href="#your-link">
-                    <i className="fas fa-circle fa-stack-2x"></i>
-                    <i className="fab fa-reddit fa-stack-1x"></i>
-                  </a>
-                </span>
-                <span className="fa-stack">
-                  <a href="#your-link">
-                    <i className="fas fa-circle fa-stack-2x"></i>
-                    <i className="fab fa-pinterest-p fa-stack-1x"></i>
-                  </a>
-                </span>
-                <span className="fa-stack">
-                  <a href="#your-link">
-                    <i className="fas fa-circle fa-stack-2x"></i>
-                    <i className="fab fa-instagram fa-stack-1x"></i>
-                  </a>
-                </span>
-                <p className="p-small">
-                  For further queries please contact us at:{" "}
-                  <a href="mailto:contact@site.com">
-                    <strong>youtubesentiment@site.com</strong>
-                  </a>
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -174,17 +144,8 @@ function Homepage() {
       <div className="copyright" id="contact">
         <div className="container">
           <div className="row">
-            <div className="col-lg-6">
-              <p className="p-small">
-                Copyright © <a href="#your-link">YouTube Sentiment Analysis</a>
-              </p>
-            </div>
-
-            <div className="col-lg-6">
-              <p className="p-small">
-                Distributed By
-                <a href="https://themewagon.com/"> Business Analytics</a>
-              </p>
+            <div className="col-lg-12">
+              <p className="p-small">Copyright © YouTube Sentiment Analysis</p>
             </div>
           </div>
         </div>

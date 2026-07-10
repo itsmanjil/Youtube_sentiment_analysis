@@ -1042,6 +1042,91 @@ def get_user_youtube_analyses(request):
         )
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@throttle_classes([ScopedRateThrottle])
+def search_youtube_videos(request):
+    """
+    Lets the Search page offer a "search YouTube" picker instead of requiring
+    the user to already have a video URL copied — the user types a keyword
+    query and picks from a results list (title/channel/thumbnail), which then
+    fills in the video_url field for the existing analyze flow unchanged.
+
+    Uses the official Data API only (no scraper fallback): search().list
+    costs a flat 100 quota units per call regardless of maxResults, which is
+    why this is throttled separately (see 'search' in DEFAULT_THROTTLE_RATES)
+    and why max_results is capped well below analyze's comment-count limits.
+    """
+    query = (request.GET.get("q") or "").strip()
+    if not query:
+        return Response({"msg": "A search query (q) is required."}, status=400)
+    if len(query) > 100:
+        return Response({"msg": "Search query is too long (max 100 characters)."}, status=400)
+
+    raw_max_results = request.GET.get("max_results")
+    try:
+        max_results = _parse_bounded_int(
+            raw_max_results, 8, minimum=1, maximum=15, name="max_results"
+        )
+    except _InvalidParam as exc:
+        return Response({"msg": str(exc)}, status=400)
+
+    try:
+        fetcher = YouTubeFetcher()
+    except ValueError as e:
+        # Local configuration error (missing YOUTUBE_API_KEY) — safe to
+        # surface verbatim, it never touches the network or embeds request
+        # details. Search has no scraper-mode fallback, unlike analyze.
+        return Response({"msg": str(e)}, status=502)
+
+    try:
+        results = fetcher.search_videos(query, max_results=max_results)
+    except HttpError as e:
+        # Never surface str(e)/repr(e) here: HttpError.__str__ always embeds
+        # the full request URL (self.uri), which for this client includes
+        # `key=<YOUTUBE_API_KEY>` as a query parameter.
+        status_code = getattr(e.resp, "status", None)
+        try:
+            error_details = json.loads(e.content).get('error', {})
+            reason = error_details.get('errors', [{}])[0].get('reason')
+            message = error_details.get('message') or (
+                f"YouTube API request failed with status {status_code}."
+            )
+            if reason == 'quotaExceeded':
+                return Response(
+                    {"msg": "YouTube API daily quota exceeded. Please try again tomorrow."},
+                    status=429,
+                )
+            if reason == 'developerKeyInvalid':
+                return Response(
+                    {"msg": "The provided YOUTUBE_API_KEY is invalid. Please check your .env file."},
+                    status=401,
+                )
+            return Response({"msg": f"A YouTube API error occurred: {message}"}, status=502)
+        except (json.JSONDecodeError, KeyError, IndexError, AttributeError):
+            logger.warning("Unparseable YouTube API error response (status=%s)", status_code)
+            return Response(
+                {"msg": f"A YouTube API error occurred (status {status_code})."},
+                status=502,
+            )
+    except Exception:
+        logger.exception(
+            "Unexpected error searching YouTube for user=%s query=%r",
+            getattr(request.user, "id", None),
+            query,
+        )
+        return Response(
+            {"msg": "An unexpected error occurred while searching YouTube."},
+            status=502,
+        )
+
+    return Response({"data": results})
+
+
+# See the throttle_scope comment above analyze_youtube_video.cls.throttle_scope.
+search_youtube_videos.cls.throttle_scope = "search"
+
+
 # Health check endpoint — unauthenticated so load balancers / uptime
 # monitors can poll it, and backed by real checks rather than a hardcoded
 # string: database reachability and presence of the model artifacts the
