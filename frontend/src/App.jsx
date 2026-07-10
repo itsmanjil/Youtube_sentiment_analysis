@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { ProtectedRoute } from "./Views/Account Pages/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -16,6 +16,16 @@ function RouteFallback() {
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center">
       <span className="text-secondary">Loading...</span>
+    </div>
+  );
+}
+
+function NotFound() {
+  return (
+    <div className="min-vh-100 d-flex flex-column align-items-center justify-content-center text-center">
+      <h1>404</h1>
+      <p className="text-secondary">This page doesn't exist.</p>
+      <Link to="/">Go home</Link>
     </div>
   );
 }
@@ -37,6 +47,7 @@ function App() {
                 <Route path="/profile" element={<Profile />}></Route>
                 <Route exact path="/report/:videoId" element={<Report />}></Route>
               </Route>
+              <Route path="*" element={<NotFound />}></Route>
             </Routes>
           </Suspense>
         </AuthProvider>

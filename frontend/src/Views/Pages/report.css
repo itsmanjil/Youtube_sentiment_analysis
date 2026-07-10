@@ -12,21 +12,21 @@
 }
 
 @media screen {
+  /* A4 proportions on screen, but let the page grow: a report with
+     calibration, aspect, and timeline sections runs past one A4 height.
+     Sizing lives on .page itself because React drops the non-standard
+     size="A4" attribute, so a .page[size="A4"] selector never matches. */
   .page {
     background: var(--white);
     display: block;
     margin: 0 auto;
-    width: 60%;
-    overflow: hidden;
-    height: 100%;
+    width: 21cm;
+    max-width: 100%;
+    min-height: 29.7cm;
+    height: auto;
+    overflow: visible;
     position: relative;
     box-shadow: var(--pageShadow);
-  }
-
-  .page[size="A4"] {
-    width: 21cm;
-    height: 29.7cm;
-    overflow: hidden;
   }
 
   .bb {
@@ -201,6 +201,28 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+}
+
+/* Print: drop the on-screen chrome so the printed report is just the page —
+   no shadow, no gray backdrop, full printable width, no clipped sections. */
+@media print {
+  body {
+    background: var(--white) !important;
+  }
+
+  .page {
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .product-area,
+  .balance-info {
+    break-inside: avoid;
   }
 }
 
