@@ -74,3 +74,7 @@ thesis_draft.docx
 
 # Thesis local backups
 thesis_backup_*.docx
+
+# Local dev helpers / samples
+run.bat
+sample.pdf
