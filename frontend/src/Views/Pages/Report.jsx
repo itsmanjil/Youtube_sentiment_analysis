@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import "./report.css";
 import { useLocation, useParams, Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../../axios";
 import usePageTitle from "../../utils/usePageTitle";
 import { SENTIMENT_COLORS } from "../../utils/sentimentColors";
+import AuthContext from "../../context/AuthContext";
 
 // Build the same shape navigateToReport() passes via location.state, from a
 // GET /api/youtube/analysis/<video_id>/ response (`{ data: {...} }`). Used
@@ -90,8 +91,14 @@ export default function Report() {
     };
   }, [location.state, videoId]);
 
+  // GET /api/youtube/analysis/<video_id>/ (the direct-link/refresh path,
+  // buildReportStateFromApiResponse above) is scoped to request.user, so
+  // whoever can fetch a given report is provably the same person who ran
+  // that analysis — falling back to the current session's user_name here
+  // is exact, not a guess, unlike leaving it as "Unknown User".
+  const { user: authUser } = useContext(AuthContext);
   const sentimentData = location.state || fetchedData;
-  const user_name = sentimentData?.user_name || "Unknown User";
+  const user_name = sentimentData?.user_name || authUser?.user_name || "Unknown User";
 
   const [totalComments, setTotalComments] = useState(0);
   const confidenceStats = sentimentData?.confidenceStats || null;
@@ -297,6 +304,7 @@ export default function Report() {
             </section>
 
             <section className="product-area mt-4">
+              <div className="table-responsive">
               <table className="table table-hover">
                 <thead>
                   <tr>
@@ -340,6 +348,7 @@ export default function Report() {
                   })}
                 </tbody>
               </table>
+              </div>
             </section>
 
             <section className="balance-info">
@@ -362,7 +371,8 @@ export default function Report() {
             {(modelUsed || analysisMeta) && (
               <section className="product-area mt-4">
                 <h6>Model & Experiment Settings</h6>
-                <table className="table table-hover">
+                <div className="table-responsive">
+              <table className="table table-hover">
                   <tbody>
                     <tr>
                       <td>Model Used</td>
@@ -472,12 +482,14 @@ export default function Report() {
                     )}
                   </tbody>
                 </table>
+              </div>
               </section>
             )}
             {hasCalibration && (
               <section className="product-area mt-4">
                 <h6>Calibration Metrics</h6>
-                <table className="table table-hover">
+                <div className="table-responsive">
+              <table className="table table-hover">
                   <tbody>
                     {calibrationECE !== null && (
                       <tr>
@@ -514,6 +526,7 @@ export default function Report() {
                     )}
                   </tbody>
                 </table>
+              </div>
               </section>
             )}
             {Array.isArray(analysisMeta?.model_comparison) && analysisMeta.model_comparison.length > 0 && (
@@ -528,7 +541,8 @@ export default function Report() {
                     Export CSV
                   </button>
                 </div>
-                <table className="table table-hover">
+                <div className="table-responsive">
+              <table className="table table-hover">
                   <thead>
                     <tr>
                       <td>Model</td>
@@ -546,13 +560,15 @@ export default function Report() {
                     ))}
                   </tbody>
                 </table>
+              </div>
               </section>
             )}
 
             {confidenceStats && (
               <section className="product-area mt-4">
                 <h6>Confidence Summary</h6>
-                <table className="table table-hover">
+                <div className="table-responsive">
+              <table className="table table-hover">
                   <tbody>
                     <tr>
                       <td>Mean Confidence</td>
@@ -574,13 +590,15 @@ export default function Report() {
                     )}
                   </tbody>
                 </table>
+              </div>
               </section>
             )}
 
             {uncertaintyStats && (
               <section className="product-area mt-4">
                 <h6>Model Uncertainty (Shannon Entropy)</h6>
-                <table className="table table-hover">
+                <div className="table-responsive">
+              <table className="table table-hover">
                   <tbody>
                     <tr>
                       <td>Mean Entropy</td>
@@ -600,13 +618,15 @@ export default function Report() {
                     </tr>
                   </tbody>
                 </table>
+              </div>
               </section>
             )}
 
             {confidenceIntervals && (
               <section className="product-area mt-4">
                 <h6>Sentiment Confidence Intervals (95%)</h6>
-                <table className="table table-hover">
+                <div className="table-responsive">
+              <table className="table table-hover">
                   <thead>
                     <tr>
                       <td>Sentiment</td>
@@ -627,13 +647,15 @@ export default function Report() {
                     })}
                   </tbody>
                 </table>
+              </div>
               </section>
             )}
 
             {aspectSentiment.length > 0 && (
               <section className="product-area mt-4">
                 <h6>Aspect Sentiment (Top {Math.min(10, aspectSentiment.length)})</h6>
-                <table className="table table-hover">
+                <div className="table-responsive">
+              <table className="table table-hover">
                   <thead>
                     <tr>
                       <td>Aspect</td>
@@ -655,13 +677,15 @@ export default function Report() {
                     ))}
                   </tbody>
                 </table>
+              </div>
               </section>
             )}
 
             {sentimentTimeline.length > 0 && (
               <section className="product-area mt-4">
                 <h6>Sentiment Timeline (Hourly Snapshot)</h6>
-                <table className="table table-hover">
+                <div className="table-responsive">
+              <table className="table table-hover">
                   <thead>
                     <tr>
                       <td>Time</td>
@@ -681,6 +705,7 @@ export default function Report() {
                     ))}
                   </tbody>
                 </table>
+              </div>
               </section>
             )}
 
