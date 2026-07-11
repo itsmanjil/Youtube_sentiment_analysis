@@ -4,25 +4,32 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
-djangorestframework = "*"
-django-cors-headers = "*"
-djangorestframework-simplejwt = "*"
-psycopg2-binary = "*"
-nltk = "*"
-pandas = "*"
-python-dotenv = "*"
+# All packages below are pinned exactly, matching requirements.txt, so a
+# `pipenv lock` only moves the versions actually changed here rather than
+# re-resolving everything to its current latest (numpy/pandas especially:
+# see the note above requirements.txt's pandas pin on model-artifact
+# compatibility). django/nltk/yt-dlp/python-dotenv are bumped to known-CVE
+# fix floors (pip-audit, 2026-07-11); django stays on the 5.2.x LTS line
+# rather than jumping to 6.0.
+django = "==5.2.16"
+djangorestframework = "==3.16.1"
+django-cors-headers = "==4.9.0"
+djangorestframework-simplejwt = "==5.5.1"
+psycopg2-binary = "==2.9.11"
+nltk = "==3.9.4"
+pandas = "==3.0.0"
+python-dotenv = "==1.2.2"
 scikit-learn = "==1.8.0"
-google-api-python-client = "*"
-google-auth-httplib2 = "*"
-google-auth-oauthlib = "*"
-youtube-comment-downloader = "*"
-yt-dlp = "*"
-emoji = "*"
-langdetect = "*"
-wordcloud = "*"
-matplotlib = "*"
-numpy = "*"
+google-api-python-client = "==2.188.0"
+google-auth-httplib2 = "==0.3.0"
+google-auth-oauthlib = "==1.2.4"
+youtube-comment-downloader = "==0.1.78"
+yt-dlp = "==2026.6.9"
+emoji = "==2.15.0"
+langdetect = "==1.0.9"
+wordcloud = "==1.9.6"
+matplotlib = "==3.10.8"
+numpy = "==1.26.4"
 
 # Deep-learning extras (Hybrid-DL / Transformers)
 # - Install separately to avoid NumPy ABI issues with PyTorch wheels.
