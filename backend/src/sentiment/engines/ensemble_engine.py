@@ -30,6 +30,7 @@ Weights can be optimized using various methods:
 """
 
 import json
+import math
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
@@ -174,12 +175,17 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
             self.temperature, self.calibration_applied = 1.0, False
 
     def _load_temperature(self, model_name: str):
-        """Load fitted temperature from research results; return (T, applied)."""
+        """Load fitted temperature from research results; return (T, applied).
+
+        `applied` reflects the artifact's `kept` flag (see
+        logreg_engine.py::_load_temperature) rather than just row presence,
+        so a temperature pinned to 1.0 as a no-op isn't misreported as applied.
+        """
         try:
             data = load_runtime_artifact_json("temperature_scaling") or {}
             for entry in data.get("models", []):
                 if entry.get("model") == model_name:
-                    return float(entry["temperature"]), True
+                    return float(entry["temperature"]), bool(entry.get("kept", True))
         except Exception:
             pass
         return 1.0, False
@@ -259,21 +265,31 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
             }
             source = "request"
 
-        # Normalize dict weights
+        # Normalize dict weights. Coerce any non-finite (NaN/inf), negative, or
+        # non-numeric value to 0.0 so one bad weight can't poison the blend —
+        # the API layer already rejects these, this is defence in depth.
+        def _finite_nonneg(value):
+            try:
+                numeric = float(value)
+            except (TypeError, ValueError):
+                return 0.0
+            return numeric if math.isfinite(numeric) and numeric > 0 else 0.0
+
         if isinstance(weights, dict):
             normalized = {
-                model: float(weights.get(model, 0.0)) for model in self.base_models
+                model: _finite_nonneg(weights.get(model, 0.0)) for model in self.base_models
             }
         else:
             normalized = {model: 1.0 for model in self.base_models}
 
-        # Ensure positive and normalized
-        total = sum(max(value, 0.0) for value in normalized.values())
-        if total <= 0:
+        # Ensure positive and normalized. `not (total > 0)` (rather than
+        # `total <= 0`) also catches a NaN total, which compares False to both.
+        total = sum(normalized.values())
+        if not (total > 0):
             return {model: 1.0 / len(self.base_models) for model in self.base_models}, source
 
         return {
-            model: max(value, 0.0) / total for model, value in normalized.items()
+            model: value / total for model, value in normalized.items()
         }, source
 
     def analyze(self, text: str) -> SentimentResult:
