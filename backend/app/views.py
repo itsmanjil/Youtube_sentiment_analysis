@@ -549,8 +549,32 @@ def _execute_analysis_job(job_id):
                     return
                 video_metadata = scraper.fetch_video_metadata(video_id)
                 comments_raw = scraper.fetch_comments(video_url, max_results=max_comments)
-            except Exception as e:
+            except (RuntimeError, ImportError) as e:
+                # YouTubeScraper deliberately raises only these two exception
+                # types, both with pre-sanitized, human-authored messages
+                # (missing youtube-comment-downloader install; comments
+                # disabled/private/region-locked/blocked) — see
+                # youtube_scraper.py, which itself takes care never to let
+                # raw yt-dlp/downloader exception text (which can embed local
+                # paths or other internals) propagate this far. Safe to
+                # surface verbatim.
                 _fail_job(job, f"Scraper error: {str(e)}", 502)
+                return
+            except Exception:
+                # Anything else is an exception type the scraper module
+                # never intentionally raises (see above) — treat it the same
+                # as the API-mode catch-all a few lines up: log the real
+                # detail server-side, return a generic client-safe message.
+                logger.exception(
+                    "Unexpected scraper error for user=%s video_url=%s",
+                    getattr(user, "id", None),
+                    video_url,
+                )
+                _fail_job(
+                    job,
+                    "An unexpected error occurred while scraping YouTube. Please try again later.",
+                    502,
+                )
                 return
 
         if not video_metadata:

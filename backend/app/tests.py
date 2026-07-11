@@ -443,6 +443,46 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertIn("quota exceeded", response.data['msg'])
 
+    @patch('app.views.YouTubeScraper')
+    def test_analyze_video_scraper_runtime_error_surfaced_verbatim(self, mock_scraper):
+        # YouTubeScraper.fetch_comments/fetch_video_metadata sanitize their own
+        # exceptions into human-authored RuntimeErrors (youtube_scraper.py) --
+        # those are safe to pass through to the client as-is.
+        mock_scraper.return_value.extract_video_id.return_value = "HLUamwXQ218"
+        mock_scraper.return_value.fetch_video_metadata.side_effect = RuntimeError(
+            "The video could not be fetched. It may be private, region-locked, "
+            "or the scraper may have been blocked."
+        )
+
+        data = {
+            "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+            "use_api": False,
+        }
+        response = self.client.post(self.analyze_url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+        self.assertIn("region-locked", response.data["msg"])
+
+    @patch('app.views.YouTubeScraper')
+    def test_analyze_video_unexpected_scraper_error_is_sanitized(self, mock_scraper):
+        # Any exception type other than RuntimeError/ImportError is one the
+        # scraper module never intentionally raises, so it must not reach the
+        # client verbatim (it could embed local paths or library internals).
+        mock_scraper.return_value.extract_video_id.return_value = "HLUamwXQ218"
+        mock_scraper.return_value.fetch_video_metadata.side_effect = KeyError(
+            "/some/internal/path/leaked/here"
+        )
+
+        data = {
+            "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+            "use_api": False,
+        }
+        response = self.client.post(self.analyze_url, data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
+        self.assertNotIn("/some/internal/path", response.data["msg"])
+        self.assertIn("unexpected error", response.data["msg"].lower())
+
     def test_get_user_analyses(self):
         video = YouTubeVideo.objects.create(
             video_id='v1',
