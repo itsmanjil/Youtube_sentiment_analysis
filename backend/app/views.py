@@ -1,6 +1,8 @@
 
 import json
+import math
 import os
+import re
 import logging
 import threading
 from collections import Counter
@@ -67,6 +69,23 @@ _TRANSFORMER_MODELS = {
     "mdeberta_v3",
 }
 
+# Canonical sentiment_model names the factory (src/sentiment/factory.py) can
+# construct, after _normalize_sentiment_model resolves view-layer aliases
+# (meta/stacking/fuzzy/deberta-v3/...) to these. Static rather than probed via
+# list_available_engines(): that function additionally gates transformer/
+# hybrid_dl names on torch/transformers actually being importable, which is
+# the right check at engine-construction time but would make this synchronous
+# pre-check reject a canonical, mockable model name in an environment that
+# simply doesn't have those optional deps installed (e.g. the test suite,
+# which mocks get_sentiment_engine directly for transformer-preset tests).
+# An unavailable-dependency request still fails cleanly via the ImportError
+# handling in _execute_analysis_job — this check only catches typos/garbage.
+_KNOWN_SENTIMENT_MODELS = {
+    "tfidf", "logreg", "svm",
+    "ensemble", "meta_learner", "fuzzy_ensemble",
+    "hybrid_dl",
+} | _TRANSFORMER_MODELS
+
 
 def _coerce_model_list(value):
     if value is None:
@@ -100,6 +119,22 @@ def _coerce_ensemble_weights(value):
     def coerce_structured_weights(payload, source):
         weights, suffix = unwrap_weights(payload)
         if not isinstance(weights, (dict, list, tuple)):
+            return None, None
+        # Reject non-numeric, non-finite (NaN/inf), negative, or all-zero
+        # weights here so the caller returns a clean 400. Otherwise a NaN
+        # weight sails past the ensemble's `total <= 0` guard (NaN compares
+        # False to everything) and crashes the analysis job with an opaque 500.
+        raw_values = weights.values() if isinstance(weights, dict) else weights
+        numeric_values = []
+        for candidate in raw_values:
+            try:
+                numeric = float(candidate)
+            except (TypeError, ValueError):
+                return None, None
+            if not math.isfinite(numeric) or numeric < 0:
+                return None, None
+            numeric_values.append(numeric)
+        if not numeric_values or not any(value > 0 for value in numeric_values):
             return None, None
         if suffix:
             source = f"{source}:{suffix}"
@@ -191,6 +226,28 @@ def _get_model_family(model_name):
     if model_name == "hybrid_dl":
         return "deep_learning"
     return "classical"
+
+
+# Same patterns as YouTubeFetcher.extract_video_id / YouTubeScraper.extract_video_id
+# (app/youtube_fetcher.py, app/youtube_scraper.py) — duplicated here so the view can
+# reject a malformed video_url synchronously, before a job is created, without
+# instantiating either fetcher (which requires a configured YOUTUBE_API_KEY) or the
+# scraper. The fetch step still calls the authoritative extract_video_id itself.
+_YOUTUBE_URL_PATTERNS = [
+    re.compile(r'(?:youtube\.com\/watch\?v=)([\w-]{11})'),
+    re.compile(r'(?:youtu\.be\/)([\w-]{11})'),
+    re.compile(r'(?:youtube\.com\/embed\/)([\w-]{11})'),
+    re.compile(r'(?:youtube\.com\/v\/)([\w-]{11})'),
+]
+_BARE_VIDEO_ID = re.compile(r'^[\w-]{11}$')
+
+
+def _looks_like_youtube_url(url):
+    if not isinstance(url, str):
+        return False
+    if any(pattern.search(url) for pattern in _YOUTUBE_URL_PATTERNS):
+        return True
+    return bool(_BARE_VIDEO_ID.match(url))
 
 
 
@@ -291,6 +348,19 @@ def analyze_youtube_video(request):
 
     if not video_url:
         return Response({"msg": "video_url is required"}, status=400)
+    if not _looks_like_youtube_url(video_url):
+        return Response({"msg": f"Invalid YouTube URL: {video_url}"}, status=400)
+
+    if sentiment_model not in _KNOWN_SENTIMENT_MODELS:
+        return Response(
+            {
+                "msg": (
+                    f"Invalid sentiment_model: '{sentiment_model}'. "
+                    f"Available models: {sorted(_KNOWN_SENTIMENT_MODELS)}"
+                )
+            },
+            status=400,
+        )
 
     # Every validated input the background job needs, since it runs outside
     # this request/response cycle (a plain function argument list would work

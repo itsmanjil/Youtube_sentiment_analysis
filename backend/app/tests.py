@@ -359,6 +359,25 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['msg'], 'video_url is required')
 
+    def test_analyze_video_rejects_malformed_url_without_creating_a_job(self):
+        jobs_before = AnalysisJob.objects.count()
+        data = {"video_url": "not_a_url_at_all"}
+        response = self.client.post(self.analyze_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Invalid YouTube URL", response.data["msg"])
+        self.assertEqual(AnalysisJob.objects.count(), jobs_before)
+
+    def test_analyze_video_rejects_unknown_sentiment_model_without_creating_a_job(self):
+        jobs_before = AnalysisJob.objects.count()
+        data = {
+            "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+            "sentiment_model": "not_a_real_model",
+        }
+        response = self.client.post(self.analyze_url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Invalid sentiment_model", response.data["msg"])
+        self.assertEqual(AnalysisJob.objects.count(), jobs_before)
+
     def test_analyze_video_rejects_path_based_ensemble_weights(self):
         data = {
             "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
@@ -418,7 +437,7 @@ class YouTubeAnalysisAPITests(APITestCase):
         mock_fetcher_instance = mock_fetcher.return_value
         mock_fetcher_instance.fetch_comments.side_effect = HttpError(resp=mock_resp, content=mock_error_content)
 
-        data = {"video_url": "https://www.youtube.com/watch?v=somevideo"}
+        data = {"video_url": "https://www.youtube.com/watch?v=HLUamwXQ218"}
         response = self.client.post(self.analyze_url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
