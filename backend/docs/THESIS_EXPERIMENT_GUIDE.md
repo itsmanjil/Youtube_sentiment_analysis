@@ -654,21 +654,24 @@ Generated bundle (timestamped under `results/repro_bundles/`) includes:
 
 ### Create Visualizations
 
-```python
-import matplotlib.pyplot as plt
-import seaborn as sns
+The figures used in the thesis document are regenerated directly from the
+pinned `results/` artifacts (no synthetic data) by:
 
-# Model comparison bar chart
-models = ['LogReg', 'SVM', 'TF-IDF', 'Hybrid-DL', 'PSO-Ens', 'Meta-LR']
-f1_scores = [0.68, 0.72, 0.68, 0.76, 0.74, 0.80]
-
-plt.figure(figsize=(10, 6))
-plt.bar(models, f1_scores)
-plt.ylabel('F1 Score (macro)')
-plt.title('Model Comparison on YouTube Sentiment Analysis')
-plt.ylim(0.6, 0.85)
-plt.savefig('results/model_comparison.png', dpi=300)
+```bash
+cd backend
+python research/visualization/generate_thesis_figures.py
 ```
+
+This reads artifacts such as `results/pso_convergence.json`,
+`results/confusion_matrices.json`, `results/domain_shift/category_domain_shift.json`,
+`results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.json`,
+`results/route_a_live_v1_ci/coverage_accuracy_curve.json`, and
+`results/neutral_analysis/neutral_analysis.json`, and writes 13 PNGs to
+`backend/figures/thesis/` (PSO convergence, neuro-fuzzy membership functions,
+category heatmap, model comparison, per-class F1, confusion matrix,
+coverage-accuracy, ensemble weights, class distribution, comment length,
+ROC-AUC, gold-set agreement, neutral-prior sweep). Re-run it whenever the
+underlying pinned artifacts change to keep the thesis figures in sync.
 
 ---
 

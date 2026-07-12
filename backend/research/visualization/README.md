@@ -101,6 +101,27 @@ This will generate ALL visualizations and the evaluation report in one command.
 
 ---
 
+### 6. `generate_thesis_figures.py`
+Regenerates the figures embedded in the thesis document directly from the
+pinned `results/` artifacts (no synthetic data).
+
+**Usage:**
+```bash
+cd backend
+python research/visualization/generate_thesis_figures.py
+```
+
+**Outputs:** 13 PNGs written to `backend/figures/thesis/` — PSO convergence,
+neuro-fuzzy membership functions, category-slice heatmap, model comparison
+(accuracy/F1/ECE), per-class F1, confusion matrix, coverage-accuracy curves,
+PSO vs NSGA-II ensemble weights, class distribution, comment length by class,
+per-class ROC-AUC, gold-set agreement, and the neutral-prior threshold sweep.
+Re-run whenever the underlying pinned artifacts change; see
+[`THESIS_EXPERIMENT_GUIDE.md`](../../docs/THESIS_EXPERIMENT_GUIDE.md#create-visualizations)
+for the full list of source artifacts.
+
+---
+
 ## Requirements
 
 Install required packages:
