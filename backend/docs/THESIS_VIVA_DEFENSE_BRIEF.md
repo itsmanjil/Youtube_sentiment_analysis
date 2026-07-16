@@ -47,8 +47,8 @@ the **best-calibrated row in the entire runtime table**, statistically tied
 with `ensemble_nsga2` on both macro-F1 and ECE.
 
 All four fixes were re-run end-to-end on the full 165,110-row held-out test
-set; the backend test suite (59 tests) and the 4 tests specific to this
-calibration-scoping logic all pass post-fix. See §8 for the before/after
+set; the backend test suite (79 tests as of 2026-07-11) and the 4 tests
+specific to this calibration-scoping logic all pass post-fix. See §8 for the before/after
 table.
 
 ## 1. One-Minute Thesis Position
@@ -109,13 +109,20 @@ Source: `backend/results/runtime/route_a_live_v1/live_runtime_benchmark_full_tes
 
 | Model | Accuracy | Macro-F1 | ECE | Calibrated |
 |---|---:|---:|---:|:---:|
-| `ensemble_pso` | 0.6961 | 0.6941 | 0.0061 | yes |
-| `meta_learner` | 0.6955 | **0.6946** | 0.0183 | yes |
+| `ensemble_pso` | 0.6961 | 0.6941 | 0.0061 | no (T = 1.0) |
+| `meta_learner` | 0.6955 | **0.6946** | 0.0183 | no (T = 1.0) |
 | `fuzzy_ensemble` | 0.6960 | 0.6940 | **0.0030** | no (uncalibrated by design) |
-| `ensemble_nsga2` | 0.6959 | 0.6940 | 0.0039 | yes |
-| `logreg` | 0.6946 | 0.6928 | 0.0039 | yes |
-| `svm` | 0.6801 | 0.6780 | 0.0157 | yes |
-| `tfidf` | 0.6622 | 0.6567 | 0.0179 | yes |
+| `ensemble_nsga2` | 0.6959 | 0.6940 | 0.0039 | no (T = 1.0) |
+| `logreg` | 0.6946 | 0.6928 | 0.0039 | yes (T = 1.0311) |
+| `svm` | 0.6801 | 0.6780 | 0.0157 | no (T = 1.0) |
+| `tfidf` | 0.6622 | 0.6567 | 0.0179 | yes (T = 1.1306) |
+
+"Calibrated" means a fitted temperature ≠ 1.0 is actually applied at serving
+time (`calibration_applied` in the benchmark JSON). For the "no (T = 1.0)"
+rows the validation-gated keep/discard decision retained the identity
+temperature, so no rescaling is applied — this is the post-fix semantics of
+the `calibration_applied` flag (it now respects the temperature artifact's
+`kept` flag) and matches Table 6 in the thesis.
 
 All ensemble/meta/gate rows land within 0.0018 macro-F1 of each other —
 none of the pairwise differences among {ensemble_pso, ensemble_nsga2,
@@ -188,9 +195,9 @@ with NSGA-II is real, not an artifact of noise.
 ### Q5. Why should the examiners trust these numbers over the ones from three months ago?
 
 Because the discrepancy itself is disclosed and explained (§0 above), the
-fixes are small and independently testable (backend test suite: 59/59
-passing, including 4 tests written specifically against the corrected
-calibration-scoping logic), and the fix touches the *evaluation
+fixes are small and independently testable (backend test suite: 79/79
+passing as of 2026-07-11, including 4 tests written specifically against
+the corrected calibration-scoping logic), and the fix touches the *evaluation
 methodology*, not the underlying models — no model was retrained, only how
 ensemble weights and calibration are fitted and served. Anyone can re-run
 `research/ci/live_runtime_benchmark.py` against `data/test.csv` and
@@ -228,8 +235,8 @@ revision.
    fitting/serving inconsistencies) and that fixing those issues *improved*
    the CI story (the fuzzy gate) rather than only correcting numbers downward.
 5. Limitation: Acknowledge that Route A transformer-centered validation is not
-   yet the final headline, and that a few evaluation sub-sections have not yet
-   been re-verified post-fix.
+   yet the final headline. (Every evaluation sub-section has been re-run
+   against the fixed engines as of 2026-07-10 — see Q6/§9.)
 6. Contribution: Emphasize technical rigor, reproducibility, and deployment
    credibility.
 

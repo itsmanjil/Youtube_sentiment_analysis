@@ -69,8 +69,9 @@ The repo root is intentionally thin. Backend Python manifests live in `backend/`
 
 ### Prerequisites
 
-- Python 3.11–3.13 (the pinned `numpy==1.26.4` has no wheels for 3.14+, so
-  `pip install -r requirements.txt` will fail to resolve on 3.14)
+- Python 3.11–3.12 (the pinned `numpy==1.26.4` ships wheels only up to
+  CPython 3.12, so `pip install -r requirements.txt` will fail to resolve
+  on 3.13+)
 - Node.js 24+ and npm
 
 ### Backend

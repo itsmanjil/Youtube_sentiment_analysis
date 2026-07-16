@@ -86,6 +86,15 @@
     padding-left: 10px;
   }
 
+  /* Below ~850px .page is viewport-wide (max-width: 100%), so the ribbon's
+     100px right bleed would poke past the viewport and force horizontal
+     scroll on the whole page — pin it to the page edge instead. */
+  @media (max-width: 850px) {
+    .top-left .graphic-path p {
+      right: 0;
+    }
+  }
+
   /* User Store Section */
   .store-user {
     padding-bottom: 25px;

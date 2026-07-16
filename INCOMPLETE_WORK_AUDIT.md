@@ -1,6 +1,8 @@
 # Incomplete Work Audit — YouTube Sentiment Analysis
 
-**Audit date:** 2026-06-02 (regenerated)
+**Audit date:** 2026-06-02 (regenerated); re-verified 2026-07-11 — items B/C
+below are now resolved, and the significance highlights were updated to the
+post-defensibility-pass re-run values.
 **Project:** YouTube sentiment analysis thesis (Django backend + React frontend + ML research pipeline)
 
 > This file was regenerated after the gold-set annotation, live-runtime significance
@@ -54,10 +56,14 @@ live `ensemble_nsga2` variant. This is now done:
 paired bootstrap, seed 42; Holm-adjusted McNemar):
 
 - Every reconstructed model validates **exactly** against the pinned benchmark.
-- NSGA-II ensemble ECE vs meta-learner: −0.0111, 95% CI [−0.0126, −0.0084] (**excludes 0**).
+- NSGA-II ensemble ECE vs meta-learner: −0.0144, 95% CI [−0.0173, −0.0105] (**excludes 0**).
 - NSGA-II vs meta-learner macro-F1: tied (CI [−0.0002, +0.0014]).
-- NSGA-II ECE vs logistic regression: tied (CI [−0.0021, +0.0031]).
-- Meta-learner vs logistic regression macro-F1: +0.0017 (CI [+0.0009, +0.0025], significant).
+- NSGA-II ECE vs logistic regression: tied (CI [−0.0014, +0.0007]).
+- Meta-learner vs logistic regression macro-F1: +0.0018 (CI [+0.0010, +0.0026], significant).
+
+(Values re-checked 2026-07-11 against the 2026-07-10 post-defensibility-pass
+re-run of `live_significance_tests.md`; the originally listed values came from
+the pre-fix run.)
 
 Thesis §4.6 and §4.5 (Discussion) and the Chapter 4/5 limitations have been updated to report
 the NSGA-II calibration advantage as significance-backed rather than descriptive.
@@ -66,7 +72,8 @@ the NSGA-II calibration advantage as significance-backed rather than descriptive
 
 - `backend/requirements.txt` is now pinned to `backend/Pipfile.lock` versions
   (scikit-learn 1.8.0, numpy 1.26.4, pandas 3.0.0, scipy 1.17.0, Django 5.2.10, …).
-- `.python-version` corrected from `3.8.18` to `3.11`, consistent with the README ("3.11+")
+- `.python-version` corrected from `3.8.18` to `3.11`, consistent with the README
+  ("Python 3.11–3.12" — the pinned numpy 1.26.4 ships no wheels past CPython 3.12)
   and `Pipfile` (`python_version = "3.11"`).
 
 ---
@@ -85,16 +92,18 @@ used in the docx as Figure 8). Still missing:
 | `conformal.py` | Conformal prediction / set-valued evaluation | **Missing** (optional) |
 | `human_gold_analysis.py` | Gold-set error slices | **Missing** (gold set now exists, so this is now feasible) |
 
-### B. `app_api/models.py` is an empty stub (Low)
+### B. `app_api/models.py` is an empty stub (Low) — RESOLVED ✅ 2026-07-11
 
-Contains only a placeholder comment. The `app_api` app has a working JWT view and tests but
-no models. Either populate or remove.
+Removed (commit d3380f8 also removed the duplicate `/api/user/login/` route).
+The dead `app_api/urls.py` — token routes that were never included in
+`core/urls.py` — was removed during the 2026-07-11 sign-off pass; the full
+backend suite (79 tests) passes after removal.
 
-### C. `backend/tests/` directory tree is empty (Low)
+### C. `backend/tests/` directory tree is empty (Low) — RESOLVED ✅
 
-`tests/unit`, `tests/integration`, `tests/fixtures` exist but contain no files. All real
-tests live in `app/tests.py`, `app_api/tests.py`, `users/tests.py`. Either populate or remove
-the empty scaffold.
+The empty `tests/unit`, `tests/integration`, `tests/fixtures` scaffold has been
+deleted. All real tests live in `app/tests.py`, `app_api/tests.py`,
+`users/tests.py`.
 
 ### D. Transformer Route A — future work (Medium, intentional)
 
@@ -120,8 +129,8 @@ not be committed; delete locally with
 | Live-runtime significance tests | `results/runtime/route_a_live_v1/live_significance_tests.*` | was Medium | **Resolved** |
 | Dependency pinning + Python version | `requirements.txt`, `.python-version` | was Medium | **Resolved** |
 | Missing `reliability_diagrams.py` / `conformal.py` / `human_gold_analysis.py` | `research/evaluation/` | Low–Medium | Open |
-| `app_api/models.py` empty | `backend/app_api/models.py` | Low | Open |
-| `backend/tests/` empty | `backend/tests/` | Low | Open |
+| `app_api/models.py` empty | `backend/app_api/models.py` | Low | **Resolved** (removed) |
+| `backend/tests/` empty | `backend/tests/` | Low | **Resolved** (removed) |
 | Transformer Route A (smoke only) | `results/deberta_v3_*` | Medium | Future work (intentional) |
 
 ---
@@ -134,4 +143,5 @@ not be committed; delete locally with
 2. **Add `reliability_diagrams.py`** and drop one reliability diagram into Chapter 4 §4.5.
 3. **(Optional) `conformal.py` and `human_gold_analysis.py`** to deepen the uncertainty/gold-set
    analysis.
-4. **Clean up dead stubs** (`app_api/models.py`, empty `tests/`).
+4. ~~Clean up dead stubs (`app_api/models.py`, empty `tests/`)~~ — done 2026-07-11
+   (including the dead `app_api/urls.py`).

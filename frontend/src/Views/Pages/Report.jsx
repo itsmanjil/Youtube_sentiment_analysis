@@ -276,7 +276,7 @@ export default function Report() {
             <section className="store-user mt-5">
               <div className="col-10">
                 <div className="row bb pb-3">
-                  <div className="col-7">
+                  <div className="col-7 text-break">
                     <p>Video analyzed:</p>
                     <h2>{sentimentData.videoTitle}</h2>
                     {/* <p className="address"> 777 Brockton Avenue, <br/> Abington MA 2351, <br/>Vestavia Hills AL </p> */}

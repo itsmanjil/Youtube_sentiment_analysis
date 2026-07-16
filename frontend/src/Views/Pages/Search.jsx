@@ -25,7 +25,9 @@ function Search() {
   const [sentimentModel, setSentimentModel] = useState("meta_learner");
   const [showResearchOptions, setShowResearchOptions] = useState(false);
   const [ensembleModels, setEnsembleModels] = useState(["logreg", "svm", "tfidf"]);
-  const [ensembleWeightsOptimization, setEnsembleWeightsOptimization] = useState("pso");
+  // Default to nsga2 so the "Ensemble NSGA-II" model option actually serves
+  // the NSGA-II knee-point weights unless the user overrides below.
+  const [ensembleWeightsOptimization, setEnsembleWeightsOptimization] = useState("nsga2");
   const [ensembleWeights, setEnsembleWeights] = useState("");
   const [metaLearnerModels, setMetaLearnerModels] = useState(["logreg", "svm", "tfidf"]);
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.6);
@@ -615,11 +617,11 @@ function Search() {
                                 }}
                               ></div>
                             )}
-                            <div>
-                              <div className="fw-semibold" style={{ fontSize: "14px" }}>
+                            <div style={{ minWidth: 0 }}>
+                              <div className="fw-semibold text-break" style={{ fontSize: "14px" }}>
                                 {result.title}
                               </div>
-                              <div className="text-muted" style={{ fontSize: "12px" }}>
+                              <div className="text-muted text-break" style={{ fontSize: "12px" }}>
                                 {result.channel}
                               </div>
                             </div>
@@ -632,13 +634,14 @@ function Search() {
                         className="alert alert-success mt-2 d-flex justify-content-between align-items-center"
                         role="status"
                       >
-                        <span>
+                        <span className="text-break" style={{ minWidth: 0 }}>
                           <i className="fas fa-check-circle me-1" aria-hidden="true"></i>
                           Selected: {selectedVideo.title}
                         </span>
                         <button
                           type="button"
                           className="btn btn-sm btn-outline-secondary"
+                          style={{ flexShrink: 0, marginLeft: "12px" }}
                           onClick={handleClearSelectedVideo}
                         >
                           Clear
@@ -773,8 +776,8 @@ function Search() {
                               value={ensembleWeightsOptimization}
                               onChange={(e) => setEnsembleWeightsOptimization(e.target.value)}
                             >
-                              <option value="pso">PSO — Best F1 (logreg:0.31, svm:0.69, tfidf:0.0)</option>
-                              <option value="nsga2">NSGA-II — Best Calibration (logreg:0.92, svm:0.003, tfidf:0.09)</option>
+                              <option value="pso">PSO — single-objective (best validation F1)</option>
+                              <option value="nsga2">NSGA-II — multi-objective (best calibration)</option>
                             </select>
                             <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
                               Auto-loaded research weights. Overridden if you provide custom JSON below.

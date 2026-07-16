@@ -1,16 +1,16 @@
-# Graph Report - Youtube_sentiment_analysis  (2026-07-03)
+# Graph Report - Youtube_sentiment_analysis  (2026-07-11)
 
 ## Corpus Check
-- 283 files · ~914,987 words
+- 287 files · ~925,043 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 5706 nodes · 13186 edges · 302 communities (240 shown, 62 thin omitted)
-- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 1550 edges (avg confidence: 0.61)
+- 5907 nodes · 13467 edges · 306 communities (241 shown, 65 thin omitted)
+- Extraction: 88% EXTRACTED · 12% INFERRED · 0% AMBIGUOUS · INFERRED: 1595 edges (avg confidence: 0.61)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fab44b8a`
+- Built from commit: `16b7a207`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -290,7 +290,6 @@
 - [[_COMMUNITY_Community 288|Community 288]]
 - [[_COMMUNITY_Community 289|Community 289]]
 - [[_COMMUNITY_Community 290|Community 290]]
-- [[_COMMUNITY_Community 292|Community 292]]
 - [[_COMMUNITY_Community 293|Community 293]]
 - [[_COMMUNITY_Community 294|Community 294]]
 - [[_COMMUNITY_Community 295|Community 295]]
@@ -299,6 +298,8 @@
 - [[_COMMUNITY_Community 298|Community 298]]
 - [[_COMMUNITY_Community 299|Community 299]]
 - [[_COMMUNITY_Community 300|Community 300]]
+- [[_COMMUNITY_Community 303|Community 303]]
+- [[_COMMUNITY_Community 304|Community 304]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `contractions` - 118 edges
@@ -310,24 +311,24 @@
 7. `Solution` - 52 edges
 8. `NSGA2` - 52 edges
 9. `un` - 52 edges
-10. `OptimizationResult` - 50 edges
+10. `YouTubePreprocessorTests` - 50 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Tracks a `youtube/analyze/` request executed in the background.      The actual` --rationale_for--> `YouTube Analysis API`  [EXTRACTED]
   backend/app/models.py → README.md
 - `Human Gold Set Annotation` --semantically_similar_to--> `Label Provenance & Quality`  [INFERRED] [semantically similar]
   INCOMPLETE_WORK_AUDIT.md → backend/docs/LABEL_PROVENANCE.md
-- `Main experiment orchestrator for thesis.      Integrates:     - Fuzzy sentime` --rationale_for--> `Thesis Experiments`  [EXTRACTED]
-  backend/research/experiments/runner.py → backend/research/computational_intelligence/fuzzy/README.md
 - `Route A Implementation Roadmap` --conceptually_related_to--> `Transformer Route A Validation`  [INFERRED]
   backend/docs/ROUTE_A_IMPLEMENTATION_ROADMAP.md → INCOMPLETE_WORK_AUDIT.md
 - `Path` --uses--> `YouTubePreprocessor`  [INFERRED]
+  backend/research/ci/gold_set_train_membership.py → backend/app/youtube_preprocessor.py
+- `str` --uses--> `YouTubePreprocessor`  [INFERRED]
   backend/research/ci/gold_set_train_membership.py → backend/app/youtube_preprocessor.py
 
 ## Import Cycles
 - 1-file cycle: `backend/app/tests.py -> backend/app/tests.py`
 
-## Communities (302 total, 62 thin omitted)
+## Communities (306 total, 65 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.03
@@ -335,10 +336,10 @@ Nodes (118): contractions, ain't, aren't, can't, can't've, cause, could've, coul
 
 ### Community 1 - "Community 1"
 Cohesion: 0.03
-Nodes (97): A, add(), addBox(), addControllers(), addPlugins(), addScales(), afterDatasetsUpdate(), an() (+89 more)
+Nodes (80): A, addControllers(), addPlugins(), addScales(), an(), at(), Bt(), ce() (+72 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.08
+Cohesion: 0.07
 Nodes (50): float, int, ndarray, object, Path, str, Path, str (+42 more)
 
 ### Community 3 - "Community 3"
@@ -346,8 +347,8 @@ Cohesion: 0.05
 Nodes (73): ae(), at, bn, ce(), ci, D(), de(), e() (+65 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.06
-Nodes (12): di(), eo, io, labelColor(), labelPointStyle(), no, oo, rs() (+4 more)
+Cohesion: 0.05
+Nodes (16): addElements(), ae(), ai(), di(), eo, Ht(), io, ki() (+8 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.06
@@ -357,37 +358,41 @@ Nodes (51): bool, DataLoader, Dataset, float, int, str, Vocabulary, int (+43 mor
 Cohesion: 0.06
 Nodes (44): Any, int, Path, str, Any, float, int, Path (+36 more)
 
+### Community 7 - "Community 7"
+Cohesion: 0.23
+Nodes (3): P(), trigger(), W
+
 ### Community 8 - "Community 8"
-Cohesion: 0.09
-Nodes (20): bool, str, main(), MetaLearnerEnsemble, Meta-Learner (Stacking Ensemble) for Sentiment Analysis  Implements a 2-level, Create meta-learner classifier, Get predictions from all base models          Notes         -----         Th, Lazy-load base engines (used for prediction when in-memory models are absent). (+12 more)
+Cohesion: 0.12
+Nodes (24): str, _apply_negation_tag(), ClassicalPreprocessConfig, _expand_negation_contractions(), get_fallback_stopwords(), _get_stopwords(), preprocess_classical_text(), preprocess_classical_texts() (+16 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.25
 Nodes (17): bool, DataFrame, float, int, Namespace, object, Path, str (+9 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.11
-Nodes (6): color(), H(), k(), L(), R(), z
+Cohesion: 0.07
+Nodes (6): afterUpdate(), beforeUpdate(), configure(), ji, no, _update()
 
 ### Community 11 - "Community 11"
 Cohesion: 0.08
-Nodes (39): Any, bool, Dataset, int, ndarray, str, DatasetManager, DatasetSplit (+31 more)
+Nodes (36): Any, bool, Dataset, int, ndarray, str, DatasetManager, Base Classes for Benchmark Datasets  Provides a unified interface for loading (+28 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.08
-Nodes (9): bs(), le(), Ms(), oe(), q(), vs, ws, ys (+1 more)
+Cohesion: 0.05
+Nodes (21): $(), add(), bs(), Es(), Fe(), Jn(), label(), le() (+13 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.08
-Nodes (42): bool, float, int, ndarray, Defuzzification Methods for Fuzzy Sentiment Classification  This module implem, Fuzzy Inference System for Sentiment Analysis  This module implements a Mamdan, Fuzzy Sentiment Classifier - Main Integration Layer  This module provides the, Fuzzy Logic Module for Sentiment Analysis  This module implements fuzzy set th (+34 more)
+Cohesion: 0.07
+Nodes (48): bool, float, int, ndarray, str, Fuzzy Sentiment Classifier - Main Integration Layer  This module provides the, Fuzzy Logic Module for Sentiment Analysis  This module implements fuzzy set th, BellMF (+40 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.07
-Nodes (13): average(), beforeDatasetsDraw(), fo(), go, ho(), Me(), mo(), nearest() (+5 more)
+Cohesion: 0.06
+Nodes (19): ao, average(), beforeDatasetsDraw(), Co(), fo(), Ft(), go, ho() (+11 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.09
-Nodes (43): ABC, bool, float, int, ndarray, OptimizationProblem, OptimizationResult, Solution (+35 more)
+Nodes (46): ABC, Any, str, bool, float, int, ndarray, OptimizationProblem (+38 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.13
@@ -398,40 +403,40 @@ Cohesion: 0.06
 Nodes (46): code:block1 (/graphify                                             # full), code:powershell (& (Get-Content graphify-out\.graphify_python) -c "), code:powershell (New-Item -ItemType Directory -Force -Path graphify-out | Out), code:powershell (# Detect Python with graphify — uv/pipx-aware (fixes #831)), code:json ({), code:block26 (Graph complete. Outputs in PATH_TO_DIR/graphify-out/), code:powershell (if (-not (Test-Path graphify-out\.graphify_extract.json)) {), code:powershell (@') (+38 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.12
-Nodes (30): float, int, ndarray, demo_adaptive_pso(), demo_comparison(), demo_ensemble_optimization(), demo_mopso(), demo_nsga2() (+22 more)
+Cohesion: 0.08
+Nodes (37): float, int, ndarray, demo_adaptive_pso(), demo_comparison(), demo_ensemble_optimization(), demo_mopso(), demo_nsga2() (+29 more)
 
 ### Community 19 - "Community 19"
-Cohesion: 0.22
-Nodes (6): Any, str, Get list of active dataset names., Convert to dictionary., Save configuration to file., Get list of active model names.
+Cohesion: 0.09
+Nodes (19): bool, str, main(), MetaLearnerEnsemble, Meta-Learner (Stacking Ensemble) for Sentiment Analysis  Implements a 2-level, Create meta-learner classifier, Get predictions from all base models          Notes         -----         Th, Lazy-load base engines (used for prediction when in-memory models are absent). (+11 more)
 
 ### Community 20 - "Community 20"
-Cohesion: 0.07
-Nodes (13): _(), B, bi, c(), h(), hi, off(), remove() (+5 more)
+Cohesion: 0.10
+Nodes (8): _(), bi, c(), hi, on(), pt, u(), v()
 
 ### Community 21 - "Community 21"
-Cohesion: 0.07
-Nodes (37): Any, bool, float, int, str, bool, ClassicalPreprocessConfig, float (+29 more)
+Cohesion: 0.10
+Nodes (23): Any, bool, float, int, str, EngineAdapter, FuzzyAnalysisResult, Integration Layer for Fuzzy Sentiment with Existing Engines  This module provi (+15 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.14
-Nodes (17): bool, float, ndarray, str, fuzzy_and(), fuzzy_not(), fuzzy_or(), Compute fuzzy NOT (complement) of a membership degree.      Parameters     -- (+9 more)
+Cohesion: 0.08
+Nodes (30): bool, float, ndarray, str, create_sentiment_fis(), fuzzy_and(), fuzzy_not(), fuzzy_or() (+22 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.10
-Nodes (28): str, int, load_dataset(), demo_pipeline(), main(), print_banner(), print_smoke_test_warning(), Run cross-domain evaluation. (+20 more)
+Cohesion: 0.08
+Nodes (31): Any, Path, str, load_dataset(), Main experiment orchestrator for thesis.      Integrates:     - Fuzzy sentime, Run the complete experiment.          Returns         -------         Experi, Load benchmark datasets., Resolve evaluation data directory. (+23 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.05
 Nodes (38): negations, absent, abundant, accept, accurate, admit, advantage, against (+30 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.11
-Nodes (15): be(), ce(), de(), e(), ei(), ge(), he(), je() (+7 more)
+Cohesion: 0.07
+Nodes (39): YouTubeAnalysisAdmin, YouTubeCommentAdmin, YouTubeVideoAdmin, AnalysisJob, Meta, Store YouTube sentiment analysis results, True if this job is still pending/running but hasn't been touched         (see `, Mark an abandoned job failed in place. Caller must have already         confirme (+31 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.05
-Nodes (39): a(), ai, be, c(), Ce, ct, D(), focusableChildren() (+31 more)
+Cohesion: 0.06
+Nodes (30): a(), ai, be, Ce, ct, Ft, ge, j() (+22 more)
 
 ### Community 27 - "Community 27"
 Cohesion: 0.07
@@ -442,12 +447,12 @@ Cohesion: 0.13
 Nodes (35): bool, float, object, str, object, Path, str, _build_matrix() (+27 more)
 
 ### Community 29 - "Community 29"
-Cohesion: 0.11
-Nodes (16): bool, Path, Dataset, Abstract base class for sentiment datasets.      Subclass this to implement sp, Initialize dataset.          Parameters         ----------         name : st, Get default data directory., Load the dataset splits.          Returns         -------         tuple, Load the dataset.          Parameters         ----------         force_reloa (+8 more)
+Cohesion: 0.05
+Nodes (33): Any, bool, int, ndarray, Path, str, Dataset, DatasetSplit (+25 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.08
-Nodes (30): compute_confusion_matrices(), Any, float, ndarray, str, compute_uncertainty_metrics(), Compute uncertainty metrics from a fuzzy output set.      These metrics help q, FuzzyEvaluationResult (+22 more)
+Cohesion: 0.06
+Nodes (41): compute_confusion_matrices(), Any, float, ndarray, str, demo_defuzzification_comparison(), demo_evaluation_metrics(), demo_fuzzy_inference() (+33 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.09
@@ -455,15 +460,15 @@ Nodes (24): bool, DataLoader, float, int, Module, ndarray, str, Tensor (+16 more
 
 ### Community 32 - "Community 32"
 Cohesion: 0.10
-Nodes (14): bool, float, int, ndarray, Initialize the optimization problem.          Parameters         ----------, Evaluate the objective function(s) for a solution.          Parameters, Evaluate with constraint penalty.          Adds a penalty term for constraint, Check if solution satisfies all constraints. (+6 more)
+Nodes (15): bool, float, int, ndarray, Initialize the optimization problem.          Parameters         ----------, Evaluate the objective function(s) for a solution.          Parameters, Evaluate with constraint penalty.          Adds a penalty term for constraint, Check if solution satisfies all constraints. (+7 more)
 
 ### Community 33 - "Community 33"
-Cohesion: 0.14
-Nodes (30): Any, bool, Path, str, get_runtime_artifact_dir(), get_runtime_artifact_metadata(), get_runtime_artifact_version(), get_runtime_manifest_path() (+22 more)
+Cohesion: 0.12
+Nodes (33): Any, bool, Path, str, Config, Centralized configuration for the sentiment analysis system.      This class p, Create all required directories if they don't exist.          This is useful f, get_runtime_artifact_dir() (+25 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.16
-Nodes (3): he, on(), trigger()
+Cohesion: 0.13
+Nodes (9): D(), H(), he, I(), M(), off(), on(), one() (+1 more)
 
 ### Community 35 - "Community 35"
 Cohesion: 0.06
@@ -475,55 +480,55 @@ Nodes (33): Bootstrap Logo, dependencies, axios, bootstrap, file-saver, jwt-deco
 
 ### Community 37 - "Community 37"
 Cohesion: 0.08
-Nodes (9): addElements(), ae(), ai(), Es(), Jn(), Pi(), qn(), removeElements() (+1 more)
+Nodes (15): b(), C(), color(), f(), g(), H(), k(), L() (+7 more)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.10
-Nodes (11): Initialize swarm and archive., Perform one MOPSO iteration., Linearly decreasing inertia weight., Check if fit1 dominates or equals fit2., Check if fit1 strictly dominates fit2., Update archive with new non-dominated solutions., Add solution to archive if non-dominated., Trim archive using crowding distance. (+3 more)
+Cohesion: 0.06
+Nodes (32): Solution, MultiObjectivePSO, Initialize swarm and archive., Initialize swarm and archive., Perform one MOPSO iteration., Perform one MOPSO iteration., Linearly decreasing inertia weight., Check if fit1 dominates or equals fit2. (+24 more)
 
 ### Community 39 - "Community 39"
 Cohesion: 0.06
 Nodes (44): Any, bool, int, Path, str, AblationStudyFramework, Ablation Study Framework.  This module provides a systematic framework for con, Register a component ablation experiment.          Parameters         ------- (+36 more)
 
 ### Community 40 - "Community 40"
-Cohesion: 0.15
-Nodes (16): Any, str, main(), Neuro-Fuzzy Gate Ablation: How Often Does the Gate Override the Base Classifier?, evaluate_engine(), load_dataset(), main(), parse_base_sets() (+8 more)
+Cohesion: 0.07
+Nodes (39): accuracy(), confusion_matrix(), evaluate(), _filter_by_reference(), main(), Gold Set Evaluation, Held-Out-Only Subset  Companion to gold_set_evaluation.py., load_gold(), load_iaa_metrics() (+31 more)
 
 ### Community 41 - "Community 41"
 Cohesion: 0.15
 Nodes (27): Any, bool, float, int, ndarray, str, Thesis Visualization Module  Auto-generates publication-ready figures for thes, apply_thesis_style() (+19 more)
 
 ### Community 42 - "Community 42"
-Cohesion: 0.15
-Nodes (18): float, int, ndarray, str, compare_defuzzification_methods(), Defuzzifier, Centroid (Center of Gravity) defuzzification.          Formula:             x, Bisector defuzzification.          Finds the point that divides the area under (+10 more)
+Cohesion: 0.14
+Nodes (19): float, int, ndarray, str, compare_defuzzification_methods(), Defuzzifier, Defuzzification Methods for Fuzzy Sentiment Classification  This module implem, Centroid (Center of Gravity) defuzzification.          Formula:             x (+11 more)
 
 ### Community 43 - "Community 43"
 Cohesion: 0.16
 Nodes (16): YouTubePreprocessorTests, YouTubePreprocessor, bool, DataFrame, int, Path, Series, str (+8 more)
 
 ### Community 45 - "Community 45"
-Cohesion: 0.09
-Nodes (10): a(), Ai, An, focusableChildren(), getDataAttributes(), o(), parents(), pt (+2 more)
+Cohesion: 0.11
+Nodes (9): a(), Ai, An, focusableChildren(), getDataAttributes(), o(), parents(), r() (+1 more)
 
 ### Community 46 - "Community 46"
-Cohesion: 0.07
-Nodes (36): create_embedding_matrix(), EmbeddingManager, initialize_embedding_layer(), load_embeddings_cache(), load_glove_embeddings(), Embedding Layer Utilities for Pre-trained Embeddings  Handles loading and initia, Save embedding matrix to cache for faster loading., Load embedding matrix from cache. (+28 more)
+Cohesion: 0.13
+Nodes (19): create_embedding_matrix(), EmbeddingManager, initialize_embedding_layer(), load_embeddings_cache(), load_glove_embeddings(), Embedding Layer Utilities for Pre-trained Embeddings  Handles loading and initia, Save embedding matrix to cache for faster loading., Load embedding matrix from cache. (+11 more)
 
 ### Community 48 - "Community 48"
-Cohesion: 0.04
-Nodes (23): $(), afterUpdate(), bo(), cs(), Fi(), Hi(), Ii(), is (+15 more)
+Cohesion: 0.07
+Nodes (20): afterDraw(), bo(), cs(), fn(), gn(), Hi(), is, jo() (+12 more)
 
 ### Community 49 - "Community 49"
-Cohesion: 0.13
-Nodes (26): bool, DataFrame, float, int, ndarray, str, build_report(), _engine_kwargs() (+18 more)
+Cohesion: 0.10
+Nodes (29): bool, DataFrame, float, int, ndarray, str, build_report(), _engine_kwargs() (+21 more)
 
 ### Community 50 - "Community 50"
 Cohesion: 0.13
 Nodes (17): Any, float, int, ndarray, str, Thesis-Grade Evaluation Framework for Sentiment Analysis Implements k-fold cros, Aggregate fold-wise results into summary statistics, Comprehensive evaluation framework for thesis-level experiments      Features: (+9 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.12
-Nodes (25): str, Analyze the sentiment of multiple texts efficiently.          Parameters, Analyze the sentiment of multiple texts efficiently.          Parameters, _apply_negation_tag(), ClassicalPreprocessConfig, _expand_negation_contractions(), get_fallback_stopwords(), _get_stopwords() (+17 more)
+Cohesion: 0.08
+Nodes (20): addBox(), bn(), constructor(), en(), get(), _getAnims(), _getRegistryForType(), has() (+12 more)
 
 ### Community 52 - "Community 52"
 Cohesion: 0.11
@@ -534,20 +539,20 @@ Cohesion: 0.10
 Nodes (23): AttentionPooling, MultiHeadAttention, Multi-Head Attention Mechanism for Sentiment Analysis  Implements scaled dot-pro, Attention-based pooling to aggregate sequence into fixed-size representation., Apply attention pooling.          Args:             x: Input tensor (batch_size,, Multi-Head Attention mechanism for sentiment analysis.      This attention modul, Compute scaled dot-product attention.          Attention(Q, K, V) = softmax(QK^T, Forward pass through multi-head attention.          Args:             x: Input t (+15 more)
 
 ### Community 54 - "Community 54"
-Cohesion: 0.09
-Nodes (14): Any, int, ndarray, str, Convert to arrays for sklearn compatibility., Convert to string labels for compatibility., Convert string label to SentimentLabel., Get dataset information. (+6 more)
+Cohesion: 0.20
+Nodes (17): str, demo_pipeline(), main(), print_banner(), print_smoke_test_warning(), Run cross-domain evaluation., Run experiment with custom config., Runs the pipeline on synthetic data only; not part of reported results. (+9 more)
 
 ### Community 55 - "Community 55"
 Cohesion: 0.11
 Nodes (21): 1. `hybrid_dl` calibration is wired, but no artifact entry exists, 2. Calibration claims must remain model-specific, 3. Neuro-fuzzy gate activation is exact-match dependent, Artifact governance, Backend request -> inference path, Backend verification, Benchmark validation, Claim discipline (+13 more)
 
 ### Community 56 - "Community 56"
-Cohesion: 0.08
-Nodes (38): DataFrame, float, int, ndarray, str, Solution, build_report(), compute_objectives() (+30 more)
+Cohesion: 0.07
+Nodes (44): DataFrame, float, int, ndarray, str, Solution, Weighted average of model probability matrices., build_report() (+36 more)
 
 ### Community 57 - "Community 57"
-Cohesion: 0.12
-Nodes (15): Solution, ParticleSwarmOptimizer, Initialize the swarm with random particles., Perform one iteration of PSO., Compute inertia weight (linearly decreasing or fixed)., Handle boundary violations using reflection., Update global best if particle is better., Update local bests for ring topology. (+7 more)
+Cohesion: 0.14
+Nodes (13): Solution, ParticleSwarmOptimizer, Initialize the swarm with random particles., Perform one iteration of PSO., Compute inertia weight (linearly decreasing or fixed)., Handle boundary violations using reflection., Update global best if particle is better., Update local bests for ring topology. (+5 more)
 
 ### Community 58 - "Community 58"
 Cohesion: 0.29
@@ -555,11 +560,11 @@ Nodes (24): a(), b(), c(), d(), E(), f(), g(), h() (+16 more)
 
 ### Community 59 - "Community 59"
 Cohesion: 0.08
-Nodes (37): Any, bool, float, int, ndarray, str, Computational Intelligence Module for YouTube Sentiment Analysis  This module, MOPSOConfig (+29 more)
+Nodes (38): Any, bool, int, ndarray, str, Computational Intelligence Module for YouTube Sentiment Analysis  This module, MOPSOConfig, Configuration for MOPSO algorithm. (+30 more)
 
 ### Community 60 - "Community 60"
-Cohesion: 0.22
-Nodes (18): Any, str, main(), Test 3: Integrate with Fuzzy Sentiment Classifier., Test 4: Test uncertainty detection on ambiguous cases., Test 5: Batch processing performance., Test 6: Compare fuzzy results with single-model baseline., Test 1: Load existing sentiment engines. (+10 more)
+Cohesion: 0.32
+Nodes (7): Any, SentimentResult, str, Neuro-fuzzy adaptive gating (ANFIS-lite).         Blends base model probs using, Neuro-fuzzy adaptive gating (ANFIS-lite).         Blends base model probs using, normalize_probs(), Normalize probability distribution to sum to 1.0.      Parameters     -------
 
 ### Community 61 - "Community 61"
 Cohesion: 0.20
@@ -570,15 +575,15 @@ Cohesion: 0.08
 Nodes (21): AbstractBaseUser, CookieTokenRefreshView, MyTokenObtainPairSerializer, MyTokenObtainPairView, Same as TokenRefreshView, except the refresh token is read from the     httpOnly, BaseUserManager, clear_refresh_cookie(), Shared helpers for storing the JWT refresh token in an httpOnly cookie instead o (+13 more)
 
 ### Community 63 - "Community 63"
-Cohesion: 0.16
-Nodes (23): DataFrame, float, int, ndarray, str, build_report(), cascade_eval(), compute_aurc() (+15 more)
+Cohesion: 0.12
+Nodes (28): DataFrame, float, int, ndarray, str, build_report(), cascade_eval(), compute_aurc() (+20 more)
 
 ### Community 64 - "Community 64"
-Cohesion: 0.15
-Nodes (21): Ft(), B(), C(), ct(), d(), e(), et(), F() (+13 more)
+Cohesion: 0.16
+Nodes (20): B(), C(), ct(), d(), e(), et(), F(), g() (+12 more)
 
 ### Community 65 - "Community 65"
-Cohesion: 0.08
+Cohesion: 0.07
 Nodes (9): APITestCase, MockSentimentEngine, YouTubeAnalysisAPITests, YouTube Analysis API, Preprocessing & Sentiment Engines, CI Workflow, UserAuthAliasAPITests, UserLogoutAPITests (+1 more)
 
 ### Community 66 - "Community 66"
@@ -594,20 +599,16 @@ Cohesion: 0.25
 Nodes (22): bool, int, Namespace, object, Path, str, default_artifact_specs(), expand_artifact_spec() (+14 more)
 
 ### Community 70 - "Community 70"
-Cohesion: 0.11
-Nodes (16): YouTubeFetcher, main(), str, YouTube Training Data Preparation Script  Fetches YouTube comments and prepare, Preprocess and filter comments          Args:             comments (list): Ra, Automatically label comments using LogReg          Only keeps comments with hi, Load pre-labeled data from CSV          Args:             csv_path (str): Pat, Validate data before export - remove duplicates, empty texts, check balance (+8 more)
+Cohesion: 0.06
+Nodes (31): YouTubeFetcher, Scrape video metadata using yt-dlp.          Args:             video_id (str), Scrape video metadata using yt-dlp.          Args:             video_id (str), Scrape video metadata using yt-dlp.          Args:             video_id (str), Graceful fallback metadata when scraping fails.          Args:             vi, Graceful fallback metadata when scraping fails.          Args:             vi, Graceful fallback metadata when scraping fails.          Args:             vi, Fetch video metadata using yt-dlp with fallback.          Args:             v (+23 more)
 
 ### Community 71 - "Community 71"
-Cohesion: 0.08
-Nodes (26): Analysis, Analysis Request Fields, Authentication, Backend, Backend, Backend, CI, code:text (.) (+18 more)
-
-### Community 72 - "Community 72"
-Cohesion: 0.13
-Nodes (5): at, b(), q, U, w()
+Cohesion: 0.07
+Nodes (28): Analysis, Analysis Request Fields, Authentication, Backend, Backend, Backend, Backend, CI (+20 more)
 
 ### Community 73 - "Community 73"
-Cohesion: 0.07
-Nodes (51): YouTubeAnalysisAdmin, YouTubeCommentAdmin, YouTubeVideoAdmin, AnalysisJob, Meta, Store YouTube sentiment analysis results, Store individual YouTube comments, Tracks a `youtube/analyze/` request executed in the background.      The actual (+43 more)
+Cohesion: 0.12
+Nodes (18): bool, Path, str, bool, ClassicalPreprocessConfig, Path, check_preprocessing_flag_consistency(), format_model_load_error() (+10 more)
 
 ### Community 74 - "Community 74"
 Cohesion: 0.10
@@ -621,17 +622,13 @@ Nodes (17): bool, float, int, Path, SentimentResult, str, Transformer-based Sent
 Cohesion: 0.09
 Nodes (21): 1. `plot_training_curves.py`, 2. `plot_confusion_matrix.py`, 3. `plot_model_comparison.py`, 4. `generate_report.py`, 5. `generate_all.py` (Master Script), code:bash (python plot_training_curves.py \), code:bash (python plot_confusion_matrix.py \), code:bash (python plot_model_comparison.py \) (+13 more)
 
-### Community 77 - "Community 77"
-Cohesion: 0.18
-Nodes (3): m(), on(), st
-
 ### Community 78 - "Community 78"
-Cohesion: 0.12
-Nodes (3): Ht, mt, setDataAttribute()
+Cohesion: 0.11
+Nodes (6): c(), Ht, l(), mt, setDataAttribute(), we()
 
 ### Community 79 - "Community 79"
-Cohesion: 0.13
-Nodes (16): int, float, SentimentResult, str, Load fitted temperature from research results; return (T, applied)., Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)., Load fitted temperature from research results; return (T, applied)., Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...). (+8 more)
+Cohesion: 0.08
+Nodes (23): bool, ClassicalPreprocessConfig, float, Path, SentimentResult, str, Load fitted temperature from research results; return (T, applied)., Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...). (+15 more)
 
 ### Community 80 - "Community 80"
 Cohesion: 0.11
@@ -642,8 +639,8 @@ Cohesion: 0.25
 Nodes (20): a(), b(), c(), d(), e(), f(), g(), h() (+12 more)
 
 ### Community 82 - "Community 82"
-Cohesion: 0.07
-Nodes (46): Any, bool, float, int, ndarray, str, DefuzzMethod, Enumeration of defuzzification methods. (+38 more)
+Cohesion: 0.08
+Nodes (40): Any, bool, float, int, ndarray, str, DefuzzMethod, Enumeration of defuzzification methods. (+32 more)
 
 ### Community 83 - "Community 83"
 Cohesion: 0.28
@@ -666,36 +663,40 @@ Cohesion: 0.08
 Nodes (23): 🙏 Acknowledgments, Advantages Over Baseline Models, 🏗️ Architecture Details, code:block1 (backend/), code:python (from research.evaluation_framework import ThesisEvaluationFr), code:block2 (INPUT → Embedding (300d) →), code:bash (# Test attention module), ✅ Completed (+15 more)
 
 ### Community 88 - "Community 88"
-Cohesion: 0.14
-Nodes (13): float, SentimentResult, str, Load fitted temperature from research results; return (T, applied)., Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)., Load fitted temperature from research results; return (T, applied)., Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)., Get probability distributions from model predictions.          For SVM, we use (+5 more)
+Cohesion: 0.13
+Nodes (17): int, float, SentimentResult, str, Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)., Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)., Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)., Get probability distributions from model predictions.          For SVM, we use (+9 more)
 
 ### Community 89 - "Community 89"
 Cohesion: 0.17
 Nodes (21): class_distribution_section(), language_section(), length_distribution_section(), lexical_section(), load_split_metadata(), main(), metadata_distribution_section(), _pct() (+13 more)
 
 ### Community 90 - "Community 90"
-Cohesion: 0.23
-Nodes (15): DataFrame, int, object, Path, str, build_run_name(), _import_training_stack(), _label_distribution() (+7 more)
+Cohesion: 0.16
+Nodes (18): DataFrame, float, int, ndarray, str, NeuroFuzzyGate, Per-sample adaptive ensemble router using learned Gaussian MFs.      This impl, Per-sample adaptive ensemble router using learned Gaussian MFs.      This impl (+10 more)
 
 ### Community 91 - "Community 91"
-Cohesion: 0.05
-Nodes (34): afterDraw(), afterEvent(), as(), beforeUpdate(), configure(), constructor(), destroy(), ds() (+26 more)
+Cohesion: 0.06
+Nodes (24): afterDatasetsUpdate(), afterEvent(), as(), be(), beforeDatasetDraw(), destroy(), ds(), fs() (+16 more)
 
 ### Community 92 - "Community 92"
 Cohesion: 0.47
 Nodes (14): int, ndarray, Path, str, build_master_table(), main(), Route A CI Analysis — DeBERTa + Classical Ensemble ============================, run_coverage_accuracy() (+6 more)
 
 ### Community 93 - "Community 93"
-Cohesion: 0.10
-Nodes (22): str, bool, ClassicalPreprocessConfig, float, Path, SentimentResult, str, ensemble_predict() (+14 more)
+Cohesion: 0.08
+Nodes (28): str, bool, ClassicalPreprocessConfig, float, Path, SentimentResult, str, ensemble_predict() (+20 more)
+
+### Community 94 - "Community 94"
+Cohesion: 0.14
+Nodes (3): Mn, off(), remove()
 
 ### Community 95 - "Community 95"
-Cohesion: 0.23
-Nodes (15): accuracy(), confusion_matrix(), evaluate(), _filter_by_reference(), load_gold(), load_iaa_metrics(), macro_f1(), main() (+7 more)
+Cohesion: 0.11
+Nodes (32): Any, str, bool, bool, ClassicalPreprocessConfig, float, int, main() (+24 more)
 
 ### Community 96 - "Community 96"
-Cohesion: 0.08
-Nodes (44): extract_aspect_sentiment(), _get_stopwords(), Keyword-level sentiment aggregation (aspect proxy).  NOTE: This module does NO, _tokenize(), analyze_youtube_video(), _coerce_bool(), _coerce_ensemble_weights(), _coerce_model_list() (+36 more)
+Cohesion: 0.06
+Nodes (56): extract_aspect_sentiment(), _get_stopwords(), Keyword-level sentiment aggregation (aspect proxy).  NOTE: This module does NO, _tokenize(), analyze_youtube_video(), _coerce_bool(), _coerce_ensemble_weights(), _coerce_model_list() (+48 more)
 
 ### Community 97 - "Community 97"
 Cohesion: 0.14
@@ -703,7 +704,7 @@ Nodes (12): Any, float, int, AggregatedMetrics, Results Aggregation and Thesis R
 
 ### Community 98 - "Community 98"
 Cohesion: 0.11
-Nodes (20): bool, Path, str, bool, ClassicalPreprocessConfig, Path, bool, ClassicalPreprocessConfig (+12 more)
+Nodes (17): float, FuzzyParameterProblem, MultiObjectiveSentimentProblem, Evaluate ensemble with given weights., Evaluate ensemble with given weights., Compute macro F1 score., Compute macro F1 score., Optimization problem for fuzzy sentiment classifier parameters.      Optimizes (+9 more)
 
 ### Community 99 - "Community 99"
 Cohesion: 0.11
@@ -718,8 +719,8 @@ Cohesion: 0.31
 Nodes (17): DataFrame, int, object, Path, str, add_length_slices(), build_markdown(), choose_slice_column() (+9 more)
 
 ### Community 102 - "Community 102"
-Cohesion: 0.15
-Nodes (18): 1. One-Minute Thesis Position, 2. Core Claims to Defend, 3. Claims to Avoid, 4. Numbers to Memorize, 5. Likely Examiner Questions, 6. Recommended Defense Structure, 7. Safe Final Answer for the Defense, 8. Final Pre-Viva Checklist (+10 more)
+Cohesion: 0.09
+Nodes (27): 0. What Changed and Why (read this first), 1. One-Minute Thesis Position, 2. Core Claims to Defend, 3. Claims to Avoid, 4. Numbers to Memorize, 5. Likely Examiner Questions, 6. Recommended Defense Structure, 7. Safe Final Answer for the Defense (+19 more)
 
 ### Community 103 - "Community 103"
 Cohesion: 0.18
@@ -727,51 +728,51 @@ Nodes (10): 4.1 Headline Runtime Performance (165,110 comments), 4.2 ROC-AUC, On
 
 ### Community 104 - "Community 104"
 Cohesion: 0.36
-Nodes (15): int, object, Path, str, audit(), band_keys(), build_markdown(), hamming_distance() (+7 more)
+Nodes (9): bool, Optimize ensemble weights using PSO., evaluate_weights(), load_dataset(), main(), normalize_weights(), precompute_model_probs(), pso_optimize() (+1 more)
 
 ### Community 105 - "Community 105"
-Cohesion: 0.11
-Nodes (18): code:block25 (ModuleNotFoundError: No module named 'architectures'), code:bash (cd backend/research), code:block27 (RuntimeError: CUDA out of memory), code:block28 (✅ GloVe embeddings loaded), code:bash (# Check if CUDA is available), code:bash (# Windows doesn't handle multiprocessing well), code:bash (# Reduce vocabulary size), code:python (import pandas as pd) (+10 more)
+Cohesion: 0.14
+Nodes (14): code:block25 (ModuleNotFoundError: No module named 'architectures'), code:bash (cd backend/research), code:block27 (RuntimeError: CUDA out of memory), code:block28 (✅ GloVe embeddings loaded), code:python (import pandas as pd), code:python (# Make sure labels are correct), code:bash (--learning_rate 0.002), code:python (# In train_hybrid_dl.py, modify criterion:) (+6 more)
 
 ### Community 106 - "Community 106"
-Cohesion: 0.10
+Cohesion: 0.12
 Nodes (17): backButton, breakdownTable, dataWithManyAspects, dataWithManyTimeline, dataWithNullValues, dataWithoutUsername, minimalData, mockNavigate (+9 more)
 
 ### Community 107 - "Community 107"
-Cohesion: 0.27
-Nodes (13): build_cm_latex(), build_cm_markdown(), build_error_markdown(), extract_errors(), load_test_set(), main(), Confusion Matrices + Error Analysis for Thesis  Runs all 5 models on the held-, Sample n misclassified examples, sorted by confidence (most confident errors fir (+5 more)
+Cohesion: 0.60
+Nodes (5): evaluate_engine(), load_dataset(), main(), parse_base_sets(), parse_list()
 
 ### Community 108 - "Community 108"
 Cohesion: 0.11
 Nodes (17): bool, float, int, str, code:json ({), LearningRateScheduler, MockTrainer, Training Callbacks for PyTorch Models  Provides modular callbacks for: - Earl (+9 more)
 
 ### Community 109 - "Community 109"
-Cohesion: 0.10
-Nodes (23): Any, bool, ClassicalPreprocessConfig, float, Path, SentimentResult, str, MetaLearnerSentimentEngine (+15 more)
+Cohesion: 0.07
+Nodes (30): Any, bool, ClassicalPreprocessConfig, float, Path, SentimentResult, str, Load fitted temperature from research results; return (T, applied). (+22 more)
 
 ### Community 110 - "Community 110"
 Cohesion: 0.25
 Nodes (16): DataFrame, float, int, ndarray, str, build_report(), holm_correct(), load_df() (+8 more)
 
 ### Community 111 - "Community 111"
-Cohesion: 0.30
-Nodes (14): build_markdown(), load_df(), main(), precompute_probs(), pso_with_convergence(), random_search_f1(), PSO Convergence Analysis for Thesis  Re-runs Particle Swarm Optimization with, PSO with per-iteration convergence logging.     Returns (best_weights, best_sco (+6 more)
+Cohesion: 0.27
+Nodes (15): build_markdown(), load_df(), main(), precompute_probs(), pso_with_convergence(), random_search_f1(), PSO Convergence Analysis for Thesis  Re-runs Particle Swarm Optimization with, PSO with per-iteration convergence logging.     Returns (best_weights, best_sco (+7 more)
 
 ### Community 112 - "Community 112"
 Cohesion: 0.36
 Nodes (16): Any, float, int, Path, str, _backend_dir(), build_model_table(), build_per_class_f1_table() (+8 more)
 
 ### Community 113 - "Community 113"
-Cohesion: 0.12
-Nodes (16): bool, ClassicalPreprocessConfig, float, SentimentResult, str, Load fitted temperature from research results; return (T, applied)., Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)., Normalize weights to sum to 1.0.          Parameters         ---------- (+8 more)
+Cohesion: 0.07
+Nodes (30): bool, ClassicalPreprocessConfig, float, SentimentResult, str, Load fitted temperature from research results; return (T, applied)., Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)., Normalize weights to sum to 1.0.          Parameters         ---------- (+22 more)
 
 ### Community 114 - "Community 114"
-Cohesion: 0.15
-Nodes (21): DataFrame, float, int, ndarray, str, Returns (n_samples, n_classes) probability matrix., build_report(), calibrate_model() (+13 more)
+Cohesion: 0.12
+Nodes (25): DataFrame, float, int, ndarray, str, Returns (n_samples, n_classes) probability matrix., build_report(), calibrate_model() (+17 more)
 
 ### Community 115 - "Community 115"
-Cohesion: 0.22
-Nodes (17): float, int, ndarray, Path, str, apply_temperature(), Apply temperature T to a probability matrix via log-softmax rescaling.      z_, Apply temperature T to a probability matrix via log-softmax rescaling.      z_ (+9 more)
+Cohesion: 0.20
+Nodes (18): float, int, ndarray, Path, str, apply_temperature(), Apply temperature T to a probability matrix via log-softmax rescaling.      z_, Apply temperature T to a probability matrix via log-softmax rescaling.      z_ (+10 more)
 
 ### Community 116 - "Community 116"
 Cohesion: 0.12
@@ -782,24 +783,24 @@ Cohesion: 0.12
 Nodes (17): code:bash (# Clone repository), code:python (# From project root), Dependencies, Installation, 1. Installation, 2. Download Pre-trained Embeddings, 3. Prepare Dataset, 4. Training (To be implemented) (+9 more)
 
 ### Community 118 - "Community 118"
-Cohesion: 0.20
-Nodes (18): DataFrame, float, int, ndarray, Path, str, auc(), build_report() (+10 more)
+Cohesion: 0.16
+Nodes (21): DataFrame, float, int, ndarray, Path, str, auc(), build_report() (+13 more)
 
 ### Community 120 - "Community 120"
-Cohesion: 0.10
-Nodes (22): str, bool, Series, main(), _parse_class_weight(), _parse_ngram(), save_outputs(), train_model() (+14 more)
+Cohesion: 0.52
+Nodes (6): load_dataset(), main(), _parse_class_weight(), _parse_ngram(), save_outputs(), train_model()
 
 ### Community 121 - "Community 121"
 Cohesion: 0.25
 Nodes (15): bool, int, Path, str, _clear(), _format_comment(), _load_existing(), _load_template() (+7 more)
 
 ### Community 122 - "Community 122"
-Cohesion: 0.15
+Cohesion: 0.14
 Nodes (9): Editprofile, Homepage, Profile, Report, Search, Signin, Tables, root (+1 more)
 
 ### Community 123 - "Community 123"
-Cohesion: 0.36
-Nodes (6): Any, SentimentResult, str, Neuro-fuzzy adaptive gating (ANFIS-lite).         Blends base model probs using, normalize_probs(), Normalize probability distribution to sum to 1.0.      Parameters     -------
+Cohesion: 0.12
+Nodes (20): int, Path, SentimentResult, str, BaseSentimentEngine, HybridDLSentimentEngine, Hybrid CNN-BiLSTM-Attention Sentiment Engine.  This module provides a producti, Tokenize text in a way that matches the training pipeline. (+12 more)
 
 ### Community 124 - "Community 124"
 Cohesion: 0.19
@@ -807,15 +808,15 @@ Nodes (14): generate_all_visualizations(), Run a visualization script., Generate
 
 ### Community 125 - "Community 125"
 Cohesion: 0.15
-Nodes (7): bi, getPlugin(), kn, mi, _notify(), removeBox(), stop()
+Nodes (8): bi, getPlugin(), Ie(), kn, mi, _notify(), removeBox(), stop()
 
 ### Community 126 - "Community 126"
 Cohesion: 0.20
 Nodes (9): 2.1 Sentiment Analysis and Social-Media Text, 2.2 Classical Machine-Learning Baselines, 2.3 Transformer-Based Sentiment Models, 2.4 Computational Intelligence for Model Combination, 2.5 Calibration, Uncertainty, and Selective Prediction, 2.6 Human Annotation and Inter-Annotator Agreement, 2.7 Research Gap and Positioning, Chapter 2 — Literature Review (+1 more)
 
 ### Community 127 - "Community 127"
-Cohesion: 0.18
-Nodes (10): Sidenavbar(), COLORS, Dashboard(), renderCustomizedLabel(), renderWithContext(), Monitoring(), Dashboard, Monitoring (+2 more)
+Cohesion: 0.17
+Nodes (13): Profile(), Sidenavbar(), COLORS, Dashboard(), renderCustomizedLabel(), Homepage(), Monitoring(), Report() (+5 more)
 
 ### Community 128 - "Community 128"
 Cohesion: 0.26
@@ -825,29 +826,25 @@ Nodes (13): analyze_length_distribution(), build_markdown(), length_bucket(), lo
 Cohesion: 0.24
 Nodes (12): DataFrame, float, int, Path, str, fold_descriptive_stats(), load_and_subsample(), main() (+4 more)
 
-### Community 130 - "Community 130"
-Cohesion: 0.16
-Nodes (3): F(), fi, setDataAttribute()
-
 ### Community 131 - "Community 131"
 Cohesion: 0.20
 Nodes (13): DataFrame, int, Path, build_markdown(), grid_search_logreg(), grid_search_svm(), load_split(), main() (+5 more)
 
 ### Community 132 - "Community 132"
-Cohesion: 0.21
-Nodes (11): RuntimeArtifactResolverTests, bool, object, Path, str, env_bool(), env_list(), Resolve the Django DATABASES setting.      SQLite (single-writer, file-locking (+3 more)
+Cohesion: 0.17
+Nodes (12): RuntimeArtifactResolverTests, bool, object, Path, str, env_bool(), env_list(), Resolve the Django DATABASES setting.      SQLite (single-writer, file-locking (+4 more)
 
 ### Community 133 - "Community 133"
-Cohesion: 0.25
-Nodes (11): float, int, ndarray, object, str, _collect_logits(), main(), _metric_summary() (+3 more)
+Cohesion: 0.11
+Nodes (3): B, xn, z
 
 ### Community 134 - "Community 134"
 Cohesion: 0.35
 Nodes (12): float, ndarray, object, Path, str, build_prediction_sets(), _confidence_matrix(), main() (+4 more)
 
 ### Community 135 - "Community 135"
-Cohesion: 0.19
-Nodes (3): li, off(), remove()
+Cohesion: 0.16
+Nodes (4): g(), li, remove(), Ut
 
 ### Community 136 - "Community 136"
 Cohesion: 0.15
@@ -866,24 +863,24 @@ Cohesion: 0.15
 Nodes (12): CI/CD Integration, Code Review Checklist, code:yaml (name: Frontend Tests), Component Tests, Frontend Testing Guide, GitHub Actions Example, Maintenance, Overview (+4 more)
 
 ### Community 140 - "Community 140"
-Cohesion: 0.16
-Nodes (11): analyzeButton, apiCheckbox, maxCommentsInput, mockNavigate, mockResponse, modelSelect, renderWithAuth(), urlInput (+3 more)
+Cohesion: 0.09
+Nodes (24): analysisData, aspectRow, confidenceSection, nonEnglishBlock, percentTexts, renderWithContext(), reportButton, spamBlock (+16 more)
 
 ### Community 141 - "Community 141"
-Cohesion: 0.09
-Nodes (22): 1. Human Gold Set — BLOCKED (P1, last critical thesis gap), 1. Human Gold Set — RESOLVED ✅ (was P1 "Blocked"), 2. Live-Runtime Significance Testing — RESOLVED ✅ (was a documented gap), 2. Three Missing Evaluation Scripts (from Route A Roadmap), 3. `app_api/models.py` Is Empty, 3. Environment Pinning — RESOLVED ✅, 4. `backend/tests/` Directory Is Completely Empty, 5. Route A Transformer Pipeline — Partially Done, Not Fully Validated (+14 more)
+Cohesion: 0.08
+Nodes (24): 1. Human Gold Set — BLOCKED (P1, last critical thesis gap), 1. Human Gold Set — RESOLVED ✅ (was P1 "Blocked"), 2. Live-Runtime Significance Testing — RESOLVED ✅ (was a documented gap), 2. Three Missing Evaluation Scripts (from Route A Roadmap), 3. `app_api/models.py` Is Empty, 3. Environment Pinning — RESOLVED ✅, 4. `backend/tests/` Directory Is Completely Empty, 5. Route A Transformer Pipeline — Partially Done, Not Fully Validated (+16 more)
 
 ### Community 142 - "Community 142"
-Cohesion: 0.25
-Nodes (16): DataFrame, int, ndarray, Path, str, score_model(), coerce_sentiment_result(), Convert various result formats to a standardized SentimentResult.      This fu (+8 more)
+Cohesion: 0.12
+Nodes (24): DataFrame, int, ndarray, Path, str, Any, str, score_model() (+16 more)
 
 ### Community 143 - "Community 143"
 Cohesion: 0.23
 Nodes (11): bool, float, int, ndarray, str, accuracy_for(), has_negation(), length_bucket() (+3 more)
 
 ### Community 144 - "Community 144"
-Cohesion: 0.12
-Nodes (3): ei, parents(), Ye
+Cohesion: 0.10
+Nodes (5): ei, f(), q, R, U
 
 ### Community 145 - "Community 145"
 Cohesion: 0.16
@@ -898,16 +895,16 @@ Cohesion: 0.24
 Nodes (7): c(), g(), h(), l(), m(), p(), u()
 
 ### Community 148 - "Community 148"
-Cohesion: 0.21
-Nodes (6): f(), g(), n(), o(), R, Ut
+Cohesion: 0.18
+Nodes (4): focusableChildren(), parents(), Qt, Ye
 
 ### Community 149 - "Community 149"
 Cohesion: 0.30
 Nodes (11): float, int, str, cohens_g(), interpret_g(), main(), odds_ratio(), Compute effect sizes for the CI-vs-baseline comparisons.  Motivation -------- (+3 more)
 
 ### Community 150 - "Community 150"
-Cohesion: 0.12
-Nodes (14): Scrape video metadata using yt-dlp.          Args:             video_id (str), Scrape video metadata using yt-dlp.          Args:             video_id (str), Scrape video metadata using yt-dlp.          Args:             video_id (str), Graceful fallback metadata when scraping fails.          Args:             vi, Graceful fallback metadata when scraping fails.          Args:             vi, Graceful fallback metadata when scraping fails.          Args:             vi, Fetch video metadata using yt-dlp with fallback.          Args:             v, Fetch video metadata using yt-dlp with fallback.          Args:             v (+6 more)
+Cohesion: 0.23
+Nodes (15): DataFrame, int, object, Path, str, build_run_name(), _import_training_stack(), _label_distribution() (+7 more)
 
 ### Community 151 - "Community 151"
 Cohesion: 0.14
@@ -962,20 +959,16 @@ Cohesion: 0.33
 Nodes (9): build_latex(), build_markdown(), extract_distribution(), load_metadata(), main(), Class Distribution Report Generator  Reads all split_metadata JSON files and C, Generate a compact LaTeX table for the thesis appendix., Extract label counts and pct for all splits from a metadata dict. (+1 more)
 
 ### Community 164 - "Community 164"
-Cohesion: 0.29
-Nodes (11): labels_from_probs(), load(), main(), metrics(), predict_probs(), DataFrame, float, int (+3 more)
+Cohesion: 0.36
+Nodes (15): int, object, Path, str, audit(), band_keys(), build_markdown(), hamming_distance() (+7 more)
 
 ### Community 165 - "Community 165"
-Cohesion: 0.29
-Nodes (15): DataFrame, int, ndarray, Path, str, build_markdown(), _cm_to_dict(), _display() (+7 more)
+Cohesion: 0.15
+Nodes (26): labels_from_probs(), load(), main(), metrics(), predict_probs(), DataFrame, float, int (+18 more)
 
 ### Community 166 - "Community 166"
 Cohesion: 0.42
 Nodes (9): float, object, Path, str, build_markdown(), build_reconciliation(), _fmt_delta(), main() (+1 more)
-
-### Community 167 - "Community 167"
-Cohesion: 0.13
-Nodes (16): int, Path, SentimentResult, str, Tokenize text in a way that matches the training pipeline., Convert tokens to padded/truncated indices and return (indices, length)., Analyze the sentiment of a single text.          Parameters         ---------, Analyze multiple texts efficiently using batching.          Parameters (+8 more)
 
 ### Community 168 - "Community 168"
 Cohesion: 0.28
@@ -1018,8 +1011,8 @@ Cohesion: 0.25
 Nodes (7): 5.1 Conclusion, 5.2 Limitations of the Present Work, 5.3 Future Work, 5.4 Final Closing Statement, Chapter 5: Conclusion and Future Work, Suggested Final Paragraph, Thesis Chapter 5 Polished Draft
 
 ### Community 179 - "Community 179"
-Cohesion: 0.20
-Nodes (10): 4.1 Train Meta-Learner, 4.2 Try Different Meta-Learners, 4.3 Compare All Meta-Learners, code:bash (python research/meta_learner.py \), code:block24 (Training accuracy (OOF): 0.7892), code:bash (# XGBoost), code:python (import pandas as pd), Experiment 4: Meta-Learner (Stacking) (+2 more)
+Cohesion: 0.18
+Nodes (11): 4.1 Train Meta-Learner, 4.2 Try Different Meta-Learners, 4.3 Compare All Meta-Learners, code:bash (python research/meta_learner.py \), code:block24 (Training accuracy (OOF): 0.7892), code:bash (# XGBoost), code:python (import pandas as pd), Experiment 4: Meta-Learner (Stacking) (+3 more)
 
 ### Community 180 - "Community 180"
 Cohesion: 0.20
@@ -1094,24 +1087,24 @@ Cohesion: 0.52
 Nodes (6): Do Not Overclaim, P0 - Must Finish Before Final Thesis, P1 - Strongly Recommended For Thesis Credibility, P2 - Good To Finish If Time Allows, Suggested Finish Order, Thesis Final Checklist
 
 ### Community 199 - "Community 199"
-Cohesion: 0.52
-Nodes (6): load_dataset(), main(), _parse_class_weight(), _parse_ngram(), save_outputs(), train_model()
+Cohesion: 0.15
+Nodes (17): ArgumentParser, int, str, Load configuration from file., _extract_explicit_cli_overrides(), load_config(), main(), merge_config_and_args() (+9 more)
 
 ### Community 200 - "Community 200"
 Cohesion: 0.33
 Nodes (11): DataFrame, float, int, Path, str, build_markdown(), _display(), _engine_kwargs() (+3 more)
 
 ### Community 201 - "Community 201"
-Cohesion: 0.20
-Nodes (11): Path, str, Config, get_env(), get_model_path(), Centralized configuration and path management.  This module provides a single, Get the path for a specific model component.          Parameters         ----, Centralized configuration for the sentiment analysis system.      This class p (+3 more)
+Cohesion: 0.27
+Nodes (13): build_cm_latex(), build_cm_markdown(), build_error_markdown(), extract_errors(), load_test_set(), main(), Confusion Matrices + Error Analysis for Thesis  Runs all 5 models on the held-, Sample n misclassified examples, sorted by confidence (most confident errors fir (+5 more)
 
 ### Community 203 - "Community 203"
 Cohesion: 0.33
 Nodes (6): Current Coverage Areas, Dashboard Component, Monitoring Component, Report Component, Search Component, Test Coverage
 
 ### Community 204 - "Community 204"
-Cohesion: 0.18
-Nodes (8): Any, str, Base classes and utilities for sentiment analysis engines.  This module provid, Convert result to dictionary format.          Returns         -------, Analyze the sentiment of a single text.          Parameters         ---------, Analyze the sentiment of multiple texts.          The default implementation c, Immutable result from a sentiment analysis prediction.      This dataclass pro, SentimentResult
+Cohesion: 0.25
+Nodes (11): float, int, ndarray, object, str, _collect_logits(), main(), _metric_summary() (+3 more)
 
 ### Community 205 - "Community 205"
 Cohesion: 0.20
@@ -1138,12 +1131,12 @@ Cohesion: 0.22
 Nodes (10): bool, DataFrame, int, ndarray, Path, str, load_balanced(), main() (+2 more)
 
 ### Community 211 - "Community 211"
-Cohesion: 0.29
-Nodes (11): DataFrame, float, int, ndarray, str, build_report(), load_df(), main() (+3 more)
+Cohesion: 0.27
+Nodes (8): Path, str, get_env(), get_model_path(), Centralized configuration and path management.  This module provides a single, Get the path for a specific model component.          Parameters         ----, Resolve a model path to an absolute path.      If the path is relative, it's r, Get an environment variable with optional default.      Parameters     ------
 
 ### Community 212 - "Community 212"
-Cohesion: 0.24
-Nodes (11): demo_defuzzification_comparison(), demo_evaluation_metrics(), demo_fuzzy_inference(), demo_membership_functions(), demo_thesis_experiment(), main(), Compare different defuzzification methods., Demonstrate fuzzy evaluation metrics. (+3 more)
+Cohesion: 0.60
+Nodes (5): main(), _parse_class_weight(), _parse_ngram(), save_outputs(), train_model()
 
 ### Community 213 - "Community 213"
 Cohesion: 0.40
@@ -1154,8 +1147,8 @@ Cohesion: 0.40
 Nodes (9): DataFrame, int, Series, str, _dedupe_by_text(), main(), _normalize_text(), _sample_balanced() (+1 more)
 
 ### Community 215 - "Community 215"
-Cohesion: 0.22
-Nodes (3): AnalysisJobAsyncAPITests, ANALYSIS_RUN_SYNC defaults to True in the test environment (see     core/settin, Stand-in for threading.Thread that runs the target synchronously in         the
+Cohesion: 0.12
+Nodes (9): AnalysisJobAsyncAPITests, ANALYSIS_RUN_SYNC defaults to True in the test environment (see     core/settin, Stand-in for threading.Thread that runs the target synchronously in         the, ANALYSIS_RUN_SYNC defaults to True in the test environment (see     core/settin, Stand-in for threading.Thread that runs the target synchronously in         the, ANALYSIS_RUN_SYNC defaults to True in the test environment (see     core/settin, Stand-in for threading.Thread that runs the target synchronously in         the, A job whose worker thread died without ever updating it again —         `update (+1 more)
 
 ### Community 216 - "Community 216"
 Cohesion: 0.70
@@ -1166,8 +1159,8 @@ Cohesion: 0.60
 Nodes (4): code:bash (cd backend), Current Position, Future Work Command Path, Route A Encoder Position
 
 ### Community 220 - "Community 220"
-Cohesion: 0.26
-Nodes (4): ProtectedRoute(), renderProtectedRoute(), Navigation(), AuthContext
+Cohesion: 0.31
+Nodes (4): ProtectedRoute(), renderProtectedRoute(), Signin(), AuthContext
 
 ### Community 221 - "Community 221"
 Cohesion: 0.40
@@ -1178,20 +1171,16 @@ Cohesion: 0.67
 Nodes (3): Asana Logo, Atlassian Logo, Jira Logo
 
 ### Community 247 - "Community 247"
-Cohesion: 0.42
-Nodes (8): bool, Optimize ensemble weights using PSO., evaluate_weights(), load_dataset(), main(), normalize_weights(), precompute_model_probs(), pso_optimize()
+Cohesion: 0.67
+Nodes (3): Series, main(), _normalize_text()
 
 ### Community 254 - "Community 254"
-Cohesion: 0.36
-Nodes (4): Any, str, Convert to dictionary for serialization., Convert to JSON string.
-
-### Community 292 - "Community 292"
-Cohesion: 0.22
-Nodes (9): analysisData, aspectRow, confidenceSection, nonEnglishBlock, percentTexts, reportButton, spamBlock, AuthContext (+1 more)
+Cohesion: 0.40
+Nodes (3): BaseCommand, Command, Mark abandoned `youtube/analyze/` background jobs as failed.      A job's backgr
 
 ### Community 293 - "Community 293"
-Cohesion: 0.70
-Nodes (4): evaluate_engine(), load_dataset(), _load_ensemble_weights(), main()
+Cohesion: 0.16
+Nodes (15): Any, str, main(), Neuro-Fuzzy Gate Ablation: How Often Does the Gate Override the Base Classifier?, evaluate_engine(), load_dataset(), _load_ensemble_weights(), main() (+7 more)
 
 ### Community 294 - "Community 294"
 Cohesion: 0.38
@@ -1202,8 +1191,8 @@ Cohesion: 0.53
 Nodes (5): bin_curve(), main(), predict(), Reliability diagrams for the pinned live-runtime models (RQ3 / calibration).  Re, tscale()
 
 ### Community 296 - "Community 296"
-Cohesion: 0.06
-Nodes (58): Any, Path, str, Enum, ExperimentConfig, EvaluationConfig, ExperimentConfig, ExperimentType (+50 more)
+Cohesion: 0.07
+Nodes (44): Any, str, int, Enum, ExperimentConfig, EvaluationConfig, ExperimentConfig, ExperimentType (+36 more)
 
 ### Community 297 - "Community 297"
 Cohesion: 0.60
@@ -1217,25 +1206,29 @@ Nodes (5): code:bash (python research/create_repro_bundle.py \), Historical Offl
 Cohesion: 0.50
 Nodes (4): code:bash (# Start TensorBoard (in a separate terminal)), Monitoring Training, TensorBoard, Training History
 
+### Community 303 - "Community 303"
+Cohesion: 0.50
+Nodes (4): code:bash (# Check if CUDA is available), code:bash (# Windows doesn't handle multiprocessing well), code:bash (# Reduce vocabulary size), Problem: Training Very Slow
+
 ## Knowledge Gaps
-- **785 isolated node(s):** `PreToolUse`, `allow`, `Meta`, `Migration`, `Migration` (+780 more)
+- **801 isolated node(s):** `version`, `configurations`, `PreToolUse`, `allow`, `Meta` (+796 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **62 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **65 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `get_sentiment_engine()` connect `Community 40` to `Community 2`, `Community 133`, `Community 8`, `Community 9`, `Community 142`, `Community 164`, `Community 165`, `Community 293`, `Community 295`, `Community 296`, `Community 172`, `Community 177`, `Community 49`, `Community 56`, `Community 61`, `Community 63`, `Community 70`, `Community 200`, `Community 73`, `Community 75`, `Community 221`, `Community 96`, `Community 101`, `Community 107`, `Community 110`, `Community 111`, `Community 114`, `Community 118`, `Community 247`, `Community 120`?**
-  _High betweenness centrality (0.062) - this node is a cross-community bridge._
-- **Why does `main()` connect `Community 46` to `Community 5`, `Community 108`, `Community 16`, `Community 53`, `Community 120`?**
-  _High betweenness centrality (0.039) - this node is a cross-community bridge._
-- **Why does `Thesis Experiments` connect `Community 296` to `Community 11`, `Community 23`, `Community 86`, `Community 247`, `Community 29`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `get_sentiment_engine()` connect `Community 293` to `Community 2`, `Community 9`, `Community 13`, `Community 142`, `Community 19`, `Community 23`, `Community 165`, `Community 295`, `Community 40`, `Community 172`, `Community 177`, `Community 49`, `Community 56`, `Community 61`, `Community 63`, `Community 70`, `Community 200`, `Community 201`, `Community 75`, `Community 204`, `Community 221`, `Community 95`, `Community 96`, `Community 101`, `Community 104`, `Community 107`, `Community 110`, `Community 111`, `Community 114`, `Community 118`, `Community 123`?**
+  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+- **Why does `main()` connect `Community 199` to `Community 5`, `Community 108`, `Community 13`, `Community 46`, `Community 16`, `Community 53`?**
+  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+- **Why does `Thesis Experiments` connect `Community 23` to `Community 296`, `Community 104`, `Community 11`, `Community 86`, `Community 54`, `Community 29`?**
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Are the 2 inferred relationships involving `_update()` (e.g. with `Ii()` and `ue()`) actually correct?**
   _`_update()` has 2 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 81 inferred relationships involving `ValueError` (e.g. with `load_csv()` and `load_gold_set()`) actually correct?**
   _`ValueError` has 81 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `PreToolUse`, `allow`, `Run administrative tasks.` to the rest of the system?**
-  _1586 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `version`, `configurations`, `PreToolUse` to the rest of the system?**
+  _1742 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.03347101552485401 - nodes in this community are weakly interconnected._

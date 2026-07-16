@@ -73,8 +73,9 @@ youtube_comments_cleaned.csv
 thesis_draft.docx
 
 # Thesis local backups
-thesis_backup_*.docx
+thesis_*backup*.docx
 
 # Local dev helpers / samples
 run.bat
 sample.pdf
+.ipynb_checkpoints/

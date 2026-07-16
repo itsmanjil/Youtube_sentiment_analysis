@@ -400,7 +400,7 @@ function Monitoring() {
                                 </div>
 
                                 {/* Video Info */}
-                                <div className="col-md-6 col-lg-4">
+                                <div className="col-md-6 col-lg-4 text-break">
                                   <h6 className="mb-1">
                                     {analysis.video?.title || "Untitled Video"}
                                   </h6>

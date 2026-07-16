@@ -1,6 +1,8 @@
 # Thesis Claim Artifact Audit
 
-Status date: 2026-07-02 (updated)
+Status date: 2026-07-11 (re-verified after the 2026-07-10 defensibility-pass
+fixes and the 2026-07-11 `calibration_applied` fix; the two rows that cited
+pre-fix numbers were updated to the regenerated artifacts)
 
 This audit maps the final defensible thesis claims to runnable scripts or stored
 artifacts in the repository. Claims not backed by an artifact are marked as
@@ -13,12 +15,12 @@ blocked or future work.
 | The final runtime is artifact-pinned and auditable, including the trained model binaries (not just calibration/ensemble/fuzzy configs). | `results/runtime/route_a_live_v1/manifest.json` (SHA-256 for temperature scaling, PSO/NSGA-II weights, neuro-fuzzy gate, and the logreg/svm/tfidf/meta_learner model + vectorizer binaries), `results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.md` | `python research/ci/live_runtime_benchmark.py --data data/test.csv --text_column text --label_column label` |
 | Live runtime labels match offline probability-cube labels for checked models. | `results/runtime/route_a_live_v1/prediction_level_reconciliation.md` | `python research/ci/prediction_level_reconciliation.py --models logreg,svm` |
 | Calibration claims are model-specific, not universal. | `results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.md`, `docs/LIVE_CI_WIRING_AUDIT.md` | Review runtime benchmark calibration fields and wiring audit. |
-| NSGA-II ensemble improves calibration at no accuracy cost vs baseline. | `results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.md` (ECE 0.0046 vs meta 0.0157) | `python research/ci/live_runtime_benchmark.py --data data/test.csv` |
+| NSGA-II ensemble improves calibration at no accuracy cost vs baseline. | `results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.md` (ECE 0.0039 vs meta 0.0183, post-fix re-run of 2026-07-10/11) | `python research/ci/live_runtime_benchmark.py --data data/test.csv` |
 | ROC-AUC (OvR) computed for all main models; Neutral is weakest class. | `results/roc_auc/roc_auc.md`, `results/roc_auc/roc_auc.json` | `python research/evaluation/roc_auc.py --test data/test.csv --sample 5000` |
 | Full confusion matrices + per-class P/R/F1 for all main models. | `results/confusion_matrices/confusion_matrices.md` | `python research/evaluation/confusion_matrices.py --test data/test.csv --sample 5000` |
 | Exploratory data analysis (class/length/lexical/metadata distributions). | `results/eda/eda_report.md`, `results/eda/eda_report.json` | `python research/analysis/eda_report.py --test data/test.csv --sample 50000` |
 | Neutral-class weakness characterised + intervention tested honestly. | `results/neutral_analysis/neutral_analysis.md` | `python research/analysis/neutral_class_analysis.py --model logreg --sample 8000` |
-| The neuro-fuzzy gate changes the base classifier's argmax on only 0.18% of comments (71/40,000: 33 corrections, 21 regressions, 17 wrong-to-wrong flips), explaining the fuzzy_ensemble/tfidf metric parity in Table 6. | `results/neuro_fuzzy_gate_ablation/fuzzy_gate_ablation.md` | `python research/ci/fuzzy_gate_ablation.py --sample 40000 --seed 42` |
+| The neuro-fuzzy gate changes the base classifier's (logreg's) argmax on 2.74% of comments (1,096/40,000: 456 corrections, 412 regressions, 228 wrong-to-wrong flips) — a small net-positive edit rate. The earlier "0.18%, fuzzy_ensemble/tfidf parity" reading was an artifact of two since-fixed bugs (THESIS_VIVA_DEFENSE_BRIEF.md §0). | `results/neuro_fuzzy_gate_ablation/fuzzy_gate_ablation.md` (regenerated 2026-07-10) | `python research/ci/fuzzy_gate_ablation.py --sample 40000 --seed 42 --base_model logreg` |
 | The thesis includes real metadata-backed domain-slice evidence. | `results/domain_shift/category_domain_shift.md`, `results/domain_shift/country_domain_shift.md` | `python research/evaluation/domain_shift.py --data data/route_a_domain_10k/test.csv --slice_column CategoryID` |
 | The checked benchmark split has no exact cross-split duplicates and has reviewed near-duplicate candidates. | `results/leakage/near_duplicate_audit.md` | `python scripts/prepare/near_duplicate_audit.py --split_dir data/route_a_benchmark_cpu` |
 | The frontend surfaces confidence, uncertainty, and calibration metadata. | `frontend/src/Views/Pages/Dashboard.test.jsx`, `frontend/src/Views/Pages/Monitoring.test.jsx` | `cd frontend && npm test -- --run` |
