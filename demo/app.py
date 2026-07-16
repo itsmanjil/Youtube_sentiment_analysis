@@ -1,7 +1,9 @@
 """Live sentiment demo — a single-file Streamlit app.
 
 Paste comments or point at a YouTube video, and compare predictions from the
-thesis models (TF-IDF, LogReg, SVM, ensemble, neuro-fuzzy) side by side. Runs
+thesis models (TF-IDF, LogReg, SVM, ensemble, neuro-fuzzy, meta-learner, the
+hybrid CNN-BiLSTM-Attention model, and the DeBERTa-v3 transformer route — the
+latter two only if their extra dependencies are installed) side by side. Runs
 fully locally against the pinned model artifacts in backend/models/; comment
 extraction scrapes YouTube directly (no API key, no cost).
 
@@ -10,6 +12,8 @@ Run from the repo root:
 """
 from __future__ import annotations
 
+import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -23,10 +27,41 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from src.sentiment import coerce_sentiment_result, get_sentiment_engine  # noqa: E402
 from youtube_fetch import fetch_comments  # noqa: E402
 
-CLASSICAL_MODELS = ["tfidf", "logreg", "svm", "ensemble", "fuzzy_ensemble"]
+MODELS = ["tfidf", "logreg", "svm", "ensemble", "fuzzy_ensemble", "meta_learner"]
+# hybrid_dl and deberta_v3 need PyTorch/transformers (backend/requirements-dl.txt) —
+# only offer them if those are installed.
+if importlib.util.find_spec("torch") is not None:
+    MODELS.append("hybrid_dl")
+if importlib.util.find_spec("transformers") is not None:
+    MODELS.append("deberta_v3")
+HEAVY_MODELS = {"hybrid_dl", "deberta_v3"}
 LABELS = ["Positive", "Neutral", "Negative"]
 LABEL_COLORS = {"Positive": "#2e7d32", "Neutral": "#616161", "Negative": "#c62828"}
 LABEL_ICONS = {"Positive": "🟢", "Neutral": "⚪", "Negative": "🔴"}
+
+
+@st.cache_data
+def load_calibration() -> dict:
+    """Per-model temperature-scaling results from the thesis (backend/results/)."""
+    path = BACKEND / "results" / "temperature_scaling.json"
+    try:
+        entries = json.loads(path.read_text())["models"]
+    except (FileNotFoundError, KeyError, json.JSONDecodeError):
+        return {}
+    return {e["model"]: e for e in entries}
+
+
+CALIBRATION = load_calibration()
+
+
+def calibration_caption(name: str) -> str:
+    """One-line calibration summary for a model, or '' if not measured."""
+    entry = CALIBRATION.get(name)
+    if not entry:
+        return ""
+    if entry["kept"]:
+        return f"calibrated T={entry['temperature']:.2f} · ECE {entry['ece_before']:.3f}→{entry['ece_after']:.3f}"
+    return f"uncalibrated · ECE {entry['ece_before']:.3f}"
 
 
 @st.cache_resource(show_spinner="Loading model artifacts...")
@@ -65,8 +100,25 @@ def show_per_comment(comments: list[str], selected: list[str]) -> None:
                 st.markdown(f"**{name}**")
                 st.markdown(label_badge(res.label), unsafe_allow_html=True)
                 st.caption(f"confidence {res.score:.1%}")
+                calib = calibration_caption(name)
+                if calib:
+                    st.caption(calib)
         df = pd.DataFrame({name: results[name][i].probs for name in selected})
         st.bar_chart(df.reindex(LABELS), height=220, stack=False, use_container_width=True)
+
+    export = pd.DataFrame(
+        [
+            {"comment": comment, "model": name, "label": results[name][i].label, "confidence": results[name][i].score}
+            for i, comment in enumerate(comments)
+            for name in selected
+        ]
+    )
+    st.download_button(
+        "Download results as CSV",
+        export.to_csv(index=False),
+        file_name="sentiment_results.csv",
+        mime="text/csv",
+    )
 
 
 def show_batch(comments: list[dict], selected: list[str]) -> None:
@@ -95,6 +147,22 @@ def show_batch(comments: list[dict], selected: list[str]) -> None:
         }
     )
     st.dataframe(table, use_container_width=True, height=420)
+    st.download_button(
+        "Download results as CSV",
+        table.to_csv(index=False),
+        file_name="sentiment_results.csv",
+        mime="text/csv",
+    )
+
+    calib_rows = {
+        name: caption
+        for name in selected
+        if (caption := calibration_caption(name))
+    }
+    if calib_rows:
+        with st.expander("Model calibration (from the thesis benchmark)"):
+            for name, caption in calib_rows.items():
+                st.caption(f"**{name}** — {caption}")
 
 
 st.set_page_config(page_title="YouTube Sentiment Demo", page_icon="🎬", layout="wide")
@@ -107,7 +175,11 @@ st.caption(
 
 with st.sidebar:
     st.header("Models")
-    selected = [m for m in CLASSICAL_MODELS if st.checkbox(m, value=True)]
+    # hybrid_dl/deberta_v3 load a PyTorch model on first use — default them
+    # off so picking only the fast classical models doesn't pay that cost.
+    selected = [
+        m for m in MODELS if st.checkbox(m, value=(m not in HEAVY_MODELS))
+    ]
 
 tab_url, tab_paste = st.tabs(["🔗 YouTube link", "✍️ Paste comments"])
 
