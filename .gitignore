@@ -1,6 +1,3 @@
-# Local tool config (keep project skills and hooks, ignore only local overrides)
-.claude/settings.local.json
-
 # Python
 __pycache__/
 *.py[cod]
@@ -16,7 +13,7 @@ build/
 venv/
 env/
 
-# Django
+# Local runtime files
 *.log
 local_settings.py
 db.sqlite3
@@ -52,17 +49,9 @@ dist/
 *.sln
 *.sw?
 
-# Graphify (generated tooling output, kept local)
-graphify-out/
-backend/graphify-out/
-
 # Local archive: thesis documents, drafts, backups, legacy files.
 # Not part of the submitted code repository.
 archive/
-
-# Claude Code internals (kept local, not tracked)
-.claude/
-/CLAUDE.md
 
 # Data files (too large for git)
 youtube_comments_cleaned.csv

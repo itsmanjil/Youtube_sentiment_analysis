@@ -1,8 +1,6 @@
 """Fetch YouTube comments without an API key via youtube-comment-downloader.
 
-Slimmed down from the thesis project's original Django-era scraper
-(backend/app/youtube_scraper.py, see git history). Two behaviors are kept
-deliberately:
+Two behaviors are kept deliberately:
 
 - ``language='en'`` forces YouTube to render vote counts in English regardless
   of the host locale; without it, counts come back localized ("2.6 लाख") and

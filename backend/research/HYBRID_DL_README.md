@@ -25,9 +25,8 @@ This architecture contributes:
 
 ```
 backend/
-├── app/
-│   ├── deep_models.py                  # HybridDLSentimentEngine integration
-│   └── sentiment_engines.py            # Updated factory functions
+├── src/
+│   └── sentiment/                      # Sentiment engines, incl. HybridDLSentimentEngine
 │
 ├── research/
 │   ├── architectures/
@@ -157,21 +156,6 @@ texts = ["Great!", "Terrible!", "Okay"]
 results = engine.batch_analyze(texts)
 ```
 
-### 6. API Usage
-
-```bash
-# Analyze YouTube video with hybrid DL model
-curl -X POST http://localhost:8000/api/youtube/analyze/ \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "video_url": "https://www.youtube.com/watch?v=VIDEO_ID",
-    "max_comments": 200,
-    "sentiment_model": "hybrid_dl",
-    "use_api": true
-  }'
-```
-
 ## 🧪 Testing
 
 ### Unit Tests
@@ -188,16 +172,13 @@ python backend/research/data/preprocessing.py
 
 # Test embedding utilities
 python backend/research/architectures/embeddings.py
-
-# Test engine integration (requires trained model)
-python backend/app/deep_models.py
 ```
 
 ### Integration Test
 
 ```bash
-# Test with existing sentiment analysis pipeline
-python backend/test_youtube.py
+# Test against the live demo
+streamlit run demo/app.py
 ```
 
 ## 📊 Expected Performance
@@ -345,7 +326,7 @@ while offering substantially faster inference times (5x speedup on CPU).
 This is a Master's thesis project. For questions or suggestions:
 
 1. Review the comprehensive plan in this README
-2. Check existing implementation in `architectures/` and `app/deep_models.py`
+2. Check existing implementation in `architectures/` and `src/sentiment/`
 3. Follow the established patterns for consistency
 4. Ensure all code is well-documented with docstrings
 5. Write unit tests for new components

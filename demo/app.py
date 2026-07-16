@@ -1,4 +1,4 @@
-"""Live sentiment demo — replaces the old Django+React app with a single file.
+"""Live sentiment demo — a single-file Streamlit app.
 
 Paste comments or point at a YouTube video, and compare predictions from the
 thesis models (TF-IDF, LogReg, SVM, ensemble, neuro-fuzzy) side by side. Runs

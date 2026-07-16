@@ -2,7 +2,7 @@
 PyTorch Dataset Classes for Sentiment Analysis Training
 
 Provides flexible dataset classes for training the hybrid CNN-BiLSTM-Attention model.
-Supports in-memory datasets, CSV files, and integration with existing Django models.
+Supports in-memory datasets and CSV files.
 """
 
 import torch
