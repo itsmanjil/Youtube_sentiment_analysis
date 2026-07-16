@@ -14,7 +14,6 @@ A research project analyzing sentiment in YouTube comments: classical ML baselin
 .
 |- backend/
 |  |- data/                 # Datasets and split artifacts
-|  |- docs/                 # Thesis and project documentation
 |  |- figures/              # Generated plots and figures
 |  |- files/                # Text resources used by preprocessing
 |  |- models/               # Trained model artifacts
@@ -30,6 +29,9 @@ A research project analyzing sentiment in YouTube comments: classical ML baselin
 |  |- 03_proposed_model.ipynb
 |  |- 04_evaluation_and_significance.ipynb
 |  `- 05_error_analysis.ipynb
+|- demo/                     # Optional live demo (Streamlit, single file)
+|  |- app.py
+|  `- requirements.txt
 |- .github/workflows/ci.yml
 `- README.md
 ```
@@ -66,6 +68,17 @@ For deep-learning/transformer work (training the hybrid model or DeBERTa-v3 rout
 | `04_evaluation_and_significance.ipynb` | Are the differences between models statistically significant and stable across seeds/folds? |
 | `05_error_analysis.ipynb` | Where does the system fail, and does it generalize beyond the training distribution? |
 
+## Live Demo (optional)
+
+A small Streamlit app classifies comments with the exact pinned model artifacts
+evaluated in the thesis, side by side. Paste comments directly, or give it a
+YouTube video URL — comments are scraped without an API key. No paid services:
+
+```bash
+pip install -r demo/requirements.txt
+streamlit run demo/app.py
+```
+
 ## CI
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every `push`/`pull_request`:
@@ -76,9 +89,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every `push`/`pull_request`:
 ## Related Docs
 
 - `backend/research/README.md` — how to run the underlying experiments
-- `backend/docs/ARCHITECTURE.md`
-- `backend/docs/THESIS_EXPERIMENT_GUIDE.md`
-- `backend/README_THESIS.md`
+- `backend/research/TRAINING_GUIDE.md` — training the deep-learning models
 
 ## License
 

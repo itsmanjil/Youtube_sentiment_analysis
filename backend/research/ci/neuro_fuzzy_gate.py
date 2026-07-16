@@ -9,8 +9,8 @@ by Adaptive Neuro-Fuzzy Inference Systems (ANFIS) that dynamically routes
 each sample to the most appropriate model based on per-model confidence
 signals.
 
-Unlike the fixed fuzzy grid search (backend/docs/FUZZY_THEORETICAL_GROUNDING.md),
-which applies the same static weights to every sample, the neuro-fuzzy gate
+Unlike the fixed fuzzy grid search, which applies the same static weights
+to every sample, the neuro-fuzzy gate
 *adapts per-sample*: it reads each model's confidence for that input and
 produces a soft routing weight learned from the validation set.
 

@@ -7,9 +7,9 @@ train/val/test (emoji conversion + whitespace normalisation). Writes a
 per-item membership CSV and a held-out-only subset for use by
 gold_set_evaluation_holdout.py.
 
-This exists because the gold set was originally sampled from train.csv
-(see README_THESIS.md), not from the held-out test split, so a naive
-"independent human evaluation" claim needs this check.
+This exists because the gold set was originally sampled from train.csv,
+not from the held-out test split, so a naive "independent human
+evaluation" claim needs this check.
 """
 
 import csv
