@@ -1,0 +1,106 @@
+{
+  "architecture": {
+    "n_models": 3,
+    "model_names": [
+      "deberta_v3",
+      "logreg",
+      "svm"
+    ],
+    "n_fuzzy_sets": 3,
+    "n_parameters": 27,
+    "reference": "ANFIS (Jang, 1993)"
+  },
+  "training": {
+    "nll_before": 0.635781,
+    "nll_after": 0.551706,
+    "converged": false,
+    "n_iterations": 200
+  },
+  "learned_mfs": [
+    {
+      "model": "deberta_v3",
+      "fuzzy_set": "Low",
+      "center": 0.1079,
+      "width": 0.1013,
+      "alpha": -5.0
+    },
+    {
+      "model": "deberta_v3",
+      "fuzzy_set": "Medium",
+      "center": 0.3139,
+      "width": 0.05,
+      "alpha": -4.6779
+    },
+    {
+      "model": "deberta_v3",
+      "fuzzy_set": "High",
+      "center": 0.4238,
+      "width": 0.05,
+      "alpha": 5.0
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "Low",
+      "center": 0.6551,
+      "width": 0.0722,
+      "alpha": 5.0
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "Medium",
+      "center": 0.7157,
+      "width": 0.2382,
+      "alpha": 3.8253
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "High",
+      "center": 0.4443,
+      "width": 0.05,
+      "alpha": 5.0
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Low",
+      "center": 0.3354,
+      "width": 0.0638,
+      "alpha": 5.0
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Medium",
+      "center": 0.1148,
+      "width": 0.2351,
+      "alpha": 3.7345
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "High",
+      "center": 0.1304,
+      "width": 0.162,
+      "alpha": -0.5215
+    }
+  ],
+  "val_metrics": {
+    "macro_f1": 0.785258,
+    "ece": 0.09476,
+    "brier": 0.314609
+  },
+  "test_metrics": {
+    "macro_f1": 0.797574,
+    "accuracy": 0.8,
+    "ece": 0.085343,
+    "brier": 0.304784
+  },
+  "static_ensemble_test_metrics": {
+    "macro_f1": 0.777008,
+    "accuracy": 0.777778,
+    "ece": 0.13851,
+    "brier": 0.337519
+  },
+  "delta_vs_static": {
+    "macro_f1": 0.020567,
+    "ece": -0.053167,
+    "brier": -0.032735
+  }
+}

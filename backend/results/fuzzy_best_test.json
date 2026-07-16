@@ -1,0 +1,53 @@
+{
+  "fuzzy_ensemble": {
+    "accuracy": 0.6627,
+    "macro_f1": 0.6676,
+    "report": {
+      "Negative": {
+        "precision": 0.7251648219234675,
+        "recall": 0.6067637442567227,
+        "f1-score": 0.6607016828468814,
+        "support": 69429.0
+      },
+      "Neutral": {
+        "precision": 0.5280705459921851,
+        "recall": 0.7354355723551647,
+        "f1-score": 0.6147368162231607,
+        "support": 67991.0
+      },
+      "Positive": {
+        "precision": 0.8297572148419606,
+        "recall": 0.6474877748863279,
+        "f1-score": 0.7273778641587625,
+        "support": 69938.0
+      },
+      "accuracy": 0.6626896478553999,
+      "macro avg": {
+        "precision": 0.6943308609192044,
+        "recall": 0.6632290304994051,
+        "f1-score": 0.6676054544096015,
+        "support": 207358.0
+      },
+      "weighted avg": {
+        "precision": 0.6958162839412808,
+        "recall": 0.6626896478553999,
+        "f1-score": 0.6681188141944876,
+        "support": 207358.0
+      }
+    }
+  },
+  "config": {
+    "base_models": [
+      "logreg"
+    ],
+    "mf_type": "triangular",
+    "defuzz_method": "mom",
+    "t_norm": "min",
+    "t_conorm": "max",
+    "alpha_cut": 0.0,
+    "resolution": 100,
+    "confidence_threshold": 0.6,
+    "use_full": true,
+    "limit": null
+  }
+}

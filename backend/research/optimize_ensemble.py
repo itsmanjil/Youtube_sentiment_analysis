@@ -1,0 +1,209 @@
+"""
+Standalone PSO ensemble-weight optimizer (exploratory / superseded).
+
+The served `pso_ensemble_weights.json` runtime artifact
+(results/runtime/route_a_live_v1/) is produced by
+research/analysis/pso_convergence_analysis.py --pin_dir ..., which fits on
+the canonical data/val.csv split and evaluates on data/test.csv. This script
+implements the same PSO algorithm but re-splits a single --data CSV
+internally, so it does not exercise the actual val/test provenance the rest
+of the pipeline relies on. It is kept for ad-hoc single-file experimentation
+but is not the production driver despite being named that way in earlier
+docs revisions -- see research/analysis/pso_convergence_analysis.py.
+"""
+
+import argparse
+import json
+import random
+import sys
+from pathlib import Path
+
+import pandas as pd
+from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(BASE_DIR))
+
+from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.sentiment import coerce_sentiment_result, get_sentiment_engine, normalize_label
+
+
+def load_dataset(csv_path):
+    df = pd.read_csv(csv_path)
+    if "text" not in df.columns or "label" not in df.columns:
+        raise ValueError("Dataset must contain 'text' and 'label' columns.")
+    df = df.dropna(subset=["text", "label"])
+    df["label"] = df["label"].apply(normalize_label)
+    return df
+
+
+def precompute_model_probs(models, texts, *, preprocess: bool = False):
+    model_probs = {}
+    for model in models:
+        # calibrate=False: ensemble weights are fitted on raw base-model
+        # probabilities, matching how EnsembleSentimentEngine builds its base
+        # engines at serving time.
+        engine_kwargs = {"calibrate": False}
+        if preprocess and model in {"tfidf", "logreg", "svm"}:
+            engine_kwargs["preprocess"] = True
+        engine = get_sentiment_engine(model, **engine_kwargs)
+        results = engine.batch_analyze(texts)
+        model_probs[model] = [
+            normalize_probs(coerce_sentiment_result(result, model).probs)
+            for result in results
+        ]
+    return model_probs
+
+
+def evaluate_weights(weights, models, labels, model_probs):
+    normalized = normalize_weights(weights, models)
+    predictions = []
+    for idx in range(len(labels)):
+        combined = {label: 0.0 for label in SENTIMENT_LABELS}
+        for model_name, weight in normalized.items():
+            probs = model_probs[model_name][idx]
+            for label in SENTIMENT_LABELS:
+                combined[label] += weight * probs.get(label, 0.0)
+        combined = normalize_probs(combined)
+        predictions.append(max(combined, key=combined.get))
+    return f1_score(labels, predictions, average="macro")
+
+
+def normalize_weights(weights, models):
+    weights = {model: max(0.0, float(weights.get(model, 0.0))) for model in models}
+    total = sum(weights.values())
+    if total <= 0:
+        return {model: 1.0 / len(models) for model in models}
+    return {model: value / total for model, value in weights.items()}
+
+
+def pso_optimize(models, labels, model_probs, n_particles=20, n_iters=30, seed=42):
+    rng = random.Random(seed)
+    dim = len(models)
+
+    def random_position():
+        return [rng.random() for _ in range(dim)]
+
+    positions = [random_position() for _ in range(n_particles)]
+    velocities = [[rng.uniform(-0.1, 0.1) for _ in range(dim)] for _ in range(n_particles)]
+    personal_best = list(positions)
+    personal_scores = [float("-inf")] * n_particles
+    global_best = positions[0]
+    global_score = float("-inf")
+
+    for _ in range(n_iters):
+        for idx, position in enumerate(positions):
+            weights = {models[i]: position[i] for i in range(dim)}
+            score = evaluate_weights(weights, models, labels, model_probs)
+            if score > personal_scores[idx]:
+                personal_scores[idx] = score
+                personal_best[idx] = list(position)
+            if score > global_score:
+                global_score = score
+                global_best = list(position)
+
+        for idx in range(n_particles):
+            for i in range(dim):
+                inertia = 0.7 * velocities[idx][i]
+                cognitive = 1.4 * rng.random() * (personal_best[idx][i] - positions[idx][i])
+                social = 1.4 * rng.random() * (global_best[i] - positions[idx][i])
+                velocities[idx][i] = inertia + cognitive + social
+                positions[idx][i] = max(0.0, positions[idx][i] + velocities[idx][i])
+
+    best_weights = normalize_weights(
+        {models[i]: global_best[i] for i in range(dim)},
+        models,
+    )
+    return best_weights, global_score
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Optimize ensemble weights with PSO on a labeled dataset."
+    )
+    parser.add_argument("--data", required=True, help="Path to labeled CSV dataset.")
+    parser.add_argument("--test-size", type=float, default=0.2)
+    parser.add_argument("--val-size", type=float, default=0.2)
+    parser.add_argument("--random-seed", type=int, default=42)
+    parser.add_argument(
+        "--use-full",
+        action="store_true",
+        help="Use the full dataset without re-splitting.",
+    )
+    parser.add_argument(
+        "--models",
+        default="logreg,svm,tfidf",
+        help="Comma-separated model list.",
+    )
+    parser.add_argument(
+        "--preprocess",
+        action="store_true",
+        help=(
+            "Enable the shared classical preprocessing for the underlying base models. "
+            "Use this only if the corresponding artifacts were trained with preprocessing enabled."
+        ),
+    )
+    parser.add_argument("--particles", type=int, default=20)
+    parser.add_argument("--iterations", type=int, default=30)
+    parser.add_argument("--output", default=None, help="Optional JSON output path.")
+    args = parser.parse_args()
+
+    df = load_dataset(args.data)
+    if args.use_full:
+        val_df = df
+        test_df = None
+        print(
+            "\n⚠️  Using full dataset for optimization. "
+            "No held-out test evaluation will be reported."
+        )
+    else:
+        train_val_df, test_df = train_test_split(
+            df,
+            test_size=args.test_size,
+            random_state=args.random_seed,
+            stratify=df["label"],
+        )
+        _, val_df = train_test_split(
+            train_val_df,
+            test_size=args.val_size,
+            random_state=args.random_seed,
+            stratify=train_val_df["label"],
+        )
+
+    models = [
+        name.strip().lower() for name in args.models.split(",") if name.strip()
+    ]
+    val_texts = val_df["text"].tolist()
+    val_labels = val_df["label"].tolist()
+    val_probs = precompute_model_probs(models, val_texts, preprocess=bool(args.preprocess))
+
+    weights, score = pso_optimize(
+        models,
+        val_labels,
+        val_probs,
+        n_particles=args.particles,
+        n_iters=args.iterations,
+        seed=args.random_seed,
+    )
+
+    result = {
+        "weights": weights,
+        "val_macro_f1": round(score, 4),
+        "models": models,
+        "preprocess": bool(args.preprocess),
+    }
+    if test_df is not None:
+        test_texts = test_df["text"].tolist()
+        test_labels = test_df["label"].tolist()
+        test_probs = precompute_model_probs(models, test_texts, preprocess=bool(args.preprocess))
+        test_score = evaluate_weights(weights, models, test_labels, test_probs)
+        result["test_macro_f1"] = round(test_score, 4)
+    if args.output:
+        Path(args.output).write_text(json.dumps(result, indent=2))
+    else:
+        print(json.dumps(result, indent=2))
+
+
+if __name__ == "__main__":
+    main()

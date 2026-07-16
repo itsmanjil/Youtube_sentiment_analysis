@@ -1,0 +1,33 @@
+\begin{table}[ht]
+\centering
+\caption{Model Performance on 300-Sample Gold Set (vs.\ Human-Reconciled Gold Labels)}
+\label{tab:gold_set_performance}
+\begin{tabular}{lccc}
+\hline
+Model & Accuracy & Macro F1 & Weighted F1 \\
+\hline
+\textsc{LogReg} & 0.6907 & 0.6940 & 0.6931 \\
+\textsc{SVM} & 0.6942 & 0.6978 & 0.6957 \\
+\textsc{TF-IDF NB} & 0.7010 & 0.6988 & 0.6995 \\
+\textsc{Ensemble (PSO)} & 0.7045 & 0.7075 & 0.7067 \\
+\textsc{Ensemble (NSGA-II)} & 0.6976 & 0.7006 & 0.6999 \\
+\textsc{Meta-Learner} & 0.6976 & 0.7001 & 0.7001 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{Inter-Annotator Agreement on 300-Sample Gold Set}
+\label{tab:gold_set_iaa}
+\begin{tabular}{lc}
+\hline
+Metric & Value \\
+\hline
+Percent Agreement & 0.9700 \\
+Krippendorff's $\alpha$ & 0.9547 \\
+Fleiss' $\kappa$ & 0.9546 \\
+Cohen's $\kappa$ (annotator\_1 vs.\ annotator\_2) & 0.9546 \\
+\hline
+\end{tabular}
+\end{table}

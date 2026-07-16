@@ -1,0 +1,75 @@
+{
+  "_note": "Temperature is gated on held-out ECE improvement (research/ci/temperature_scaling.py::calibrate_model). Entries where the fitted temperature made test-set ECE worse than the uncalibrated model (ece_after_fitted >= ece_before) are pinned to temperature=1.0 (no-op) rather than shipping a harmful calibration; temperature_fitted retains the originally-fitted value for reference and kept=false marks these rows.",
+  "models": [
+    {
+      "model": "logreg",
+      "temperature": 1.0,
+      "temperature_fitted": 1.0311,
+      "kept": false,
+      "ece_before": 0.006789,
+      "ece_after": 0.006789,
+      "ece_reduction_pct": 0.0,
+      "brier_before": 0.408315,
+      "brier_after": 0.408315,
+      "brier_reduction_pct": 0.0,
+      "macro_f1_before": 0.69425,
+      "macro_f1_after": 0.69425
+    },
+    {
+      "model": "svm",
+      "temperature": 1.0,
+      "temperature_fitted": 1.0326,
+      "kept": false,
+      "ece_before": 0.012565,
+      "ece_after": 0.012565,
+      "ece_reduction_pct": 0.0,
+      "brier_before": 0.427427,
+      "brier_after": 0.427427,
+      "brier_reduction_pct": 0.0,
+      "macro_f1_before": 0.681666,
+      "macro_f1_after": 0.681666
+    },
+    {
+      "model": "tfidf",
+      "temperature": 1.0,
+      "temperature_fitted": 1.1306,
+      "kept": false,
+      "ece_before": 0.01308,
+      "ece_after": 0.01308,
+      "ece_reduction_pct": 0.0,
+      "brier_before": 0.446417,
+      "brier_after": 0.446417,
+      "brier_reduction_pct": 0.0,
+      "macro_f1_before": 0.657892,
+      "macro_f1_after": 0.657892
+    },
+    {
+      "model": "ensemble",
+      "temperature": 0.9348,
+      "temperature_fitted": 0.9348,
+      "kept": true,
+      "ece_before": 0.021617,
+      "ece_after": 0.011672,
+      "ece_reduction_pct": 46.01,
+      "brier_before": 0.411337,
+      "brier_after": 0.410681,
+      "brier_reduction_pct": 0.16,
+      "macro_f1_before": 0.693793,
+      "macro_f1_after": 0.693793
+    },
+    {
+      "model": "meta_learner",
+      "temperature": 1.0,
+      "temperature_fitted": 0.9835,
+      "kept": false,
+      "ece_before": 0.02029,
+      "ece_after": 0.02029,
+      "ece_reduction_pct": 0.0,
+      "brier_before": 0.410187,
+      "brier_after": 0.410187,
+      "brier_reduction_pct": 0.0,
+      "macro_f1_before": 0.696704,
+      "macro_f1_after": 0.696704
+    }
+  ]
+}

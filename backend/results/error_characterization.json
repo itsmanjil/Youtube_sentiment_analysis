@@ -1,0 +1,276 @@
+{
+  "metadata": {
+    "model": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\models\\logreg\\model.sav",
+    "test_data": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\data\\test.csv",
+    "n_test": 165110,
+    "overall_accuracy": 0.6946278238749924
+  },
+  "per_class": {
+    "Negative": {
+      "n": 59614,
+      "accuracy": 0.72419230382125,
+      "recall": 0.72419230382125,
+      "precision": 0.6913825408772801
+    },
+    "Neutral": {
+      "n": 50540,
+      "accuracy": 0.6231697665215671,
+      "recall": 0.6231697665215671,
+      "precision": 0.6171617808433923
+    },
+    "Positive": {
+      "n": 54956,
+      "accuracy": 0.7282735279132397,
+      "recall": 0.7282735279132397,
+      "precision": 0.7751137794131887
+    }
+  },
+  "length_stats": {
+    "very_short (<=5 tok)": {
+      "n": 15781,
+      "accuracy": 0.7334769659717382
+    },
+    "short (6-15)": {
+      "n": 73083,
+      "accuracy": 0.6976451431933555
+    },
+    "medium (16-40)": {
+      "n": 59044,
+      "accuracy": 0.6871824402140776
+    },
+    "long (41+)": {
+      "n": 17202,
+      "accuracy": 0.6717242181141728
+    }
+  },
+  "negation_stats": {
+    "with_negation": {
+      "n": 46791,
+      "accuracy": 0.6566861148511466
+    },
+    "without_negation": {
+      "n": 118319,
+      "accuracy": 0.7096324343512032
+    }
+  },
+  "question_stats": {
+    "question_like": {
+      "n": 16176,
+      "accuracy": 0.7263847675568744
+    },
+    "statement_like": {
+      "n": 148934,
+      "accuracy": 0.6911786428887964
+    }
+  },
+  "confidence_stats": {
+    "correct": {
+      "mean": 0.7435975025185486,
+      "std": 0.175230306475622
+    },
+    "wrong": {
+      "mean": 0.5932984401208448,
+      "std": 0.1430821956233952
+    }
+  },
+  "confusion_pairs": [
+    {
+      "true": "Neutral",
+      "pred": "Negative",
+      "count": 12120,
+      "fraction_of_errors": 0.24038080126933756
+    },
+    {
+      "true": "Negative",
+      "pred": "Neutral",
+      "count": 11755,
+      "fraction_of_errors": 0.2331416104720349
+    },
+    {
+      "true": "Positive",
+      "pred": "Neutral",
+      "count": 7782,
+      "fraction_of_errors": 0.1543435144783816
+    },
+    {
+      "true": "Positive",
+      "pred": "Negative",
+      "count": 7151,
+      "fraction_of_errors": 0.1418286394287981
+    },
+    {
+      "true": "Neutral",
+      "pred": "Positive",
+      "count": 6925,
+      "fraction_of_errors": 0.13734629115430386
+    },
+    {
+      "true": "Negative",
+      "pred": "Positive",
+      "count": 4687,
+      "fraction_of_errors": 0.09295914319714399
+    }
+  ],
+  "top_confident_errors": [
+    {
+      "text": "tera thank you",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9989759832708983,
+      "length_bucket": "very_short (<=5 tok)",
+      "has_negation": false
+    },
+    {
+      "text": "thank you carryminati",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9989759832708983,
+      "length_bucket": "very_short (<=5 tok)",
+      "has_negation": false
+    },
+    {
+      "text": "love kaitlan collins red heart",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9986010943871293,
+      "length_bucket": "very_short (<=5 tok)",
+      "has_negation": false
+    },
+    {
+      "text": "heartfelt thanks to amazing ai for rescuingsaving the digital cheetah her adorable cute baby cheetahs are spectacularly precious sight its beautifully heartwarming smiling face with hearts",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9985650014603757,
+      "length_bucket": "medium (16-40)",
+      "has_negation": false
+    },
+    {
+      "text": "great shes pilferer red heart",
+      "true": "Negative",
+      "pred": "Positive",
+      "confidence": 0.9979660369970729,
+      "length_bucket": "very_short (<=5 tok)",
+      "has_negation": false
+    },
+    {
+      "text": "learned lot through telusuko thank you",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9977114586359378,
+      "length_bucket": "short (6-15)",
+      "has_negation": false
+    },
+    {
+      "text": "god bless you mel cant wait for the resurrection movie was absolutely devastated when watched your first one the passion sat there and just cried the whole time thank you red heart",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9972178245667777,
+      "length_bucket": "medium (16-40)",
+      "has_negation": true
+    },
+    {
+      "text": "what disgusting cover up by disgusting people",
+      "true": "Positive",
+      "pred": "Negative",
+      "confidence": 0.9971389815511993,
+      "length_bucket": "short (6-15)",
+      "has_negation": false
+    },
+    {
+      "text": "love this mr gibson red heart",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9969670800441168,
+      "length_bucket": "short (6-15)",
+      "has_negation": false
+    },
+    {
+      "text": "ridiculous worried about being called racist while little girls being raped in the worst way ridiculous",
+      "true": "Positive",
+      "pred": "Negative",
+      "confidence": 0.996863077178493,
+      "length_bucket": "medium (16-40)",
+      "has_negation": false
+    },
+    {
+      "text": "thank you truckers",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9966628126936903,
+      "length_bucket": "very_short (<=5 tok)",
+      "has_negation": false
+    },
+    {
+      "text": "please americans just dump trump the past lying toxic propaganda pushing fool",
+      "true": "Positive",
+      "pred": "Negative",
+      "confidence": 0.9965149378693675,
+      "length_bucket": "short (6-15)",
+      "has_negation": false
+    },
+    {
+      "text": "congratulations im so glad this channel is growing so well great to see channel get the recognition they deserve",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9962613796188793,
+      "length_bucket": "medium (16-40)",
+      "has_negation": false
+    },
+    {
+      "text": "ugh cant stand awkward silences",
+      "true": "Neutral",
+      "pred": "Negative",
+      "confidence": 0.9962480457538432,
+      "length_bucket": "very_short (<=5 tok)",
+      "has_negation": true
+    },
+    {
+      "text": "laura you are the bomb this interview nearly broke my heart in transcendental way thank you mel for your service to truth bravo smiling face with sunglasses heart on fire",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9959195571091759,
+      "length_bucket": "medium (16-40)",
+      "has_negation": false
+    },
+    {
+      "text": "thank you for helping this amazing ia you are the future",
+      "true": "Negative",
+      "pred": "Positive",
+      "confidence": 0.9956535027325805,
+      "length_bucket": "short (6-15)",
+      "has_negation": false
+    },
+    {
+      "text": "love this guy the best actor and filmmaker in the world god bless mel gibson",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9956101240136893,
+      "length_bucket": "short (6-15)",
+      "has_negation": false
+    },
+    {
+      "text": "whenever saw your videos lost my mind and get stuck just by thinking whether may have programming skills like you or not most of the time really get disappointed because as software engineering studen",
+      "true": "Negative",
+      "pred": "Positive",
+      "confidence": 0.995588887596752,
+      "length_bucket": "long (41+)",
+      "has_negation": true
+    },
+    {
+      "text": "babymonster red heart im so happy yall stan them they are my fav red heart red heart",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.995569848798967,
+      "length_bucket": "medium (16-40)",
+      "has_negation": false
+    },
+    {
+      "text": "sir wish could understand hindicoz see your videos very informative and miss alot of details wish could have translations thank you thank you",
+      "true": "Neutral",
+      "pred": "Positive",
+      "confidence": 0.9954427972840493,
+      "length_bucket": "medium (16-40)",
+      "has_negation": false
+    }
+  ]
+}

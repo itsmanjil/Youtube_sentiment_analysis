@@ -1,0 +1,251 @@
+{
+  "title": "Domain-Shift / Robustness Slice Evaluation",
+  "created_at": "2026-05-17T07:57:27Z",
+  "dataset_path": "C:\\Users\\itsma\\OneDrive\\Documents\\GitHub\\Youtube_sentiment_analysis\\backend\\data\\test.csv",
+  "text_column": "text",
+  "label_column": "label",
+  "slice_column": "_domain_slice",
+  "slice_source": "text_length_proxy",
+  "n_samples": 3000,
+  "min_slice_size": 30,
+  "models": [
+    "logreg",
+    "svm",
+    "tfidf",
+    "ensemble_nsga2",
+    "meta_learner"
+  ],
+  "results": {
+    "logreg": {
+      "overall": {
+        "n_samples": 3000,
+        "accuracy": 0.692,
+        "macro_f1": 0.687691
+      },
+      "slices": [
+        {
+          "slice": "medium",
+          "n_samples": 714,
+          "accuracy": 0.645658,
+          "macro_f1": 0.634168
+        },
+        {
+          "slice": "long",
+          "n_samples": 743,
+          "accuracy": 0.694482,
+          "macro_f1": 0.676649
+        },
+        {
+          "slice": "short",
+          "n_samples": 774,
+          "accuracy": 0.687339,
+          "macro_f1": 0.687309
+        },
+        {
+          "slice": "very_short",
+          "n_samples": 769,
+          "accuracy": 0.737321,
+          "macro_f1": 0.737817
+        }
+      ],
+      "worst_slice": {
+        "slice": "medium",
+        "n_samples": 714,
+        "accuracy": 0.645658,
+        "macro_f1": 0.634168
+      },
+      "best_slice": {
+        "slice": "very_short",
+        "n_samples": 769,
+        "accuracy": 0.737321,
+        "macro_f1": 0.737817
+      },
+      "macro_f1_spread": 0.103649
+    },
+    "svm": {
+      "overall": {
+        "n_samples": 3000,
+        "accuracy": 0.680333,
+        "macro_f1": 0.675705
+      },
+      "slices": [
+        {
+          "slice": "medium",
+          "n_samples": 714,
+          "accuracy": 0.634454,
+          "macro_f1": 0.625609
+        },
+        {
+          "slice": "long",
+          "n_samples": 743,
+          "accuracy": 0.674293,
+          "macro_f1": 0.656319
+        },
+        {
+          "slice": "short",
+          "n_samples": 774,
+          "accuracy": 0.686047,
+          "macro_f1": 0.68559
+        },
+        {
+          "slice": "very_short",
+          "n_samples": 769,
+          "accuracy": 0.723017,
+          "macro_f1": 0.72292
+        }
+      ],
+      "worst_slice": {
+        "slice": "medium",
+        "n_samples": 714,
+        "accuracy": 0.634454,
+        "macro_f1": 0.625609
+      },
+      "best_slice": {
+        "slice": "very_short",
+        "n_samples": 769,
+        "accuracy": 0.723017,
+        "macro_f1": 0.72292
+      },
+      "macro_f1_spread": 0.097311
+    },
+    "tfidf": {
+      "overall": {
+        "n_samples": 3000,
+        "accuracy": 0.662,
+        "macro_f1": 0.652884
+      },
+      "slices": [
+        {
+          "slice": "medium",
+          "n_samples": 714,
+          "accuracy": 0.609244,
+          "macro_f1": 0.596328
+        },
+        {
+          "slice": "long",
+          "n_samples": 743,
+          "accuracy": 0.671602,
+          "macro_f1": 0.658679
+        },
+        {
+          "slice": "short",
+          "n_samples": 774,
+          "accuracy": 0.666667,
+          "macro_f1": 0.660431
+        },
+        {
+          "slice": "very_short",
+          "n_samples": 769,
+          "accuracy": 0.697009,
+          "macro_f1": 0.689858
+        }
+      ],
+      "worst_slice": {
+        "slice": "medium",
+        "n_samples": 714,
+        "accuracy": 0.609244,
+        "macro_f1": 0.596328
+      },
+      "best_slice": {
+        "slice": "very_short",
+        "n_samples": 769,
+        "accuracy": 0.697009,
+        "macro_f1": 0.689858
+      },
+      "macro_f1_spread": 0.09353
+    },
+    "ensemble_nsga2": {
+      "overall": {
+        "n_samples": 3000,
+        "accuracy": 0.693333,
+        "macro_f1": 0.688666
+      },
+      "slices": [
+        {
+          "slice": "medium",
+          "n_samples": 714,
+          "accuracy": 0.648459,
+          "macro_f1": 0.636747
+        },
+        {
+          "slice": "long",
+          "n_samples": 743,
+          "accuracy": 0.699865,
+          "macro_f1": 0.681471
+        },
+        {
+          "slice": "short",
+          "n_samples": 774,
+          "accuracy": 0.689922,
+          "macro_f1": 0.689821
+        },
+        {
+          "slice": "very_short",
+          "n_samples": 769,
+          "accuracy": 0.73212,
+          "macro_f1": 0.732453
+        }
+      ],
+      "worst_slice": {
+        "slice": "medium",
+        "n_samples": 714,
+        "accuracy": 0.648459,
+        "macro_f1": 0.636747
+      },
+      "best_slice": {
+        "slice": "very_short",
+        "n_samples": 769,
+        "accuracy": 0.73212,
+        "macro_f1": 0.732453
+      },
+      "macro_f1_spread": 0.095706
+    },
+    "meta_learner": {
+      "overall": {
+        "n_samples": 3000,
+        "accuracy": 0.689667,
+        "macro_f1": 0.686559
+      },
+      "slices": [
+        {
+          "slice": "medium",
+          "n_samples": 714,
+          "accuracy": 0.642857,
+          "macro_f1": 0.634055
+        },
+        {
+          "slice": "long",
+          "n_samples": 743,
+          "accuracy": 0.69179,
+          "macro_f1": 0.675748
+        },
+        {
+          "slice": "short",
+          "n_samples": 774,
+          "accuracy": 0.682171,
+          "macro_f1": 0.68259
+        },
+        {
+          "slice": "very_short",
+          "n_samples": 769,
+          "accuracy": 0.738622,
+          "macro_f1": 0.739108
+        }
+      ],
+      "worst_slice": {
+        "slice": "medium",
+        "n_samples": 714,
+        "accuracy": 0.642857,
+        "macro_f1": 0.634055
+      },
+      "best_slice": {
+        "slice": "very_short",
+        "n_samples": 769,
+        "accuracy": 0.738622,
+        "macro_f1": 0.739108
+      },
+      "macro_f1_spread": 0.105053
+    }
+  },
+  "interpretation": "This is a proxy robustness check because the selected dataset has no channel/topic/time metadata. Add those columns and rerun with `--slice_column` for a true domain-shift evaluation."
+}

@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\centering
+\caption{Preprocessing and filtering ablation (macro-F1).}
+\label{tab:preprocess_ablation}
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Dataset} & \textbf{YouTubePre} & \textbf{Spam} & \textbf{Lang} & \textbf{Train} & \textbf{Val} & \textbf{Test} & \textbf{LogReg F1} & \textbf{Meta F1} \\
+\midrule
+raw &  &  &  & 634528 & 153657 & 199045 & 0.6885 & 0.6891 \\
+youtube_clean & True & False & False & 594640 & 143646 & 185845 & 0.6939 & 0.6939 \\
+youtube_filtered & True & True & True & 516886 & 128854 & 165110 & 0.6928 & 0.6946 \\
+\bottomrule
+\end{tabular}
+\end{table}

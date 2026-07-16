@@ -1,0 +1,250 @@
+{
+  "weights": {
+    "logreg": 0.916081,
+    "svm": 0.002738,
+    "tfidf": 0.081181
+  },
+  "stage2_model": "logreg",
+  "n_samples": 20000,
+  "full_ensemble": {
+    "accuracy": 0.69635,
+    "macro_f1": 0.694854
+  },
+  "entropy_stats": {
+    "mean": 0.6415,
+    "std": 0.2697,
+    "p25": 0.4601,
+    "p50": 0.7136,
+    "p75": 0.8607,
+    "max": 1.0
+  },
+  "aurc": 0.15206,
+  "risk_coverage_sweep": [
+    {
+      "threshold": 0.04,
+      "coverage": 0.0183,
+      "accuracy": 0.9918,
+      "macro_f1": 0.8618,
+      "abstain_rate": 0.9817
+    },
+    {
+      "threshold": 0.08,
+      "coverage": 0.0396,
+      "accuracy": 0.9912,
+      "macro_f1": 0.9357,
+      "abstain_rate": 0.9604
+    },
+    {
+      "threshold": 0.12,
+      "coverage": 0.0594,
+      "accuracy": 0.9874,
+      "macro_f1": 0.9352,
+      "abstain_rate": 0.9406
+    },
+    {
+      "threshold": 0.16,
+      "coverage": 0.0776,
+      "accuracy": 0.9852,
+      "macro_f1": 0.9351,
+      "abstain_rate": 0.9224
+    },
+    {
+      "threshold": 0.2,
+      "coverage": 0.0984,
+      "accuracy": 0.9782,
+      "macro_f1": 0.9297,
+      "abstain_rate": 0.9016
+    },
+    {
+      "threshold": 0.24,
+      "coverage": 0.1187,
+      "accuracy": 0.9731,
+      "macro_f1": 0.9301,
+      "abstain_rate": 0.8812
+    },
+    {
+      "threshold": 0.28,
+      "coverage": 0.1404,
+      "accuracy": 0.9662,
+      "macro_f1": 0.9326,
+      "abstain_rate": 0.8597
+    },
+    {
+      "threshold": 0.32,
+      "coverage": 0.1631,
+      "accuracy": 0.9592,
+      "macro_f1": 0.9281,
+      "abstain_rate": 0.8369
+    },
+    {
+      "threshold": 0.36,
+      "coverage": 0.185,
+      "accuracy": 0.953,
+      "macro_f1": 0.9253,
+      "abstain_rate": 0.8151
+    },
+    {
+      "threshold": 0.4,
+      "coverage": 0.2099,
+      "accuracy": 0.9428,
+      "macro_f1": 0.9151,
+      "abstain_rate": 0.7901
+    },
+    {
+      "threshold": 0.44,
+      "coverage": 0.2361,
+      "accuracy": 0.9335,
+      "macro_f1": 0.9081,
+      "abstain_rate": 0.764
+    },
+    {
+      "threshold": 0.48,
+      "coverage": 0.2648,
+      "accuracy": 0.923,
+      "macro_f1": 0.8987,
+      "abstain_rate": 0.7351
+    },
+    {
+      "threshold": 0.52,
+      "coverage": 0.2959,
+      "accuracy": 0.9162,
+      "macro_f1": 0.8941,
+      "abstain_rate": 0.7041
+    },
+    {
+      "threshold": 0.56,
+      "coverage": 0.3281,
+      "accuracy": 0.9058,
+      "macro_f1": 0.8854,
+      "abstain_rate": 0.6719
+    },
+    {
+      "threshold": 0.6,
+      "coverage": 0.3643,
+      "accuracy": 0.8923,
+      "macro_f1": 0.8727,
+      "abstain_rate": 0.6357
+    },
+    {
+      "threshold": 0.64,
+      "coverage": 0.4039,
+      "accuracy": 0.8781,
+      "macro_f1": 0.8597,
+      "abstain_rate": 0.596
+    },
+    {
+      "threshold": 0.68,
+      "coverage": 0.4527,
+      "accuracy": 0.8607,
+      "macro_f1": 0.8448,
+      "abstain_rate": 0.5473
+    },
+    {
+      "threshold": 0.72,
+      "coverage": 0.5083,
+      "accuracy": 0.8407,
+      "macro_f1": 0.8273,
+      "abstain_rate": 0.4917
+    },
+    {
+      "threshold": 0.76,
+      "coverage": 0.5744,
+      "accuracy": 0.8189,
+      "macro_f1": 0.8083,
+      "abstain_rate": 0.4256
+    },
+    {
+      "threshold": 0.8,
+      "coverage": 0.643,
+      "accuracy": 0.7987,
+      "macro_f1": 0.7911,
+      "abstain_rate": 0.357
+    },
+    {
+      "threshold": 0.84,
+      "coverage": 0.714,
+      "accuracy": 0.7772,
+      "macro_f1": 0.7711,
+      "abstain_rate": 0.286
+    },
+    {
+      "threshold": 0.88,
+      "coverage": 0.7856,
+      "accuracy": 0.7552,
+      "macro_f1": 0.7507,
+      "abstain_rate": 0.2144
+    },
+    {
+      "threshold": 0.92,
+      "coverage": 0.8569,
+      "accuracy": 0.7357,
+      "macro_f1": 0.7325,
+      "abstain_rate": 0.1431
+    },
+    {
+      "threshold": 0.96,
+      "coverage": 0.9283,
+      "accuracy": 0.7173,
+      "macro_f1": 0.7151,
+      "abstain_rate": 0.0717
+    },
+    {
+      "threshold": 1.0,
+      "coverage": 1.0,
+      "accuracy": 0.6964,
+      "macro_f1": 0.6949,
+      "abstain_rate": 0.0
+    }
+  ],
+  "cascade_results": [
+    {
+      "tau": 0.2,
+      "ensemble_coverage": 0.0984,
+      "stage2_coverage": 0.9016,
+      "accuracy": 0.6957,
+      "macro_f1": 0.6943
+    },
+    {
+      "tau": 0.3,
+      "ensemble_coverage": 0.151,
+      "stage2_coverage": 0.849,
+      "accuracy": 0.6957,
+      "macro_f1": 0.6943
+    },
+    {
+      "tau": 0.4,
+      "ensemble_coverage": 0.2099,
+      "stage2_coverage": 0.7901,
+      "accuracy": 0.6957,
+      "macro_f1": 0.6943
+    },
+    {
+      "tau": 0.5,
+      "ensemble_coverage": 0.2786,
+      "stage2_coverage": 0.7214,
+      "accuracy": 0.6957,
+      "macro_f1": 0.6943
+    },
+    {
+      "tau": 0.6,
+      "ensemble_coverage": 0.3643,
+      "stage2_coverage": 0.6357,
+      "accuracy": 0.6957,
+      "macro_f1": 0.6943
+    },
+    {
+      "tau": 0.7,
+      "ensemble_coverage": 0.4804,
+      "stage2_coverage": 0.5195,
+      "accuracy": 0.6956,
+      "macro_f1": 0.6941
+    },
+    {
+      "tau": 0.8,
+      "ensemble_coverage": 0.643,
+      "stage2_coverage": 0.357,
+      "accuracy": 0.6956,
+      "macro_f1": 0.6942
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "created_at": "2026-03-27T04:56:25Z",
+  "source_csv": "data/route_a_smoke/test.csv",
+  "text_column": "text",
+  "label_column": "label",
+  "sample_size": 60,
+  "models": [
+    "deberta_v3",
+    "logreg",
+    "svm"
+  ],
+  "labels": [
+    "Positive",
+    "Neutral",
+    "Negative"
+  ],
+  "calibration_profile": "auto",
+  "split_metadata_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/split_metadata.json",
+  "split_provenance": "group_seed42_train516886_val128854_test165110_text",
+  "sample_id_column": null,
+  "logit_models": [
+    "deberta_v3"
+  ],
+  "output_npz": "results/prob_cubes/route_a_smoke_test_deberta_logreg_svm.npz",
+  "output_json": "results/prob_cubes/route_a_smoke_test_deberta_logreg_svm.json",
+  "prob_cube_shape": [
+    3,
+    60,
+    3
+  ],
+  "contains_logits": true,
+  "texts_included": false
+}

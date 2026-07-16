@@ -1,0 +1,43 @@
+{
+  "created_at": "2026-03-27T06:02:05Z",
+  "input_dir": "data/route_a_transformer_10k",
+  "output_dir": "data/route_a_benchmark_cpu",
+  "label_column": "label",
+  "seed": 42,
+  "splits": {
+    "train": {
+      "source_path": "data/route_a_transformer_10k/train.csv",
+      "output_path": "data/route_a_benchmark_cpu/train.csv",
+      "requested_per_label": 150,
+      "rows": 450,
+      "label_distribution": {
+        "Positive": 150,
+        "Negative": 150,
+        "Neutral": 150
+      }
+    },
+    "val": {
+      "source_path": "data/route_a_transformer_10k/val.csv",
+      "output_path": "data/route_a_benchmark_cpu/val.csv",
+      "requested_per_label": 60,
+      "rows": 180,
+      "label_distribution": {
+        "Negative": 60,
+        "Positive": 60,
+        "Neutral": 60
+      }
+    },
+    "test": {
+      "source_path": "data/route_a_transformer_10k/test.csv",
+      "output_path": "data/route_a_benchmark_cpu/test.csv",
+      "requested_per_label": 60,
+      "rows": 180,
+      "label_distribution": {
+        "Negative": 60,
+        "Positive": 60,
+        "Neutral": 60
+      }
+    }
+  },
+  "source_split_metadata_path": "data/route_a_transformer_10k/split_metadata.json"
+}

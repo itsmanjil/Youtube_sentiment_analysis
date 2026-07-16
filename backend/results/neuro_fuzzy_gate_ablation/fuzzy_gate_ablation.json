@@ -1,0 +1,11 @@
+{
+  "n_samples": 40000,
+  "seed": 42,
+  "base_model": "logreg",
+  "used_neuro_fuzzy_gate_path": true,
+  "n_argmax_changed": 1096,
+  "pct_argmax_changed": 2.74,
+  "n_corrections_base_wrong_gate_right": 456,
+  "n_regressions_base_right_gate_wrong": 412,
+  "n_wrong_to_wrong_flips": 228
+}

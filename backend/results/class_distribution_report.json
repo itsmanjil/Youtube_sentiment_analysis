@@ -1,0 +1,161 @@
+{
+  "raw": {
+    "train": {
+      "total": 634528,
+      "labels": {
+        "Negative": {
+          "count": 217608,
+          "pct": 34.3
+        },
+        "Neutral": {
+          "count": 209674,
+          "pct": 33.0
+        },
+        "Positive": {
+          "count": 207246,
+          "pct": 32.7
+        }
+      }
+    },
+    "val": {
+      "total": 153657,
+      "labels": {
+        "Negative": {
+          "count": 53304,
+          "pct": 34.7
+        },
+        "Neutral": {
+          "count": 50311,
+          "pct": 32.7
+        },
+        "Positive": {
+          "count": 50042,
+          "pct": 32.6
+        }
+      }
+    },
+    "test": {
+      "total": 199045,
+      "labels": {
+        "Negative": {
+          "count": 68134,
+          "pct": 34.2
+        },
+        "Neutral": {
+          "count": 64857,
+          "pct": 32.6
+        },
+        "Positive": {
+          "count": 66054,
+          "pct": 33.2
+        }
+      }
+    }
+  },
+  "youtube_clean": {
+    "train": {
+      "total": 594640,
+      "labels": {
+        "Negative": {
+          "count": 208660,
+          "pct": 35.1
+        },
+        "Neutral": {
+          "count": 189639,
+          "pct": 31.9
+        },
+        "Positive": {
+          "count": 196341,
+          "pct": 33.0
+        }
+      }
+    },
+    "val": {
+      "total": 143646,
+      "labels": {
+        "Negative": {
+          "count": 50896,
+          "pct": 35.4
+        },
+        "Neutral": {
+          "count": 45571,
+          "pct": 31.7
+        },
+        "Positive": {
+          "count": 47179,
+          "pct": 32.8
+        }
+      }
+    },
+    "test": {
+      "total": 185845,
+      "labels": {
+        "Negative": {
+          "count": 64985,
+          "pct": 35.0
+        },
+        "Neutral": {
+          "count": 58259,
+          "pct": 31.3
+        },
+        "Positive": {
+          "count": 62601,
+          "pct": 33.7
+        }
+      }
+    }
+  },
+  "youtube_filtered": {
+    "train": {
+      "total": 516886,
+      "labels": {
+        "Negative": {
+          "count": 184266,
+          "pct": 35.6
+        },
+        "Neutral": {
+          "count": 160744,
+          "pct": 31.1
+        },
+        "Positive": {
+          "count": 171876,
+          "pct": 33.3
+        }
+      }
+    },
+    "val": {
+      "total": 128854,
+      "labels": {
+        "Negative": {
+          "count": 47023,
+          "pct": 36.5
+        },
+        "Neutral": {
+          "count": 39037,
+          "pct": 30.3
+        },
+        "Positive": {
+          "count": 42794,
+          "pct": 33.2
+        }
+      }
+    },
+    "test": {
+      "total": 165110,
+      "labels": {
+        "Negative": {
+          "count": 59614,
+          "pct": 36.1
+        },
+        "Neutral": {
+          "count": 50540,
+          "pct": 30.6
+        },
+        "Positive": {
+          "count": 54956,
+          "pct": 33.3
+        }
+      }
+    }
+  }
+}

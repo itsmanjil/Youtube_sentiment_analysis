@@ -1,0 +1,89 @@
+{
+  "created_at": "2026-02-07T07:59:59Z",
+  "source": {
+    "uri": "hf://datasets/AmaanP314/youtube-comment-sentiment/youtube-comments-sentiment.csv",
+    "raw_rows": 1032225,
+    "raw_columns": [
+      "CommentID",
+      "VideoID",
+      "VideoTitle",
+      "AuthorName",
+      "AuthorChannelID",
+      "CommentText",
+      "Sentiment",
+      "Likes",
+      "Replies",
+      "PublishedAt",
+      "CountryCode",
+      "CategoryID"
+    ]
+  },
+  "schema": {
+    "text_col": "CommentText",
+    "label_col": "Sentiment",
+    "group_col": "VideoID"
+  },
+  "normalization": {
+    "text_whitespace_collapse": true,
+    "text_strip": true,
+    "label_title_case": true,
+    "valid_labels": [
+      "Negative",
+      "Neutral",
+      "Positive"
+    ]
+  },
+  "youtube_preprocess": {
+    "enabled": true,
+    "primary_text_profile": "classical",
+    "_primary_text_profile_note": "Field added post-hoc: this run predates prepare_hf_dataset.py recording primary_text_profile explicitly. Value inferred from the script's own default ('classical' when youtube_preprocess is enabled, 'normalized' otherwise) and confirmed by train_logreg_youtube.py's metadata (trained on this train.csv's `text` column, which is the classical-profile column).",
+    "emoji_mode": "convert",
+    "min_words": 3,
+    "filter_spam": true,
+    "filter_language": true,
+    "chunk_size": 5000,
+    "filter_stats": {
+      "spam": 34266,
+      "language": 138590,
+      "too_short": 25221
+    }
+  },
+  "dedupe": {
+    "conflicting_texts_dropped": 1228,
+    "duplicate_text_rows_removed": 12679
+  },
+  "split": {
+    "strategy": "group",
+    "random_state": 42,
+    "test_size": 0.2,
+    "val_size": 0.2,
+    "paths": {
+      "train": "data/train.csv",
+      "val": "data/val.csv",
+      "test": "data/test.csv"
+    },
+    "_paths_note": "Rewritten to be relative to backend/; the original absolute paths (/Users/deadshot/...) were from the machine that generated this file and are misleading on any other checkout.",
+    "rows": {
+      "train": 516886,
+      "val": 128854,
+      "test": 165110
+    },
+    "label_distribution": {
+      "train": {
+        "Negative": 184266,
+        "Positive": 171876,
+        "Neutral": 160744
+      },
+      "val": {
+        "Negative": 47023,
+        "Positive": 42794,
+        "Neutral": 39037
+      },
+      "test": {
+        "Negative": 59614,
+        "Positive": 54956,
+        "Neutral": 50540
+      }
+    }
+  }
+}

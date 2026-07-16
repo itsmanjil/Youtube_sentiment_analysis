@@ -1,0 +1,110 @@
+{
+  "architecture": {
+    "n_models": 3,
+    "model_names": [
+      "logreg",
+      "svm",
+      "tfidf"
+    ],
+    "n_fuzzy_sets": 3,
+    "n_parameters": 27,
+    "activation": "Gaussian MF",
+    "aggregation": "softmax",
+    "reference": "ANFIS (Jang, 1993)"
+  },
+  "training": {
+    "nll_before": 0.716383,
+    "nll_after": 0.704741,
+    "converged": true,
+    "n_iterations": 120
+  },
+  "learned_mfs": [
+    {
+      "model": "logreg",
+      "fuzzy_set": "Low",
+      "center": 0.5159,
+      "width": 0.1582,
+      "alpha": 3.4354
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "Medium",
+      "center": 0.1545,
+      "width": 0.05,
+      "alpha": 2.5259
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "High",
+      "center": 0.8952,
+      "width": 0.5,
+      "alpha": 0.7057
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Low",
+      "center": 0.8119,
+      "width": 0.4549,
+      "alpha": -3.1845
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Medium",
+      "center": 0.7404,
+      "width": 0.4236,
+      "alpha": -2.9765
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "High",
+      "center": 0.6911,
+      "width": 0.3683,
+      "alpha": -3.1738
+    },
+    {
+      "model": "tfidf",
+      "fuzzy_set": "Low",
+      "center": 0.01,
+      "width": 0.05,
+      "alpha": -1.7018
+    },
+    {
+      "model": "tfidf",
+      "fuzzy_set": "Medium",
+      "center": 0.8903,
+      "width": 0.05,
+      "alpha": 3.4576
+    },
+    {
+      "model": "tfidf",
+      "fuzzy_set": "High",
+      "center": 0.4514,
+      "width": 0.0934,
+      "alpha": -0.9056
+    }
+  ],
+  "val_metrics": {
+    "macro_f1": 0.689335,
+    "ece": 0.009699,
+    "brier": 0.409234
+  },
+  "test_metrics": {
+    "macro_f1": 0.696001,
+    "accuracy": 0.6976,
+    "ece": 0.007018,
+    "brier": 0.407541
+  },
+  "static_ensemble_test_metrics": {
+    "macro_f1": 0.693833,
+    "accuracy": 0.6959,
+    "ece": 0.026014,
+    "brier": 0.412276
+  },
+  "delta_vs_static": {
+    "macro_f1": 0.002168,
+    "ece": -0.018996,
+    "brier": -0.004735
+  },
+  "val_cube": null,
+  "test_cube": null
+}

@@ -1,0 +1,110 @@
+{
+  "architecture": {
+    "n_models": 3,
+    "model_names": [
+      "deberta_v3",
+      "logreg",
+      "svm"
+    ],
+    "n_fuzzy_sets": 3,
+    "n_parameters": 27,
+    "activation": "Gaussian MF",
+    "aggregation": "softmax",
+    "reference": "ANFIS (Jang, 1993)"
+  },
+  "training": {
+    "nll_before": 0.697472,
+    "nll_after": 0.558841,
+    "converged": false,
+    "n_iterations": 200
+  },
+  "learned_mfs": [
+    {
+      "model": "deberta_v3",
+      "fuzzy_set": "Low",
+      "center": 0.1452,
+      "width": 0.05,
+      "alpha": -5.0
+    },
+    {
+      "model": "deberta_v3",
+      "fuzzy_set": "Medium",
+      "center": 0.384,
+      "width": 0.1309,
+      "alpha": -5.0
+    },
+    {
+      "model": "deberta_v3",
+      "fuzzy_set": "High",
+      "center": 0.3614,
+      "width": 0.1203,
+      "alpha": -4.6281
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "Low",
+      "center": 0.2119,
+      "width": 0.27,
+      "alpha": -5.0
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "Medium",
+      "center": 0.7308,
+      "width": 0.1381,
+      "alpha": 5.0
+    },
+    {
+      "model": "logreg",
+      "fuzzy_set": "High",
+      "center": 0.5299,
+      "width": 0.06,
+      "alpha": 5.0
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Low",
+      "center": 0.1525,
+      "width": 0.05,
+      "alpha": 5.0
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "Medium",
+      "center": 0.1523,
+      "width": 0.05,
+      "alpha": 4.3074
+    },
+    {
+      "model": "svm",
+      "fuzzy_set": "High",
+      "center": 0.1765,
+      "width": 0.1358,
+      "alpha": -5.0
+    }
+  ],
+  "val_metrics": {
+    "macro_f1": 0.735267,
+    "ece": 0.179748,
+    "brier": 0.326707
+  },
+  "test_metrics": {
+    "macro_f1": 0.76649,
+    "accuracy": 0.766667,
+    "ece": 0.124034,
+    "brier": 0.357143
+  },
+  "static_ensemble_test_metrics": {
+    "macro_f1": 0.762497,
+    "accuracy": 0.766667,
+    "ece": 0.153206,
+    "brier": 0.366997
+  },
+  "delta_vs_static": {
+    "macro_f1": 0.003993,
+    "ece": -0.029172,
+    "brier": -0.009854
+  },
+  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_test_deberta_v3_logreg_svm.npz"
+}

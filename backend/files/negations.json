@@ -1,0 +1,43 @@
+{
+	"negations" : {
+		"like" : "dislike",
+		"worth" : "useless",
+		"recommend" : "reject",
+		"absent"    :    "present",    
+		"abundant"    :    "scarce",    
+		"accept"    :    "decline",   
+		"accurate"    :    "inaccurate",    
+		"admit"    :    "deny",    
+		"advantage"    :    "disadvantage",    
+		"against"    :    "for",    
+		"agree"    :    "disagree",
+		"alive"    :    "dead",   
+		"all "   :    "nothing",     
+		"ally"    :    "enemy"  ,  
+		"always"    :    "never" ,   
+		"ancient"    :    "modern",    
+		"answer"    :    "question",    
+		"antonym"    :    "synonym" ,   
+		"apart"    :    "together",
+		"appear"    :    "disappea",     
+		"approve"    :    "disapprove",    
+		"arrive"    :    "depart"    ,
+		"artificial"    :    "natural",    
+		"ascend"    :    "descend"    ,
+		"attic"    :    "cellar"    ,
+		"attractive"    :    "repulsive",    
+		"awake"    :    "asleep",
+		"backward"    :    "forward",    
+		"bad"    :    "good"    ,
+		"beautiful"    :    "ugly",    
+		"before"    :    "after"   , 
+		"begin"    :    "end"    ,
+		"below"    :    "above"   , 
+		"bent"    :    "straight"  ,  
+		"best"    :    "worst" ,
+		"disappointed" : "satisfied",
+		"enjoy" : "hate"
+
+	
+	}
+}

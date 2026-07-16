@@ -1,0 +1,92 @@
+{
+  "algorithm": "NSGA-II",
+  "objectives": [
+    "neg_macro_f1",
+    "ece",
+    "neg_coverage"
+  ],
+  "confidence_threshold": 0.7,
+  "population_size": 8,
+  "generations": 8,
+  "models": [
+    "deberta_v3",
+    "logreg",
+    "svm"
+  ],
+  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_test_deberta_v3_logreg_svm.npz",
+  "runtime_s": 0.46,
+  "evaluations": 72,
+  "pareto_front_size": 5,
+  "pareto_front": [
+    {
+      "weights": {
+        "deberta_v3": 0.675231,
+        "logreg": 0.1319,
+        "svm": 0.192869
+      },
+      "macro_f1": 0.590488,
+      "ece": 0.065851,
+      "coverage": 0.166667
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.896504,
+        "logreg": 0.04549,
+        "svm": 0.058006
+      },
+      "macro_f1": 0.56413,
+      "ece": 0.09533,
+      "coverage": 0.216667
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.689915,
+        "logreg": 0.170118,
+        "svm": 0.139967
+      },
+      "macro_f1": 0.60962,
+      "ece": 0.080694,
+      "coverage": 0.166667
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.011404,
+        "logreg": 0.585419,
+        "svm": 0.403177
+      },
+      "macro_f1": 0.688889,
+      "ece": 0.124583,
+      "coverage": 0.483333
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.00106,
+        "logreg": 0.179346,
+        "svm": 0.819594
+      },
+      "macro_f1": 0.737961,
+      "ece": 0.162444,
+      "coverage": 0.483333
+    }
+  ],
+  "knee_point": {
+    "index": 3,
+    "weights": {
+      "deberta_v3": 0.011404,
+      "logreg": 0.585419,
+      "svm": 0.403177
+    },
+    "val": {
+      "macro_f1": 0.688889,
+      "ece": 0.124583,
+      "coverage": 0.483333
+    },
+    "test": {
+      "macro_f1": 0.764625,
+      "ece": 0.113039,
+      "coverage": 0.416667
+    }
+  },
+  "pso_baseline_val_f1": null
+}

@@ -1,0 +1,326 @@
+{
+  "n_samples": 5000,
+  "dataset": "data\\test.csv",
+  "label_order": [
+    "Negative",
+    "Neutral",
+    "Positive"
+  ],
+  "results": [
+    {
+      "model": "logreg",
+      "macro_f1": 0.6909,
+      "confusion_matrix": {
+        "labels": [
+          "Negative",
+          "Neutral",
+          "Positive"
+        ],
+        "matrix": [
+          [
+            1312,
+            351,
+            161
+          ],
+          [
+            379,
+            929,
+            229
+          ],
+          [
+            191,
+            222,
+            1226
+          ]
+        ]
+      },
+      "prf": {
+        "Negative": {
+          "precision": 0.6971,
+          "recall": 0.7193,
+          "f1": 0.708
+        },
+        "Neutral": {
+          "precision": 0.6185,
+          "recall": 0.6044,
+          "f1": 0.6114
+        },
+        "Positive": {
+          "precision": 0.7587,
+          "recall": 0.748,
+          "f1": 0.7533
+        }
+      }
+    },
+    {
+      "model": "svm",
+      "macro_f1": 0.6791,
+      "confusion_matrix": {
+        "labels": [
+          "Negative",
+          "Neutral",
+          "Positive"
+        ],
+        "matrix": [
+          [
+            1290,
+            367,
+            167
+          ],
+          [
+            375,
+            916,
+            246
+          ],
+          [
+            201,
+            236,
+            1202
+          ]
+        ]
+      },
+      "prf": {
+        "Negative": {
+          "precision": 0.6913,
+          "recall": 0.7072,
+          "f1": 0.6992
+        },
+        "Neutral": {
+          "precision": 0.603,
+          "recall": 0.596,
+          "f1": 0.5995
+        },
+        "Positive": {
+          "precision": 0.7443,
+          "recall": 0.7334,
+          "f1": 0.7388
+        }
+      }
+    },
+    {
+      "model": "tfidf",
+      "macro_f1": 0.6545,
+      "confusion_matrix": {
+        "labels": [
+          "Negative",
+          "Neutral",
+          "Positive"
+        ],
+        "matrix": [
+          [
+            1376,
+            299,
+            149
+          ],
+          [
+            520,
+            788,
+            229
+          ],
+          [
+            304,
+            198,
+            1137
+          ]
+        ]
+      },
+      "prf": {
+        "Negative": {
+          "precision": 0.6255,
+          "recall": 0.7544,
+          "f1": 0.6839
+        },
+        "Neutral": {
+          "precision": 0.6132,
+          "recall": 0.5127,
+          "f1": 0.5585
+        },
+        "Positive": {
+          "precision": 0.7505,
+          "recall": 0.6937,
+          "f1": 0.721
+        }
+      }
+    },
+    {
+      "model": "ensemble_pso",
+      "macro_f1": 0.694,
+      "confusion_matrix": {
+        "labels": [
+          "Negative",
+          "Neutral",
+          "Positive"
+        ],
+        "matrix": [
+          [
+            1324,
+            342,
+            158
+          ],
+          [
+            385,
+            933,
+            219
+          ],
+          [
+            198,
+            216,
+            1225
+          ]
+        ]
+      },
+      "prf": {
+        "Negative": {
+          "precision": 0.6943,
+          "recall": 0.7259,
+          "f1": 0.7097
+        },
+        "Neutral": {
+          "precision": 0.6258,
+          "recall": 0.607,
+          "f1": 0.6162
+        },
+        "Positive": {
+          "precision": 0.7647,
+          "recall": 0.7474,
+          "f1": 0.7559
+        }
+      }
+    },
+    {
+      "model": "ensemble_nsga2",
+      "macro_f1": 0.6937,
+      "confusion_matrix": {
+        "labels": [
+          "Negative",
+          "Neutral",
+          "Positive"
+        ],
+        "matrix": [
+          [
+            1322,
+            342,
+            160
+          ],
+          [
+            383,
+            932,
+            222
+          ],
+          [
+            196,
+            216,
+            1227
+          ]
+        ]
+      },
+      "prf": {
+        "Negative": {
+          "precision": 0.6954,
+          "recall": 0.7248,
+          "f1": 0.7098
+        },
+        "Neutral": {
+          "precision": 0.6255,
+          "recall": 0.6064,
+          "f1": 0.6158
+        },
+        "Positive": {
+          "precision": 0.7626,
+          "recall": 0.7486,
+          "f1": 0.7555
+        }
+      }
+    },
+    {
+      "model": "meta_learner",
+      "macro_f1": 0.6964,
+      "confusion_matrix": {
+        "labels": [
+          "Negative",
+          "Neutral",
+          "Positive"
+        ],
+        "matrix": [
+          [
+            1279,
+            380,
+            165
+          ],
+          [
+            346,
+            972,
+            219
+          ],
+          [
+            170,
+            231,
+            1238
+          ]
+        ]
+      },
+      "prf": {
+        "Negative": {
+          "precision": 0.7125,
+          "recall": 0.7012,
+          "f1": 0.7068
+        },
+        "Neutral": {
+          "precision": 0.614,
+          "recall": 0.6324,
+          "f1": 0.6231
+        },
+        "Positive": {
+          "precision": 0.7633,
+          "recall": 0.7553,
+          "f1": 0.7593
+        }
+      }
+    },
+    {
+      "model": "fuzzy_ensemble",
+      "macro_f1": 0.6927,
+      "confusion_matrix": {
+        "labels": [
+          "Negative",
+          "Neutral",
+          "Positive"
+        ],
+        "matrix": [
+          [
+            1336,
+            334,
+            154
+          ],
+          [
+            396,
+            922,
+            219
+          ],
+          [
+            205,
+            215,
+            1219
+          ]
+        ]
+      },
+      "prf": {
+        "Negative": {
+          "precision": 0.6897,
+          "recall": 0.7325,
+          "f1": 0.7104
+        },
+        "Neutral": {
+          "precision": 0.6268,
+          "recall": 0.5999,
+          "f1": 0.613
+        },
+        "Positive": {
+          "precision": 0.7657,
+          "recall": 0.7437,
+          "f1": 0.7546
+        }
+      }
+    }
+  ]
+}

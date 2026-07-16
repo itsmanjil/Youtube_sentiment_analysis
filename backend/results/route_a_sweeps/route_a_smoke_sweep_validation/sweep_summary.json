@@ -1,0 +1,69 @@
+{
+  "created_at": "2026-03-31T02:54:31Z",
+  "split_dir": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/route_a_transformer_smoke",
+  "models": [
+    "deberta_v3"
+  ],
+  "classical_models": [
+    "logreg",
+    "svm"
+  ],
+  "run_prefix": "route_a_smoke_sweep_validation",
+  "runs": [
+    {
+      "model": "deberta_v3",
+      "run_dir": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3",
+      "encoder_test": {
+        "macro_f1": 0.6629035452564864,
+        "accuracy": 0.6666666666666666
+      },
+      "encoder_calibration": {
+        "ece_before": null,
+        "ece_after": null,
+        "temperature": null
+      },
+      "best_classical_model": "svm",
+      "best_classical_metrics": {
+        "accuracy": 0.7666666666666667,
+        "macro_f1": 0.7622108779227327
+      },
+      "ci_knee": {
+        "macro_f1": 0.697143,
+        "ece": 0.118237,
+        "coverage": 0.166667,
+        "encoder_weight": 0.691492
+      },
+      "neuro_fuzzy_test": {
+        "macro_f1": 0.781133,
+        "accuracy": 0.783333,
+        "ece": 0.149888
+      },
+      "significance": {
+        "encoder_vs_best_classical": {
+          "model_a": "deberta_v3",
+          "model_b": "svm",
+          "n11": 36,
+          "n00": 10,
+          "n01": 10,
+          "n10": 4,
+          "p_value": 0.1795654296875,
+          "odds_ratio_n01_over_n10": 2.5,
+          "p_value_adjusted": 1.0,
+          "significant": false
+        },
+        "neuro_fuzzy_vs_best_classical": {
+          "model_a": "neuro_fuzzy",
+          "model_b": "svm",
+          "n11": 46,
+          "n00": 13,
+          "n01": 0,
+          "n10": 1,
+          "p_value": 1.0,
+          "odds_ratio_n01_over_n10": Infinity,
+          "p_value_adjusted": 1.0,
+          "significant": false
+        }
+      }
+    }
+  ]
+}

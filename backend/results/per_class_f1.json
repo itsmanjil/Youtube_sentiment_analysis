@@ -1,0 +1,172 @@
+{
+  "n_test": 20000,
+  "labels": [
+    "Positive",
+    "Neutral",
+    "Negative"
+  ],
+  "results": {
+    "logreg": {
+      "macro_f1": 0.6943,
+      "Positive": {
+        "precision": 0.7758,
+        "recall": 0.7267,
+        "f1": 0.7504
+      },
+      "Neutral": {
+        "precision": 0.6239,
+        "recall": 0.6261,
+        "f1": 0.625
+      },
+      "Negative": {
+        "precision": 0.6889,
+        "recall": 0.7268,
+        "f1": 0.7073
+      }
+    },
+    "svm": {
+      "macro_f1": 0.6817,
+      "Positive": {
+        "precision": 0.7584,
+        "recall": 0.7226,
+        "f1": 0.7401
+      },
+      "Neutral": {
+        "precision": 0.6108,
+        "recall": 0.6055,
+        "f1": 0.6081
+      },
+      "Negative": {
+        "precision": 0.68,
+        "recall": 0.7144,
+        "f1": 0.6968
+      }
+    },
+    "tfidf": {
+      "macro_f1": 0.6579,
+      "Positive": {
+        "precision": 0.7701,
+        "recall": 0.6827,
+        "f1": 0.7237
+      },
+      "Neutral": {
+        "precision": 0.6184,
+        "recall": 0.5201,
+        "f1": 0.565
+      },
+      "Negative": {
+        "precision": 0.6188,
+        "recall": 0.7669,
+        "f1": 0.6849
+      }
+    },
+    "ensemble": {
+      "macro_f1": 0.6938,
+      "Positive": {
+        "precision": 0.7774,
+        "recall": 0.7237,
+        "f1": 0.7496
+      },
+      "Neutral": {
+        "precision": 0.6303,
+        "recall": 0.6162,
+        "f1": 0.6231
+      },
+      "Negative": {
+        "precision": 0.6817,
+        "recall": 0.7378,
+        "f1": 0.7087
+      }
+    },
+    "meta_learner": {
+      "macro_f1": 0.6967,
+      "Positive": {
+        "precision": 0.7766,
+        "recall": 0.7312,
+        "f1": 0.7532
+      },
+      "Neutral": {
+        "precision": 0.6158,
+        "recall": 0.6496,
+        "f1": 0.6322
+      },
+      "Negative": {
+        "precision": 0.7023,
+        "recall": 0.707,
+        "f1": 0.7046
+      }
+    },
+    "pso": {
+      "macro_f1": 0.6951,
+      "Positive": {
+        "precision": 0.7802,
+        "recall": 0.7253,
+        "f1": 0.7518
+      },
+      "Neutral": {
+        "precision": 0.6284,
+        "recall": 0.6236,
+        "f1": 0.626
+      },
+      "Negative": {
+        "precision": 0.6842,
+        "recall": 0.7327,
+        "f1": 0.7076
+      }
+    },
+    "nsga2": {
+      "macro_f1": 0.6949,
+      "Positive": {
+        "precision": 0.7791,
+        "recall": 0.7262,
+        "f1": 0.7517
+      },
+      "Neutral": {
+        "precision": 0.626,
+        "recall": 0.6241,
+        "f1": 0.6251
+      },
+      "Negative": {
+        "precision": 0.6863,
+        "recall": 0.7306,
+        "f1": 0.7078
+      }
+    },
+    "neuro_fuzzy": {
+      "macro_f1": 0.6955,
+      "Positive": {
+        "precision": 0.7839,
+        "recall": 0.7234,
+        "f1": 0.7524
+      },
+      "Neutral": {
+        "precision": 0.6297,
+        "recall": 0.6202,
+        "f1": 0.6249
+      },
+      "Negative": {
+        "precision": 0.6819,
+        "recall": 0.7388,
+        "f1": 0.7092
+      }
+    },
+    "ts_meta": {
+      "macro_f1": 0.6967,
+      "Positive": {
+        "precision": 0.7766,
+        "recall": 0.7312,
+        "f1": 0.7532
+      },
+      "Neutral": {
+        "precision": 0.6158,
+        "recall": 0.6496,
+        "f1": 0.6322
+      },
+      "Negative": {
+        "precision": 0.7023,
+        "recall": 0.707,
+        "f1": 0.7046
+      }
+    }
+  }
+}

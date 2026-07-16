@@ -1,0 +1,151 @@
+{
+  "title": "Live Runtime Benchmark",
+  "runtime_artifacts": {
+    "version": "route_a_live_v1",
+    "manifest_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/runtime/route_a_live_v1/manifest.json",
+    "artifacts": {
+      "temperature_scaling": {
+        "path": "temperature_scaling.json",
+        "sha256": "f8dc0b048c3d12860e0c83881344e4a8a9b9b7b62750ee73798654e52696e565"
+      },
+      "pso_ensemble_weights": {
+        "path": "pso_ensemble_weights.json",
+        "sha256": "52eb7ae6ce95636359b09678ce06afe49325f5a7dfa5773d10a064970716f9b6"
+      },
+      "multi_objective_ensemble": {
+        "path": "multi_objective_ensemble.json",
+        "sha256": "d70ab94348edfc52ed173b452234851560e5efb03f2b86b974182eda9068ac85"
+      },
+      "neuro_fuzzy_gate": {
+        "path": "neuro_fuzzy_gate.json",
+        "sha256": "ca7e97f032283104135b0c7fb3ad5f798820b48790f086e34732fb005c918af1"
+      }
+    }
+  },
+  "dataset_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv",
+  "text_column": "text",
+  "label_column": "label",
+  "n_samples": 100,
+  "results": [
+    {
+      "model": "logreg",
+      "engine_type": "logreg",
+      "variant": null,
+      "accuracy": 0.7,
+      "macro_f1": 0.6964,
+      "ece": 0.09207,
+      "brier": 0.443187,
+      "n_samples": 100,
+      "runtime_seconds": 0.013,
+      "ms_per_sample": 0.1287,
+      "calibration_applied": true,
+      "temperature": 1.0311,
+      "weights_source": null,
+      "nf_gate_active": false,
+      "model_artifact": null
+    },
+    {
+      "model": "ensemble_nsga2",
+      "engine_type": "ensemble",
+      "variant": "nsga2",
+      "accuracy": 0.69,
+      "macro_f1": 0.6865,
+      "ece": 0.081799,
+      "brier": 0.443767,
+      "n_samples": 100,
+      "runtime_seconds": 0.041,
+      "ms_per_sample": 0.411,
+      "calibration_applied": true,
+      "temperature": 0.9348,
+      "weights_source": "nsga2",
+      "nf_gate_active": false,
+      "model_artifact": null
+    },
+    {
+      "model": "ensemble_pso",
+      "engine_type": "ensemble",
+      "variant": "pso",
+      "accuracy": 0.66,
+      "macro_f1": 0.6536,
+      "ece": 0.114782,
+      "brier": 0.466338,
+      "n_samples": 100,
+      "runtime_seconds": 0.049,
+      "ms_per_sample": 0.4889,
+      "calibration_applied": true,
+      "temperature": 0.9348,
+      "weights_source": "pso",
+      "nf_gate_active": false,
+      "model_artifact": null
+    },
+    {
+      "model": "meta_learner",
+      "engine_type": "meta_learner",
+      "variant": null,
+      "accuracy": 0.65,
+      "macro_f1": 0.65,
+      "ece": 0.140027,
+      "brier": 0.452315,
+      "n_samples": 100,
+      "runtime_seconds": 0.063,
+      "ms_per_sample": 0.6334,
+      "calibration_applied": true,
+      "temperature": 0.9835,
+      "weights_source": null,
+      "nf_gate_active": false,
+      "model_artifact": null
+    },
+    {
+      "model": "svm",
+      "engine_type": "svm",
+      "variant": null,
+      "accuracy": 0.64,
+      "macro_f1": 0.6308,
+      "ece": 0.153811,
+      "brier": 0.480375,
+      "n_samples": 100,
+      "runtime_seconds": 0.014,
+      "ms_per_sample": 0.1365,
+      "calibration_applied": true,
+      "temperature": 1.0326,
+      "weights_source": null,
+      "nf_gate_active": false,
+      "model_artifact": null
+    },
+    {
+      "model": "tfidf",
+      "engine_type": "tfidf",
+      "variant": null,
+      "accuracy": 0.56,
+      "macro_f1": 0.5503,
+      "ece": 0.147944,
+      "brier": 0.489045,
+      "n_samples": 100,
+      "runtime_seconds": 0.021,
+      "ms_per_sample": 0.2095,
+      "calibration_applied": true,
+      "temperature": 1.1306,
+      "weights_source": null,
+      "nf_gate_active": false,
+      "model_artifact": null
+    },
+    {
+      "model": "fuzzy_ensemble",
+      "engine_type": "fuzzy_ensemble",
+      "variant": null,
+      "accuracy": 0.56,
+      "macro_f1": 0.5488,
+      "ece": 0.147861,
+      "brier": 0.488374,
+      "n_samples": 100,
+      "runtime_seconds": 0.045,
+      "ms_per_sample": 0.452,
+      "calibration_applied": false,
+      "temperature": null,
+      "weights_source": null,
+      "nf_gate_active": true,
+      "model_artifact": null
+    }
+  ],
+  "failures": []
+}

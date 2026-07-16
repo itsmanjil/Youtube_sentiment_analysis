@@ -1,0 +1,301 @@
+text,in_train,in_val,in_test,split_membership
+"Seriously, you would become the main course for Christmas dinner. 😭",True,False,False,train
+That’s actually really good,False,False,False,none
+Me and my btother we will defent our selfs,True,False,False,train
+That is one RADICAL steering setup!!! TOTALY BONKERS… Love Fiolas desire to progress even to this day… what an athlete!😎🤙🏽,True,False,False,train
+"Lolz at the host commentary that L'oreal piece isn't about telling you what to buy, but what not to buy (from L'oreal portfolio). And then conclude with she's going to buy retinol... What?",False,False,False,none
+This would have been helpful for a computer science project I was working on seven months ago 😂,True,False,False,train
+a little to basic. why can't i inherit classes when the order is switched?,False,False,False,none
+Tom’s “oh boy…” truly shows how chaotic sonic is,False,False,False,none
+What about wasted water?,True,False,False,train
+"Elon can get away with almost anything, but not when it comes to video games. Gamers will always call out that kind of stuff.",False,True,False,val
+The dude unintentionally brought back childhood trauma from the movie The Neverending Story.,False,True,False,val
+Another great video. Lovely Rolls Royce. Great presentation by everyone. Absolutely love the Autoalex multiverse.,False,False,True,test
+whats the name of the movie/show ?,False,False,False,none
+The will of The People will be heard eventually - its just a matter of how much damage Turdeau wants to do to the country first.,True,False,False,train
+"It’s sad, seems like Tony and the old man really hit it off. Sometimes you just meet people you not only click with, but you have surprisingly a lot of respect for. One of the real good ones.",False,False,False,none
+We live in dystopia!,True,False,False,train
+Can i use this with Vue.js?,False,False,False,none
+How can she take the broach back and then lie about it like that....LMFAO,False,False,False,none
+Thank you mam. Really best video,True,False,False,train
+"He started off so smug, Julia slapped that right off his face.",False,False,True,test
+Bros took “uptown downtown” too literally.,False,True,False,val
+This is too difficult D: I kindaaaa understood the stuff up to 2.5 and now this :<,True,False,False,train
+Yes❤❤❤❤😊😊😊,True,False,False,train
+"Yeah, I mean. It's funny here, but no one's that stupid.And this isn't real",False,False,False,none
+"Fun Fact: As a passionate Football ⚽️ enthusiast, I recall that in 2010, after their team's defeat, North Korean television didn't broadcast the loss. Instead, they fabricated stories of other teams losing by scores of 7-0 and 11-0, falsely claiming that Portugal won the World Cup. Therefore, according to North Korean media, Portugal emerged victorious in the World Cup that year.",False,False,False,none
+I'm a fan of the British accent.,False,False,False,none
+You sound somewhat like Daily dose of internet.,True,False,False,train
+Really wanted this video and you have maded it . Thank you ♥️,True,False,False,train
+But datatype toh int tha aur printf mein string toh error ana chaiye na,True,False,False,train
+Would love to see more of this,True,False,False,train
+It’s destructive. Single life is better than the feeling of being unwanted and neglected.,False,False,False,none
+She is a youtuber❤,True,False,False,train
+"Hi mosh, Can you please tell me the theme name, Thank you",True,False,False,train
+"I am so very proud of these two brave and strong women who are very articulate and eloquent in their message. They have the true American spirit, and we need to give people like these our full support whether you are Hispanic or Latin or not. I am neither, but I love brave people like these women who stand up for the right things in life and are proud of their country. They want to stop bad things happening to our country and make it a great place to live and raise their children. They know how the policies of the Democrats can hurt our country because they have either run away from countries that had those policies or have parents and grandparents who did. I wish them the best and look forward to them being members in our congress very soon.",True,False,False,train
+"Thank you for the video, really well done. Although, I must say for Retool, I think it would be better to the admin panel by yourself. You will learn a lot by doing so. If someone is trying to build a web app with Django, it's impossible that they aren't programmers.",False,False,False,none
+"regarding the initial run, the result is: 90.46 second run : 90 third run : 90",True,False,False,train
+Oa kayo sa Kasing laki ni Lolong,False,False,False,none
+Guy uses duct tape and blames product…,False,False,True,test
+AS a fireman I can tell you what happened to those poor souls. With an explosion like that which I liken to a nuclear bomb or a volcanic eruption they would have been vaporized. Happily if you can call it that they never saw it coming and never knew it hit. May they rest in peace and may their families rest in knowing they were doing what they loved to do,False,False,True,test
+He is also very handsome 🤍,True,False,False,train
+"nice topic chosen wisely 👌🏻, I actually understood you about 70 percent but something is better than nothing.",False,False,True,test
+Kid watched *'Taxi Driver'* 1 too many times 😂,True,False,False,train
+I am from 2025,False,False,False,none
+"As we know Trump tells a lot of lies, his knowledge of thus war us limited! Trumps mouth moves without any facts, just what sounds good to him! Trump is a Putin supporter, friend making Trump bias for Putin, or should I say Putin is one if Trumps heroes, once Trump is in full power as President you will see Trump throw his full support behind Putin!😢",False,True,False,val
+Good video 🎉🎉 Thank you.,True,False,False,train
+You way smarter than other mean looking lady. Thank you! Fox News! God Bless USA! Slava Ukraini!,False,True,False,val
+Ok this is useful.,False,True,False,val
+I love the look on Kat's face anytime Greg calls on her. 😆,False,False,False,none
+I wish waffles were the subject after Black Lives Matter protests,False,True,False,val
+Depends on the temp and amount of vapors whether it lights or not.,False,False,True,test
+"The man prepared a top-tier, exquisite dish 💫😐😎💔😍💫😎😍😭🥺🥵👍😭😍😅😈😏😎🧢😡😋😡🤸😐💫😁🤮🥶😋🥲l",False,False,False,none
+"Putting tariffs on Canadian goods, puts America second, not first.",True,False,False,train
+Captain knuckles fr crazy shit,True,False,False,train
+"We need real bikers, not some rich, spoiled kid.",True,False,False,train
+"They are standing there filming, they should have run and removed those people, why are you so stupid?",False,False,True,test
+"Mosh this is what i intuitively came up for removeLast method public void removeLast(){ if (isEmpty()){ throw new IllegalStateException(""cannot remove item from empty list""); } if (first==last){ first=last=null; return; } var i=first; while (i.next!=last){ i=i.next; } i.next=null; last=i; } Any reason why my code might not be optimal?",False,False,False,none
+"i am a skinner, who's probably gonna skin again",False,False,False,none
+"""AIGHT BET""",False,False,False,none
+Finally I wrote my first React app. Thanks sir. Good tutorial and explanation.,True,False,False,train
+I can’t believe they put the power button on the front 😂,False,False,False,none
+"Never in my wildest dreams as a kid did I imagine I would live to see ninjas being accepted in America. But now... I can truly become... the great white American ninja, with the assistance of my brother Gobei and my best friend Curtis Jackson.",True,False,False,train
+She even seems happy it's over,False,False,False,none
+Speed really messed up he just embarrassed his self in front of Korean girls,False,True,False,val
+*Don’t expect relationships to make you happy.* Make yourself happy!,False,False,False,none
+"why can we do this? @classmethod def merge_k_sorted_list(cls, list_of_sorted_list): if not list_of_sorted_list: return while len(list_of_sorted_list) > 1: list_of_sorted_list.append(cls.merge_sorted_list(list_of_sorted_list.pop(), list_of_sorted_list.pop())) return list_of_sorted_list[0]",False,False,False,none
+Llore viendo este video 🤧 gracias por existir MrBeast,False,False,False,none
+That's what I would do and that's what my mom would have said,False,False,False,none
+"Freedom of choice. As long as there is risk, there should be a choice. My body - my choice. Dr. Malone's speech in DC was awesome. globalcovidsummit",False,False,False,none
+"Judge, those are the feelings of the majority of Americans... thanks for letting out for us, God bless you 🙏",False,False,True,test
+Meadow was always hot asl,True,False,False,train
+With the hair growth- Rogaine and Red Light… are they a lifelong sentence? Or once your hair starts growing you are good to go without them.,True,False,False,train
+maa kasam mood sahi ho jata hai aapki javascript ki series padh ke🙏,False,False,False,none
+No he won’t bro hell be in jail jo and wishing he didn’t do this shit,False,False,False,none
+didi pls make a video on college freshers what to learn as side hustle and where do we get resources in detail,False,False,True,test
+That dad wasn’t laughing he was crying,False,False,False,none
+"What the heck?! Why did you move like that?! You got beat by Karen, dude, that's way worse!",False,False,False,none
+"Thanks for the new course. However, one topic is still missing: video streaming. Could you please create another course on how to manage, sell, and authenticate video content on the web? I'm looking forward to it...",False,False,False,none
+Bro that sound of your window scratch my Brain,False,False,True,test
+Great job.. Please Start complete video series on node KS as back-end technology..,False,False,False,none
+"You made a blindman see. Thanks, a 10^6 times!",False,True,False,val
+Sir you are good Man ❤❤ love you ❤❤❤,True,False,False,train
+Like a super Sunday game how do the teams match up against each other 🙄 absolute madness,False,False,True,test
+"Giving poison before death, She filtering reality.",False,True,False,val
+"Really like,like.",False,False,False,none
+My brain:what is it saying? Also brain: BRAIN NEEDLE,False,False,False,none
+I’m sad people on the media make jokes about this when there are family’s hiding in there basements right now because of stupid leaders,False,False,False,none
+Sir you explain perfectly.Now I have decided to code on notebook.,False,False,False,none
+"Loving this new format queen❤ especially with the new influx of people that will be coming to yt when tt closes, they love story times!! & this was amazing girlie, keep it up❤💃",False,True,False,val
+You are idiots. They are a young country with young people. 70% of that country is Russian. Maybe talk about the 5 million that left the country once Zelensky was voted in. Fkn US wankers.,False,False,True,test
+sHeS dOiNg tHe AOC. *flaps arms* IM DEAD. IMA DO THE AOC WHEN QUARANTINE IS OVER,True,False,False,train
+I don't like that Xbox is copying them PlayStation commies,False,False,False,none
+"We can not have this traitor in the white house for another 3 ,yrs",False,False,True,test
+The moment I heard about Gina Carano being cancelled I hoped that Crowder would offer her a job and cheered when it happened!,False,False,True,test
+I'm keen on learning more about a ServiceNow Crashcourse,False,False,False,none
+Man this is some revelations type thing. Prayers to residents of California,False,True,False,val
+"Free healthcare for all of california, doubling the population of canada with people who've never paid a dime of tax to the cdn government would bankrupt our country. About 90% of cdn taxes go to healthcare, so, that's nonsense.",False,False,False,none
+They laughed 50 years ago when we couldn't fish in our own waters🤔🤔,False,False,False,none
+"17:38 const {x,y,w,h} = this.boundary",False,False,False,none
+Anyone in 2025 ?,False,False,False,none
+"who writes characters like that? nobody would be this fucking rude to anyone, especially a kid.",True,False,False,train
+"Brad please i really like all your works, could you make a course for PostgreSQL",False,False,True,test
+"for 100k, these games won't run at 60 fps on ultra settings",False,False,False,none
+Thank you so much for the great tutorial! Your explanations were very clear and easy to follow. Please create more videos with practical examples in React.js.,False,False,False,none
+This ban on our freedom should be tested in a court of law.,False,True,False,val
+"Мужик на мерсе все правильно сделал. После с каждого велосипедиста сдерёт штраф + моральный ущерб, а возможно нескольких закроет в тюрьме за пункт ""по Предварительному сговору""",False,False,False,none
+"Sir, I am unable to configure VS Code on my PC... Should I consider using Webstorm instead???",True,False,False,train
+"Everyone is around you when your partner dies, but then they go back to life and want you to be ok. Life goes on as it should. Your left not knowing what or how to feel and the fear is unexpected. I was relieved to hear you say this! When I feel sick, I am scared it’s something serious and no one will go to urgent care with me 2 years later I’m ready to talk about Greg because it doesn’t hurt so much, but I can tell it makes others uncomfortable. I’m scared I will forget him, and I can’t remember the details of his face and the sound of his voice. Meanwhile, I work, take care of myself, my house, my animals and I am a friend to others. It’s not that I am stuck. People don’t get it.",False,False,False,none
+You are cyco time for the rubber room wow you and hunter must be buddys,True,False,False,train
+How on Earth would this make code-sharing easier? The mixins for the options API seemed pretty darned convenient...,False,False,False,none
+"""The couple unknowingly breathed in the gas."" 😂😂😂",True,False,False,train
+Look at the Mayors race in Chicago~,False,True,False,val
+These animals are so gorgeous...,True,False,False,train
+2025 has started off crazy. Our thoughts and prayers are for ALL of the people suffering from these fires.,False,False,False,none
+"Horizon won't be successful if they make it like Forbidden West. They went overboard with the gender neutrality. The women are either equally as strong or stronger than the male warriors. It might work in a video game, but it will look ridiculous in live action. You'll see a 6'5"" 250lb guy getting beaten not by Aloy, but by some 5'3"" 100lb random tribal female. This will make people laugh and ruin the immersion.",False,False,False,none
+6:44 7th reason why luis hates noobs is because he’s *cool*,False,False,False,none
+resigning onana yeah right 😂😂😂😂,True,False,False,train
+Instead of just talking the so called powerful NATO why can't they take action on Russia,False,False,False,none
+"American workers HAVE no rights. No paid 28 days leave, No paid unlimited sick leave AND NO PAID PARENTAL LEAVE FOR 3 MONTHS WHICH INCLUDES THE HUSBAND",True,False,False,train
+U dead.....,False,False,False,none
+"Thanks but i am little confused about what will be the 3 rd parameter that browser takes in app.use((req,res,next) [i mean next parameter ]",False,False,False,none
+It's a beaver probably,False,False,False,none
+A great and simple explanation of var vs. let. Thank you Mosh.,True,False,False,train
+"Recently I’d been interviewed at google, after 2.5 months of preparation and interviews, I’ve been told position is frozen. I was crushed, I cracked every single interview and but in the end it didn’t work out. It was hard to come back to daily routine knowing that you had it for a day then you lost everything. I’ve learned lot from your videos, and I always find them very relatable. Even hiring freeze. I’ll try again and hope this time I’ll make it. Thank you for everything.",False,False,False,none
+"It's quite annoying that when I invoke a function, it doesn't automatically fill in the parentheses.",False,False,False,none
+I passed this exam over the weekend! This was a fantastic course and I thank you for the help!,False,False,True,test
+Sir I am from Bangladesh. I have already completed Photoshop course. Salute sir,False,True,False,val
+ashten was SO falling for lexi,True,False,False,train
+Are they brothers?,True,False,False,train
+That would be a big NOT GONNA HAPPEN !,False,False,True,test
+"""i'm a villain, not a monster"" Nelson.",False,False,False,none
+Elon got the money and the fame. What he didn't get til Rogan exalted him was a pseudo 'cool kid' status. And he clearly longed for that,False,False,False,none
+"The reason why Elon Musk buys Twitter is because the stock market is now very overvalued and close to crash in a couple of months due to hike rates, debt, and the crisis generated by China, Ukraine, Russia. Not only does the stock market can crash, the dollar and bitcoin can crash as well. So, Elon sells part of his shares of Tesla and others (now overvalued), buys Twitter (excuse for not saying that the stock market is going to crash), privatizes Twitter, to avoid the Twitter stock price to crash, and in this way Elon protects its wealth. Then a few years later when the market stabilizes again, Twitter goes again public, and Elon recovers his wealth. Master play, Twitter is just a good excuse to make cash with his investments without making a lot of noise.",True,False,False,train
+Please stop doing these things already,True,False,False,train
+they missed their chance to call the module QtPy,True,False,False,train
+"Hey Shaun, thanks a bunch for the series! It's really boosting my understanding. What exactly sets Hive apart from Firebase? Also, is it possible to use Firebase as a local database?",False,False,False,none
+TEAM 50-60 ✌️ 🇯🇲,False,True,False,val
+Zach is a child .. someone who doesn’t get their way and throws a tantrum pretty much . Everyone wants to be a victim 😪,False,False,False,none
+i’ve had to double my smoke intake since this disastrous election,False,False,False,none
+I have been waiting for this missing piece!!! You are so passionate in delivery!!! Thanks a million MAX!!! ONE LOVE JAH RASTER!!!,False,False,True,test
+The Russians cannot make drones because they cannot make the various items making up a drone. Everything was imported from the West.,True,False,False,train
+"Really nice!! For someone who has to start from basics, this is going to be a great help!!",True,False,False,train
+Interest on java becomes loving java and getting a job as a java developer only happens when I watch your tutorials these will actually fascinated and I agree I'm an alien 😅😅,False,False,False,none
+Thanks for the message at the end. You actually made me feel better.,True,False,False,train
+Bet it will take till day 22/23,True,False,False,train
+Aspirin....at least take aspirin..to stay alive.,False,False,False,none
+Has anyone taken notes?,True,False,False,train
+God bless the ranchers who haven't forgotten their past 😢😢,False,False,False,none
+"In uno my friends play with the interception rule, where we can stack the same number on each other, 1s can go on other 1s with diff colors, 2 with 2s, and so on, we can stack plus 2s and plus 4s but if someone had a wild card they can cancel the plus 4 out but not the plus two, plus 2s cant be stacked onto wilds tho. Once the wild card cancels out the plus 4, its the next persons turn but if they have a plus 4, they can place it on but it will just start over with the plus 4 and the other plus 2s and plus 4s are canceled.",False,False,True,test
+what is this supposed to be? America's finest dish?,False,False,False,none
+The day you don’t turn up to school 😂,False,False,False,none
+Following this video is somewhat confusing; it's difficult to stay focused in general.,False,False,False,none
+This is a man that was found guilty of perjury and he himself said that Trump had nothing to do with paying off Stormy Daniels. Get someone more credibility.,True,False,False,train
+He literally punched himself out of energy,True,False,False,train
+The Man a boss idc what the crooked media try to paint him to be. Perfect?…nah but definitely not the monster they try to make him,False,False,False,none
+"Created function as hinted at the end, works perfectly 🤌 function addDiv(text,color) { let div = document.createElement('div') let addText = document.createTextNode(text) div.style.padding = ""12px"" div.appendChild(addText) div.style.backgroundColor = color document.body.appendChild(div) } addDiv(""usman"",""red"")",False,False,False,none
+They might be large and mighty but their environment is far more dangerous.,True,False,False,train
+"I admit, my vote for Harris is hastily a protest vote against T, but have learned much about her I've enjoyed.",False,False,False,none
+"I think this is the best looking coding video I've ever seen. Coding videos tend to be very dry, but the way you highlight the commands in that little popup window and direct the attention to what you're doing really makes the video feel good to watch. Kudos!",False,False,False,none
+She's a war hawk but occasionally preaches about freedom. These days she represents nothing new really. She has turned out to be quite pro establishment.,False,False,False,none
+"Biden-Harris administration has to go. Vote them, Congress and Senate Democrats out of office on next elections.",False,False,False,none
+Amazing lady!!!we need more people like you in this world 🎉❤,False,False,False,none
+Being as iv tried indian snacks its the same lil difference but like base line same,False,True,False,val
+No fire prevention protocol here . The Mayor and the Governor need to be indicted for criminal negligence!!,False,True,False,val
+uhhhhhhhhhhhhhhhhhhhhhhhhhhhh hahahahahahah,False,False,False,none
+"From 2023.9.24 this solution will result in TLE, I am assuming the dummy node initialization and the merging of the two lists is much more inefficient than the priority queue. Any comments?",False,False,False,none
+"So, where exactly does the speedrun aspect come into play here?",False,False,True,test
+"That's a pretty weak lock for a door that I could easily break by just pushing hard. These doors are those cheap, hollow types.",False,False,False,none
+It's not natural disaster. Could've been prevented. Hurricanes are natural disaster.,False,False,False,none
+"I dont like coding,I like non technical things but I am in the coding field what to do ,I don't have any backup",False,False,False,none
+Haha. I love your videos. The wit is on point and you pretty much talked about all the main things I found interesting from CES as well.,True,False,False,train
+"The easier and more cost effective way to solve this is to have a groove on either side of the piston seal to accommodate a Trelleborg C380 wear band. This will centre the piston in the barrel and keep dirt away from the seal. Make sure that the gaps on either side of the seal are maximized for the design pressure of the cylinder. Flush the whole hydraulic system after such type of damage since the chips as a result of scoring can have any shape and size and will distribute themselves throughout the system. They might destroy the pump leading to high costs. I agree to your first conclusion, bad design!",False,True,False,val
+"Funny, a senator knew the virus was on it's way and is a scam but trimp didnt know? Unusual.",False,False,False,none
+It's completely blank for me; nothing shows up.,False,False,False,none
+"Well well well, at first I adored the idea of this series. It truly sounded like a masterpiece until I managed to go further into it. To be very honest this series seems more like a crash course. Everything is so rushed (even the bgm is kinda fast lol). Not saying that it's useless. It's a boon for those who want to brush up on concepts or just are having their shift from another language to C++. As a beginner, it's not that great of a series. I hope that my words get taken as constructive criticism. Love you Apna College!",False,False,False,none
+Needs to be a class action suit.,True,False,False,train
+"Dang 64k women left the workforce? Did they... Get married? Get pregnant? Women have nore jobless options then men, how many men left the workforce?",True,False,False,train
+"""the rules of war is made by the ones who never saw combat"".",True,False,False,train
+The parents don't care about anything. There's no remorse.,False,False,False,none
+"in the 2nd game,what about the team on the other side",False,False,False,none
+"""He achieved his goal but still didn't get a like."" Do you think we are going to like the video? It's not your clip, so don't expect us to give it a thumbs up.",False,False,False,none
+mern stack pls,False,False,False,none
+Kinsella still a Liberal. Its going to be a tighter race? Doesn't matter who wins the leadership race. The Liberals are done. Maybe you Easterners will get it right this time.,False,False,False,none
+"First Jame's bond now Paddington bear, so happy she is enjoying things lately",False,False,False,none
+You use Ableton??????? I didn’t know you produced!,False,False,False,none
+Great program 🇵🇰👍👏,False,True,False,val
+"One of the best tutorial of prototype .... Moreover, the title of tutorial (Magic of Prototype in js) , is completely matching the energy of tutorial .Thank you so much sir.",True,False,False,train
+"No ceasefire, no compromise, no forgiveness...",False,False,False,none
+"python looks like, but for a java gui like me there are some things I cant get over: no ; : and no { } None vs null",False,False,True,test
+Utter b.s. ruperts idiot trumpsucker channel.,False,False,False,none
+Na I would never trust something like that with something as dangerous as a Semi truck and I drove a truck Na Hell No,True,False,False,train
+...I think you could use a couple more lessons on economics yourself,True,False,False,train
+You look great with bart.,True,False,False,train
+"Thank you BOTH for Not interrupting S.S., he speaks in a way that most hosts cannot allow his pauses, you did it right and what a great interview!",False,False,False,none
+"Почему у них специфический голос (у цыганок)?с закрытыми глазами можно узнать,что разговаривает цынанка?🤔",False,False,False,none
+"I believe in humanity and human rights. In short, I have no need for a God.",True,False,False,train
+React is one of the technologies I'd planned on learning this year after doing alot of backend work with python and some bootstraping and i think this course is just so much of a good thing that has happen so far to me. Thanks alot FCC and SCRIMBA we really appreciate.,False,False,False,none
+This is a very challenging topic 😬😬,True,False,False,train
+Name := Sanket shelar Age := 18 Mumbai,False,False,False,none
+I went from broke to earning millions when I taught my cat to invest in the stock exchange. My cat is now an in-demand broker and can be contacted on …(half of these stupid spam comments),False,False,False,none
+"Oh my goodness this is a result of someone never truly having a job. This moron has milked the government for millions and millions of dollars. He is so pathetically stupid, how could anyone vote for this idiot.",False,False,True,test
+"Mexifornia, the late great state of California, is losing their best and brightest young families and their parents, grandparents are following, taking their businesses and wealth with them, Idaho, Arizona, the Carolinas,Tennessee, Texas and Florida, all RED states with better schools🇺🇸🇺🇸",False,False,False,none
+Biden lecturing about the abused of power is fucking insane on a whole new level.,False,True,False,val
+"Can anyone please tell me, how to code this program on a locally installed version of python. I mean, in neet/leet code, linked lists are predefined. I can't solve this problem on my local pc, without defining a list first.",False,False,False,none
+Don't buy the 14 Pro Max; get the 16 with a 60Hz screen and just two cameras 😂,False,False,False,none
+"As someone who unfortunately overthinks and has a lot of empathy, even knowing it's safe, I wouldn't be able to bring myself to eat it.",False,False,False,none
+"Saying Biden has been a disaster is like, repeat, say the line again.",False,False,True,test
+blood sausage????,False,False,False,none
+What in the world is this....,False,False,False,none
+That women politician was completely clueless what the hell was she talking about Rupert was spot on as usual,False,False,True,test
+ахахаха парень тупой и не знает что такое инверсия . есть даже в самом примитивном приложении. Как он вообще ещё догадался что нужно подсветку сделать,False,False,False,none
+The empty danimals in the back cup holder is so real,True,False,False,train
+Pls do what works for you,True,False,False,train
+"thank you for the video. Given that I'm utilizing Angular as my JavaScript library, how might I implement the toggle functionality?",False,False,False,none
+Wow is girl new is so so cute💛😍🥰,False,False,False,none
+Wow...matt should receive the medal of honor 🎖. Hopefully he writes a book and makes a movie off of the incident. He's so tough,False,False,False,none
+"When I had a concussion, my partner handed me the TV remote and asked me to lower the volume down; I gazed at it as if it had come from outer space. He then called an ambulance.",False,False,True,test
+"Hello Tim, sorry, but nothing more than the many tutorials on this subject. I would have hoped from you that you would divide the screen for four cameras, that you say after 5 seconds start cam 1, the body is in front of cam 2 so it starts after the first one goes off if it detects a body. I would have wanted you to show how the video can take a photo when you detect the face ... ect but you still the best;)",True,False,False,train
+We're looking for a complete digital marketing course,False,False,False,none
+If you have make more than 21 trillion dollars a year then you might be close to making to much money. If you are below that I think you are ok.,True,False,False,train
+Are we seriously having phone debates in 2025? 😔,False,False,False,none
+I have just found NeetCode150 on yesterday!! Thanks so much for you guys to contribute the so nice study resources to help beginners to start Data structures and algorithms!,True,False,False,train
+"That lady made German sound lovely. R.I.P to the Queen. Met her once at the local church very small woman, very polite.",False,False,False,none
+Need to learn PHP for my next project at work. You are my hope.,False,True,False,val
+"switch (age) { case 1: System.out.println(""monday""); break; case 2: System.out.println(""tuesday""); break; case 3: System.out.println(""wednesday""); break; case 4: System.out.println(""thursday""); break; case 5: System.out.println(""friday""); break; case 6: System.out.println(""saturday""); break; case 7: System.out.println(""sunday""); break; default: System.out.println(""Not in this calander""); break;",False,False,False,none
+"GOP for Sale, Foreign Money Welcome. Have we had enough America? Remove the Electoral Process, it is unconstitutional. Every VOTE should count during a presidential election. This is not a State issue. #45*, Moscow Mitch and NRA betrayed our country and are Russian Entities funnelling money to the Russian Republicans. Follow the foreign money being invested in America. The TRUTH is There.",True,False,False,train
+"Ma'am, please include projects centered around cyber security.",False,False,False,none
+I'd watch this channel more if they'd get some more news hosts other than this lady.,False,False,False,none
+Why post this without the end? Are you stupid?,False,False,True,test
+Being stronger than steel and only 1/3 the weight is actually worse than titanium which is around 45% lighter than steel,True,False,False,train
+"sir, you are doing stupendous job. May you live long and doing your work with the same impetus. I am from pakistan and i am very greatfull to you for making these videos free of cost. seriously harry bhai i have no words to say thanks to you. keep doing and shining with your effective vedios,",True,False,False,train
+"please guys, where is this appending for the plot answer ????????????????",False,False,False,none
+"I realize this is an older comment, but he's been dealing with a mental health condition for many years. He's not doing well.",False,False,False,none
+I have a question actually. why you create jwt token and hashed the password in model rather than in controller?,True,False,False,train
+Anyone watching this in 2025? 😅 👇,False,False,False,none
+Imagine Gavin Newsom being the leader of an entire country. Worst nightmare. Wait... I live that nightmare every day in Canada.,True,False,False,train
+Amego jajajaja,False,False,False,none
+We want to see the hostages not your media lying mouth take the camera off yourself. $&@!,True,False,False,train
+"Could you create a more in-depth tutorial video on developing Android applications using KOTLIN, please?",False,False,False,none
+What happens if internet shot down happened all over the world just like Covid lock down,True,False,False,train
+"Come on now, I can’t watch this video with the alarm beepin cuz the wife thinks we’re all gonna die!!😅",False,False,False,none
+Thankyou thankyou thankyou,True,False,False,train
+Ng pasikat lg mga congress ng drama lg galit2 kuno ...,False,False,False,none
+This man's outerwear speaks volumes. Refrain from providing him monetary support!,False,False,False,none
+Many Thanks,False,False,False,none
+We need some way of getting Joy to vacation in Ukraine before her trip to Italy. What about a possible GO FUND ME?,False,True,False,val
+1 DETAILS TAG😂😂,False,False,False,none
+"You're too focused on Flutter, and you're giving it incorrect wins.",False,False,False,none
+How am I now realizing that the P in Swaggy P makes zero sense 😂😂😂😂,True,False,False,train
+"Lots of love from Tim ,you're awesome. ❤❤❤❤",False,False,False,none
+Bro it says playstation,False,True,False,val
+"That was actually nice, but at the end was funnyyyyyyy😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂😂",False,False,False,none
+"Kindly inform me if Business Analysts or Project Managers can utilize this Generative AI, and whether it benefits them in their roles. Thank you.",True,False,False,train
+"Nah this is legit, if you have iq in 2 digit only then you will be fooled",True,False,False,train
+"What in the cinnamon toast F…is this shit?! Go ahead. Just tell us. What part of California, New York, Illinois, or Oregon is this taking place in. It looks like something to fix a blood shortage in a distant future where vampires rule the world😐",False,False,False,none
+"You are brave man, President Trump, sitting with the snakes",False,False,True,test
+Why not be in the wnba and keep mak8ng that shot. C'mon now,False,False,False,none
+I require you to shut your shoes.,True,False,False,train
+They all look guilty 😔,True,False,False,train
+Definitely looking into this for my next phone!,False,True,False,val
+"Aww, thank you for helping this Mom!❤❤",False,False,True,test
+"I just watched your responsive portfolio website series and realized ""Oh, looks like I've been doing Sass wrong"" *me, goes to Brad's YouTube to see that he uploaded a course on this 6 days ago*. Awesome!",False,False,False,none
+may pananagutan Ang PADEA maari may connection kay Duterte Ang PADEA?,False,False,False,none
+Keep this in mind when elections come around!,True,False,False,train
+Mast lecture mja aa gya ❤❤❤,False,False,False,none
+In my country a person like Trump would not be allowed to be a member of a political party let alone be in a position of authority.,False,False,True,test
+"I don't play Rust, I'm here for the chill vibes. This has been one of my favourite videos of yours.",False,False,False,none
+"Louisiana shall be so Sad, 7th son of a 7th son. Tampa",True,False,False,train
+"On throughout my learning journey of using Rust as my first language :), I will begin my first project after the 11.3 section",True,False,False,train
+The U.S would never act militarily against Canada they are probably our closest ally. We❤️ our Canadian neighbors.,False,False,False,none
+I love eating the Sushi Rice from LundBerg!! You should try it! My dad used to work there since we lived in a small near there! 😊 Happy New Year to you!,True,False,False,train
+"I didn't even know fading smile can be translated to sound... But here we are, listening to YMCA x Clair de Lune",False,False,False,none
+"You really shouldn't encourage the use of 'namespace std', especially in tutorials for beginners. Using this namespace is a very common cause of errors and bugs and is easily avoidable.",False,False,False,none
+Legends watching 👀in 2023! 🖐,False,False,False,none
+you are the best,True,False,False,train
+This channel will reach 10 million mark my words,True,False,False,train
+Omg😂😂😂😂😂😂😂,True,False,False,train
+Stay strong Justice Kavanaugh. True righteous Americans support you!!,False,False,True,test
+"We need more immeasurably wise and compassionate humans like you on this planet. Thank you for sharing *Deep web experts on the WEB* . I bet I'm not alone when I say this video found me at the perfect moment, and there are a lot of things here that I needed to hear right now.",False,False,False,none
+"import java.util.Scanner; public class test { public static void Main(String[] args) { Scanner scanner = new scanner(System.in); System.out.print(""pls enter your name""); String name = scanner.next(); } } Could someone assist me with this code, please?",False,False,False,none
+O iha catholik roma force no have money lifeeee,False,True,False,val
+"Its been a long four years. Finally, lets make America great again!",True,False,False,train
+"Thank you.. SO MUCH!!!...for THE FACTS!!!, wake-up call, and bravery to disclose to the public what we need to know!",False,False,False,none
+That's exactly me and my brother you fight he punched me in the eye yesterday and I kindly put them back that's how we show kindness if someone punches you,False,False,False,none
+Why does this look like it was done on PURPOSE! Anyone else feel like this?,False,False,True,test
+Anybody here from 2010?,False,False,False,none
+i am also using IdeaPad 310.. but it is bit slow maybe because of hdd and no ssd..,False,False,True,test
+Wow! The best explanation so far within just few minutes! Thanks!,True,False,False,train
+This is super helpful! Ty :),True,False,False,train
+WOW EVERYTHING IS JUST WOW THE PERSON THE PEOPLE SUPPORTING THE PLACE THE RAMPS EVERYTHING! THESE PEOPLE ARE SO KIND HEARTED!,False,False,True,test
+"I use Fedora, Mint and Debian 11...all are great and easy to use. thanks for offering these courses. ;)",True,False,False,train
+You are so amazing James God Bless you and your family and friends and please all your co actors hear this amazing human being.❤❤❤,True,False,False,train
+This problem destroyed my confidence.,True,False,False,train
+Just a friendly reminder: A few days after Halloween is the best time to throw away the orange pumkin(g)! VOTE!!!,False,False,False,none
+INFTY3 Token still presents opportunities even if we missed out on other coins. What makes it an attractive investment?,False,False,True,test
+Very nice information sir .. Sir bhut yese video dekhte the khi v step by step ads ka course nhi krate the but aapki agar harek part ko dekh le to syd hme lgta hai ki wo 99percent to jarur sikh jayega 👍👌👌very nice 🙏🙏,False,False,True,test
+Why are they thinking of telling people not to even go out for a jog? Doesn't social distancing work? Is it permanently airborne?,False,False,False,none
+"just politely sharing a video for how to pronounce available, otherwise pretty good English.",True,False,False,train
+Lmfao eyy another john Travolta movie iv never heard of😂 love this actor,True,False,False,train
+The Floral apron 😂,True,False,False,train
+my mouth always hurts after opening gifts because of how much I fake smiles,False,False,True,test

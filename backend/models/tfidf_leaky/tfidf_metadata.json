@@ -1,0 +1,64 @@
+{
+  "train_dataset": "backend/data/train.csv",
+  "test_dataset": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv",
+  "train_samples": 663984,
+  "test_samples": 207313,
+  "label_distribution": {
+    "Negative": 222269,
+    "Neutral": 221649,
+    "Positive": 220066
+  },
+  "max_per_class": null,
+  "text_column": "text",
+  "label_column": "label",
+  "vectorizer": {
+    "max_features": 75000,
+    "min_df": 2,
+    "max_df": 0.95,
+    "ngram_range": "1,2",
+    "lowercase": true,
+    "strip_accents": false
+  },
+  "model": {
+    "type": "MultinomialNB",
+    "alpha": 0.5
+  },
+  "random_seed": 42,
+  "sklearn_version": "1.8.0",
+  "pandas_version": "3.0.0",
+  "accuracy": 0.6500798309802087,
+  "f1_macro": 0.6500252399135765,
+  "report": {
+    "Negative": {
+      "precision": 0.596273958234004,
+      "recall": 0.7205202437021994,
+      "f1-score": 0.6525354638839067,
+      "support": 69429.0
+    },
+    "Neutral": {
+      "precision": 0.6072891853263459,
+      "recall": 0.5628145880552203,
+      "f1-score": 0.5842066668703596,
+      "support": 67946.0
+    },
+    "Positive": {
+      "precision": 0.769335120022499,
+      "recall": 0.6649317967342503,
+      "f1-score": 0.7133335889864632,
+      "support": 69938.0
+    },
+    "accuracy": 0.6500798309802087,
+    "macro avg": {
+      "precision": 0.6576327545276163,
+      "recall": 0.6494222094972234,
+      "f1-score": 0.6500252399135765,
+      "support": 207313.0
+    },
+    "weighted avg": {
+      "precision": 0.6582671383682939,
+      "recall": 0.6500798309802087,
+      "f1-score": 0.650651504998261,
+      "support": 207313.0
+    }
+  }
+}

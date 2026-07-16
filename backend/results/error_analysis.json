@@ -1,0 +1,1062 @@
+{
+  "logreg": [
+    {
+      "text": "that man wicked after he came to jamaica hot hot to married you he did this to you the disappointment were there but never see this coming stay strong and put god first god bless red heart red heart r",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9695,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "this is for all of you democrats others liberals republicans trump is still your president plus he is already reelected prove me wrong make sure to bring receipts thank you have great day",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9454,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "for all the incredible bravery of the ukrainians the fact is that they cannot succeed against the might of the russian forces the ukrainians must now surrender in order to save lives",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9452,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "where can find vim",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.9355,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "use english text please",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.9313,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "for some reason felt like crying because ur my fav youtuber and my inspiration for my youtube channel joined the discord and the curly gang and im just such big fan always wanted to meet in gtag or ir",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9262,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "but will the merger between honda and nissan make hondas cars less reliable because of there new market share thought balloon thought balloon",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.9254,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "thank you for your help with this amazing ai you represent the future",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9221,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "steve adams is not just some random player",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.9179,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "ask nestle and the people and golf courses who water hours day where the water is",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.9078,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "babymonster red heart im so happy yall stan them they are my fav red heart red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9956,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "harris you are dynamo thank you for being so honest and forthright we need journalists like you",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9894,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "its sad bittersweet understanding that you are completely alone when youre in trouble another brick is falling down justice will leave its mark trump is secure the mystique of executive privilege that",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.983,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "wish wish the world listens ro this everyone should listen to this love you liam and ill always love you payno red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.983,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "dont have autism but do this lot actually when get gift im always greatful and do love it but im not the type to express my feelings like omg love it so much thank you also might be cuz im an introver",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9808,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "remember her she was pretty cool hope shes learned lot",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9778,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "you triggered my alexa other than that love your tutorials so so much thank you for your hard works love from korea",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9768,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "love this do canada as well red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9729,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "am feeling very grateful right now for this amazing life god has blessed me with folded hands light skin tone folded hands light skin tone nazar amulet nazar amulet wish sab ki living conditions impro",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9727,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "bad cops good cops not working for fox",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.9714,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "pile of poo face with rolling eyes face vomiting face with rolling eyes pile of poo crowder nails it ps im sorry for watching this video and clicking like before started it the ellen paige bit is pain",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9922,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "russia has lot of equipment but it lacks professional army their army and reserves are made up of conscripts who dont want to fight they abandon vehicles and flee the battlefield russian equipment is ",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9721,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "what an awful legacy to inherit poor woman",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9718,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "why would truth about history make you feel guilty because youre white that makes no sense unless you know you have racist feelings and that makes you feel guilty or maybe angery because you enjoy bei",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9644,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "he needs to be removed itll be disgusting if he pardons himself hes got deaths on his hands",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9637,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "where is this wanna fly like superman pretty plz",
+      "true_label": "Positive",
+      "predicted": "Neutral",
+      "confidence": 0.9559,
+      "error_type": "Positive \u2192 Neutral"
+    },
+    {
+      "text": "love hearing how deluded the west is and how quickly they forget talking about surprised with russia and its approach like afghanistan and iraq werent total failure not to mention illegal",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9513,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "his name is jared for yall wondering",
+      "true_label": "Positive",
+      "predicted": "Neutral",
+      "confidence": 0.951,
+      "error_type": "Positive \u2192 Neutral"
+    },
+    {
+      "text": "what is surprising about the fact he cheats he lies he cheats he bullies people he is dictator",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9503,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "trump and the ag barr along with the supreme court judges are openly using voter suppression to illegally win the election trump is dictator getting his militant thugs to intimidate voters and practic",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9502,
+      "error_type": "Positive \u2192 Negative"
+    }
+  ],
+  "svm": [
+    {
+      "text": "agree orange flavored snacks are terrible shes absolutely right",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9215,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "for all the incredible bravery of the ukrainians the fact is that they cannot succeed against the might of the russian forces the ukrainians must now surrender in order to save lives",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9145,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "but will the merger between honda and nissan make hondas cars less reliable because of there new market share thought balloon thought balloon",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.9119,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "big query is an enterprise data warehouse for large amounts of relational structured data on the other hand bigtable is nosql widecolumn database optimized for heavy reads and writes please make the c",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.9073,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "ask nestle and the people and golf courses who water hours day where the water is",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.9029,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "where can find vim",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8971,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "steve adams is not just some random player",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8936,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "bro at least update to the latest version",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8913,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "youtube full stack developer me working for asian client",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8907,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "that man wicked after he came to jamaica hot hot to married you he did this to you the disappointment were there but never see this coming stay strong and put god first god bless red heart red heart r",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.889,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "babymonster red heart im so happy yall stan them they are my fav red heart red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9719,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "its sad bittersweet understanding that you are completely alone when youre in trouble another brick is falling down justice will leave its mark trump is secure the mystique of executive privilege that",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.9605,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "bad cops good cops not working for fox",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.958,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "why do people follow hit and runs the insurance will pay and you wont get punished on you insurances",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.9485,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "another ai video",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.9477,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "rusien gypsies en the en will lost the word",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.939,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "harris you are dynamo thank you for being so honest and forthright we need journalists like you",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9354,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "git rm cached is working but just git rm is not working it says that it did not match any files",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.9334,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "all vehicles sold in the us now require backup camera which this doesnt have im sure they could add it if they wanted to before you scream about the government think of all the toddlers and dogs that ",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.9325,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "what to do if submitting is not working",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.9262,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "pile of poo face with rolling eyes face vomiting face with rolling eyes pile of poo crowder nails it ps im sorry for watching this video and clicking like before started it the ellen paige bit is pain",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9727,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "russia has lot of equipment but it lacks professional army their army and reserves are made up of conscripts who dont want to fight they abandon vehicles and flee the battlefield russian equipment is ",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9505,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "love hearing how deluded the west is and how quickly they forget talking about surprised with russia and its approach like afghanistan and iraq werent total failure not to mention illegal",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9369,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "why would truth about history make you feel guilty because youre white that makes no sense unless you know you have racist feelings and that makes you feel guilty or maybe angery because you enjoy bei",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9338,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "what is surprising about the fact he cheats he lies he cheats he bullies people he is dictator",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.933,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "he needs to be removed itll be disgusting if he pardons himself hes got deaths on his hands",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9274,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "what an awful legacy to inherit poor woman",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9235,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "where is this wanna fly like superman pretty plz",
+      "true_label": "Positive",
+      "predicted": "Neutral",
+      "confidence": 0.9231,
+      "error_type": "Positive \u2192 Neutral"
+    },
+    {
+      "text": "you are coward though yes she is and now the world knows it too",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9192,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "trump and the ag barr along with the supreme court judges are openly using voter suppression to illegally win the election trump is dictator getting his militant thugs to intimidate voters and practic",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9135,
+      "error_type": "Positive \u2192 Negative"
+    }
+  ],
+  "tfidf": [
+    {
+      "text": "that man wicked after he came to jamaica hot hot to married you he did this to you the disappointment were there but never see this coming stay strong and put god first god bless red heart red heart r",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9798,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "its clapping hands light skin tone not clapping hands light skin tone an clapping hands light skin tone entire clapping hands light skin tone park clapping hands light skin tone",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9751,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "for some reason felt like crying because ur my fav youtuber and my inspiration for my youtube channel joined the discord and the curly gang and im just such big fan always wanted to meet in gtag or ir",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9026,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "nope not at all of course she will return those things to owner of the missing items dude smiling face with smiling eyes smiling face with smiling eyes smiling face with smiling eyes smiling face with",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.901,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "how to capture cctv camera with processing we bought tv tuner video grabber and an cctv infrared camera the camera works fine with the video surveillance software that came with the tv tuner card in p",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8948,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "now am confused watch machine learning or data science",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8919,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "referee was man of the match that game clapping hands medium skin tone",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.8913,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "dont think the explanation in this lecture is very good",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.8861,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "dear apna college team please begin course the previous lectures are difficult to understand and comprehensive notes are missing we request that shraddha di teach the course please folded hands",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.8856,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "code with brackets and snippet manager called brackets snippets by edc which allows you to write lets say ii and it would insert whole image tag with cursor inside the alt tag press tab and you are in",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8819,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "am feeling very grateful right now for this amazing life god has blessed me with folded hands light skin tone folded hands light skin tone nazar amulet nazar amulet wish sab ki living conditions impro",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9957,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "thank you for this precious content smiling face with hearteyessmiling face with hearteyes smiling face with hearts mam plz kuch ai tarike bataoo online earn karne ke folded hands folded hands",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9948,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "babymonster red heart im so happy yall stan them they are my fav red heart red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9927,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "smiling face with smiling eyes smiling face with smiling eyes red heart smiling face with smiling eyes red heart party popper red heart party popper red heart smiling face with smiling eyes red heart ",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9918,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "growing heart growing heart navin is in love with kiran red heart red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.991,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "you triggered my alexa other than that love your tutorials so so much thank you for your hard works love from korea",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9896,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "im super early for this one ukraine ukraine flexed biceps flexed biceps",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9887,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "prayers for mel gibson and the rest of the victims of these horrible fires red heart folded hands light skin tone red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9883,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "hi shradha ji your videos have inspired me greatly pray to god folded hands folded hands that find partner like you in life",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9811,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "love dogs and cats and my family red heart red heart red heart red heart red heart red heart red heart red heart red heart red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9798,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "pile of poo face with rolling eyes face vomiting face with rolling eyes pile of poo crowder nails it ps im sorry for watching this video and clicking like before started it the ellen paige bit is pain",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9856,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "majority of the media should be ashamed prior to actually watching the case and seeing what actually happened they made me believe that kyle had no reason being there with the only reason being there ",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9764,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "trump and the ag barr along with the supreme court judges are openly using voter suppression to illegally win the election trump is dictator getting his militant thugs to intimidate voters and practic",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9744,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "one reason people get to jail is because they dont listen they go mouthing off about police and saying its protected under their rights yes it is protected under your rights but doesnt make it any bet",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9656,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "have no sympathy for amber turd millions of women all over the world would have trampled her to get to him and treated him like king she had dream life with him and she ruined it",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9631,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "thank you sir sir login krna toh email username and password required fir as said ek refresh token required hoga phir bas db check krna hoga ki kya sahi daala ya ni validation check means then uske ba",
+      "true_label": "Positive",
+      "predicted": "Neutral",
+      "confidence": 0.9627,
+      "error_type": "Positive \u2192 Neutral"
+    },
+    {
+      "text": "one question for matt miller is when the israelis claimed that unrwa had hamas workers you cut off unrwas funding within few days but when you have documented evidence of israeli war crimes and the is",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9616,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "hi daniel greate video have aquestion what camera were you using in this series will nice webcam do well for image processing with processing or opencv if so do you recommend any specific brandmodel",
+      "true_label": "Positive",
+      "predicted": "Neutral",
+      "confidence": 0.9612,
+      "error_type": "Positive \u2192 Neutral"
+    },
+    {
+      "text": "its not just political theater its witness intimidation all these clowns shouldve been arrested and its travesty that we live in such broken country that theyll never face justice",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9598,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "how can you trust russia ever again will thosethat committed crimes be held accountable and pay for all the death and destruction theyve brought to ukraine",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9532,
+      "error_type": "Positive \u2192 Negative"
+    }
+  ],
+  "ensemble": [
+    {
+      "text": "that man wicked after he came to jamaica hot hot to married you he did this to you the disappointment were there but never see this coming stay strong and put god first god bless red heart red heart r",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9394,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "where can find vim",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.9066,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "for some reason felt like crying because ur my fav youtuber and my inspiration for my youtube channel joined the discord and the curly gang and im just such big fan always wanted to meet in gtag or ir",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9049,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "big query is an enterprise data warehouse for large amounts of relational structured data on the other hand bigtable is nosql widecolumn database optimized for heavy reads and writes please make the c",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8873,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "plot twist he added pineapple off camera",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8753,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "now am confused watch machine learning or data science",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8657,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "hi sir have compac ram gb pentium but sometime it create issue",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.863,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "but will the merger between honda and nissan make hondas cars less reliable because of there new market share thought balloon thought balloon",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8609,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "steve adams is not just some random player",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8582,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "use english text please",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8551,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "babymonster red heart im so happy yall stan them they are my fav red heart red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9855,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "its sad bittersweet understanding that you are completely alone when youre in trouble another brick is falling down justice will leave its mark trump is secure the mystique of executive privilege that",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.968,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "harris you are dynamo thank you for being so honest and forthright we need journalists like you",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9611,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "am feeling very grateful right now for this amazing life god has blessed me with folded hands light skin tone folded hands light skin tone nazar amulet nazar amulet wish sab ki living conditions impro",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9488,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "why do people follow hit and runs the insurance will pay and you wont get punished on you insurances",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.9465,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "bad cops good cops not working for fox",
+      "true_label": "Neutral",
+      "predicted": "Negative",
+      "confidence": 0.946,
+      "error_type": "Neutral \u2192 Negative"
+    },
+    {
+      "text": "wish wish the world listens ro this everyone should listen to this love you liam and ill always love you payno red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.944,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "love this do canada as well red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9434,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "that clip from hook made me smile thank you so much for that",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9366,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "remember her she was pretty cool hope shes learned lot",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9339,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "pile of poo face with rolling eyes face vomiting face with rolling eyes pile of poo crowder nails it ps im sorry for watching this video and clicking like before started it the ellen paige bit is pain",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9831,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "russia has lot of equipment but it lacks professional army their army and reserves are made up of conscripts who dont want to fight they abandon vehicles and flee the battlefield russian equipment is ",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9587,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "what is surprising about the fact he cheats he lies he cheats he bullies people he is dictator",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9437,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "trump and the ag barr along with the supreme court judges are openly using voter suppression to illegally win the election trump is dictator getting his militant thugs to intimidate voters and practic",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9403,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "he needs to be removed itll be disgusting if he pardons himself hes got deaths on his hands",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9376,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "love hearing how deluded the west is and how quickly they forget talking about surprised with russia and its approach like afghanistan and iraq werent total failure not to mention illegal",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9365,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "why would truth about history make you feel guilty because youre white that makes no sense unless you know you have racist feelings and that makes you feel guilty or maybe angery because you enjoy bei",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9339,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "have no sympathy for amber turd millions of women all over the world would have trampled her to get to him and treated him like king she had dream life with him and she ruined it",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9319,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "what an awful legacy to inherit poor woman",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9309,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "wouldve been lot cheaper on tax payers if they just throw the cops in jail",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9186,
+      "error_type": "Positive \u2192 Negative"
+    }
+  ],
+  "meta_learner": [
+    {
+      "text": "that man wicked after he came to jamaica hot hot to married you he did this to you the disappointment were there but never see this coming stay strong and put god first god bless red heart red heart r",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9463,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "for some reason felt like crying because ur my fav youtuber and my inspiration for my youtube channel joined the discord and the curly gang and im just such big fan always wanted to meet in gtag or ir",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9324,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "for all the incredible bravery of the ukrainians the fact is that they cannot succeed against the might of the russian forces the ukrainians must now surrender in order to save lives",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9252,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "this is for all of you democrats others liberals republicans trump is still your president plus he is already reelected prove me wrong make sure to bring receipts thank you have great day",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9193,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "thank you for your help with this amazing ai you represent the future",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9126,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "it is good to see that every day and in every way trump is getting fatter and fatter morbidly obese and climbing smiling face with smiling eyes",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.9092,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "where can find vim",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8929,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "truly appreciate the tremendous amount of effort that was put into this course especially considering it is free course and fully understand that vandad is trying to make this learning experience as s",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.8905,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "this is pretty good tutorial overall especially considering its free did experience some errors around the point when we started using listcrudrepository but didnt think it was worth my time to debug ",
+      "true_label": "Negative",
+      "predicted": "Positive",
+      "confidence": 0.8885,
+      "error_type": "Negative \u2192 Positive"
+    },
+    {
+      "text": "now am confused watch machine learning or data science",
+      "true_label": "Negative",
+      "predicted": "Neutral",
+      "confidence": 0.8871,
+      "error_type": "Negative \u2192 Neutral"
+    },
+    {
+      "text": "babymonster red heart im so happy yall stan them they are my fav red heart red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9556,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "harris you are dynamo thank you for being so honest and forthright we need journalists like you",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9525,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "wish wish the world listens ro this everyone should listen to this love you liam and ill always love you payno red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.95,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "am feeling very grateful right now for this amazing life god has blessed me with folded hands light skin tone folded hands light skin tone nazar amulet nazar amulet wish sab ki living conditions impro",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9495,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "that clip from hook made me smile thank you so much for that",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9469,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "you triggered my alexa other than that love your tutorials so so much thank you for your hard works love from korea",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9459,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "love this do canada as well red heart",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9456,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "dont have autism but do this lot actually when get gift im always greatful and do love it but im not the type to express my feelings like omg love it so much thank you also might be cuz im an introver",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9453,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "remember her she was pretty cool hope shes learned lot",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9452,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "im super early for this one ukraine ukraine flexed biceps flexed biceps",
+      "true_label": "Neutral",
+      "predicted": "Positive",
+      "confidence": 0.9444,
+      "error_type": "Neutral \u2192 Positive"
+    },
+    {
+      "text": "pile of poo face with rolling eyes face vomiting face with rolling eyes pile of poo crowder nails it ps im sorry for watching this video and clicking like before started it the ellen paige bit is pain",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.9055,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "hi daniel greate video have aquestion what camera were you using in this series will nice webcam do well for image processing with processing or opencv if so do you recommend any specific brandmodel",
+      "true_label": "Positive",
+      "predicted": "Neutral",
+      "confidence": 0.9039,
+      "error_type": "Positive \u2192 Neutral"
+    },
+    {
+      "text": "russia has lot of equipment but it lacks professional army their army and reserves are made up of conscripts who dont want to fight they abandon vehicles and flee the battlefield russian equipment is ",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.898,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "where is this wanna fly like superman pretty plz",
+      "true_label": "Positive",
+      "predicted": "Neutral",
+      "confidence": 0.8961,
+      "error_type": "Positive \u2192 Neutral"
+    },
+    {
+      "text": "he needs to be removed itll be disgusting if he pardons himself hes got deaths on his hands",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.8915,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "his name is jared for yall wondering",
+      "true_label": "Positive",
+      "predicted": "Neutral",
+      "confidence": 0.891,
+      "error_type": "Positive \u2192 Neutral"
+    },
+    {
+      "text": "love hearing how deluded the west is and how quickly they forget talking about surprised with russia and its approach like afghanistan and iraq werent total failure not to mention illegal",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.8876,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "what is surprising about the fact he cheats he lies he cheats he bullies people he is dictator",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.8874,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "trump and the ag barr along with the supreme court judges are openly using voter suppression to illegally win the election trump is dictator getting his militant thugs to intimidate voters and practic",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.8865,
+      "error_type": "Positive \u2192 Negative"
+    },
+    {
+      "text": "what an awful legacy to inherit poor woman",
+      "true_label": "Positive",
+      "predicted": "Negative",
+      "confidence": 0.8856,
+      "error_type": "Positive \u2192 Negative"
+    }
+  ]
+}

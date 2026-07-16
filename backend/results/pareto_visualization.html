@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NSGA-II Pareto Front — Ensemble Weights</title>
+<style>
+  body { font-family: Helvetica, Arial, sans-serif; max-width: 1080px; margin: 2em auto; padding: 0 1em; color: #222; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 18px; margin-top: 2em; }
+  figure { margin: 1em 0 2em 0; }
+  figcaption { color: #555; margin-top: 0.5em; }
+  .knee { background: #fff3e0; border-left: 4px solid #e67e22; padding: 0.8em 1em; margin: 1.5em 0; }
+  code { background: #f6f6f6; padding: 2px 4px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<h1>NSGA-II Pareto Front — Ensemble Weights (Multi-Objective Optimization)</h1>
+
+<p>Source: <code>multi_objective_ensemble.json</code> &middot;
+Algorithm: <b>NSGA-II</b> &middot;
+Pop size: 60 &middot;
+Generations: 80 &middot;
+Objectives: neg_macro_f1, ece, neg_coverage &middot;
+Pareto front size: 60 &middot;
+Runtime: 418.5 s</p>
+
+<div class="knee"><b>Knee point:</b> Knee point (index 26): weights logreg=0.916, svm=0.003, tfidf=0.081; val F1=0.6903, ECE=0.0122, coverage=0.4679; test F1=0.6940, ECE=0.0039.</div>
+
+<h2>Macro-F1 vs Expected Calibration Error</h2>
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" font-family="Helvetica, Arial, sans-serif" font-size="13">
+<rect width="640" height="480" fill="white"/>
+<text x="320.0" y="30" text-anchor="middle" font-size="18" font-weight="bold">NSGA-II Pareto Front: Macro-F1 vs ECE</text>
+<rect x="80" y="50" width="520" height="360" fill="none" stroke="#333" stroke-width="1"/>
+<line x1="184.0" y1="50" x2="184.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="122.0" x2="600" y2="122.0" stroke="#eee" stroke-width="1"/>
+<line x1="288.0" y1="50" x2="288.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="194.0" x2="600" y2="194.0" stroke="#eee" stroke-width="1"/>
+<line x1="392.0" y1="50" x2="392.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="266.0" x2="600" y2="266.0" stroke="#eee" stroke-width="1"/>
+<line x1="496.0" y1="50" x2="496.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="338.0" x2="600" y2="338.0" stroke="#eee" stroke-width="1"/>
+<text x="80.0" y="428" text-anchor="middle" fill="#444">0.007058</text>
+<text x="72" y="54.0" text-anchor="end" fill="#444">0.694</text>
+<text x="184.0" y="428" text-anchor="middle" fill="#444">0.008659</text>
+<text x="72" y="126.0" text-anchor="end" fill="#444">0.6864</text>
+<text x="288.0" y="428" text-anchor="middle" fill="#444">0.01026</text>
+<text x="72" y="198.0" text-anchor="end" fill="#444">0.6788</text>
+<text x="392.0" y="428" text-anchor="middle" fill="#444">0.01186</text>
+<text x="72" y="270.0" text-anchor="end" fill="#444">0.6712</text>
+<text x="496.0" y="428" text-anchor="middle" fill="#444">0.01346</text>
+<text x="72" y="342.0" text-anchor="end" fill="#444">0.6637</text>
+<text x="600.0" y="428" text-anchor="middle" fill="#444">0.01506</text>
+<text x="72" y="414.0" text-anchor="end" fill="#444">0.6561</text>
+<text x="320.0" y="460" text-anchor="middle" font-size="14" font-weight="600">Expected Calibration Error (ECE) — lower is better</text>
+<text x="20" y="240.0" text-anchor="middle" font-size="14" font-weight="600" transform="rotate(-90 20 240.0)">Macro-F1 — higher is better</text>
+<circle cx="518.2717900656046" cy="66.36363636363672" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="103.63636363636365" cy="347.27945736945594" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="532.30740393627" cy="96.56831048179544" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="576.3636363636365" cy="88.16914976444633" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="352.5085910652922" cy="393.6363636363633" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="403.38769134645435" cy="306.61383760672425" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="510.7341455795065" cy="66.36363636363672" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="419.37269603248996" cy="98.51607965267397" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="188.23992502343026" cy="338.2912152443289" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="229.04717275851297" cy="335.2032885100092" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="301.044673539519" cy="382.46281951464135" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="323.1377694470479" cy="387.7075443064702" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="284.4098719150266" cy="321.65441613111756" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="375.44642299281486" cy="326.5380910278569" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="304.2936582318026" cy="365.28444555879577" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="384.2836613558263" cy="309.58774858469974" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="493.1246485473291" cy="92.63476688792355" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="541.7944392377383" cy="71.81739004209606" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="117.73695720087477" cy="344.9896409295447" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="395.39518900343654" cy="392.11615355177474" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="359.91627616369885" cy="364.39132213409994" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="349.4545454545455" cy="390.67195397141677" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="153.47578881599506" cy="340.48601855395276" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="555.5701343330209" cy="85.89833595059298" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="333.9243986254296" cy="372.4579368954453" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="235.15526398000628" cy="332.7424484355821" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="415.5388940955952" cy="84.91970070863977" r="8" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+<text x="427.5388940955952" y="74.91970070863977" fill="#c0392b" font-weight="bold">knee</text>
+<circle cx="558.4942205560764" cy="87.01949088797625" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="333.9243986254296" cy="372.4579368954453" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="139.57013433302095" cy="353.00874912574744" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="133.1371446422993" cy="355.81163646920606" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="483.96251171508914" cy="67.50379392707782" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="450.0431115276477" cy="79.20941157840508" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="357.51202749140907" cy="318.41446838833997" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="525.6144954701656" cy="88.39718127713479" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="445.4945329584505" cy="73.63214083057255" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="271.47891283973763" cy="386.54838411697114" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="429.5095282724149" cy="84.03607859697286" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="459.4651671352703" cy="68.70095936869058" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="499.0378006872853" cy="87.18101320946414" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="167.18650421743206" cy="351.97310600562156" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="249.3858169322087" cy="349.7878040090256" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="490.33052171196505" cy="94.15497697251209" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="475.84004998437996" cy="79.93151136858518" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="466.1580756013747" cy="98.32605339210033" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="527.3039675101531" cy="95.39964897926848" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="282.5254607935021" cy="330.12008603966825" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="126.37925648234932" cy="355.7546285910345" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="435.42268041237116" cy="68.90048694229216" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="437.69696969696975" cy="83.47550112828071" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="163.222742892846" cy="340.48601855395276" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="501.3770696657295" cy="82.23082912152427" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="517.1671352702281" cy="77.60368967655916" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="471.6163698844112" cy="75.11434566304632" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="257.7681974383006" cy="333.8636033729654" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="495.13901905654495" cy="77.77471331107603" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="519.961262105592" cy="72.3209596326156" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="264.26616682286794" cy="331.07971865556357" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="176.9334582942831" cy="349.07520553187555" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="176.9334582942831" cy="349.07520553187555" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+</svg>
+<figcaption>Each point is one Pareto-optimal ensemble weight vector (logreg/svm/tfidf).
+The knee point (highlighted in red) is the trade-off recommended for the thesis headline number.
+Top-left is the best region: high F1, low ECE. The Pareto front shows that the CI layer
+primarily trades a small amount of F1 for a substantial reduction in ECE — which
+is the defensible contribution of the multi-objective framework.</figcaption>
+</figure>
+
+<h2>Macro-F1 vs Coverage</h2>
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" font-family="Helvetica, Arial, sans-serif" font-size="13">
+<rect width="640" height="480" fill="white"/>
+<text x="320.0" y="30" text-anchor="middle" font-size="18" font-weight="bold">NSGA-II Pareto Front: Macro-F1 vs Coverage</text>
+<rect x="80" y="50" width="520" height="360" fill="none" stroke="#333" stroke-width="1"/>
+<line x1="184.0" y1="50" x2="184.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="122.0" x2="600" y2="122.0" stroke="#eee" stroke-width="1"/>
+<line x1="288.0" y1="50" x2="288.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="194.0" x2="600" y2="194.0" stroke="#eee" stroke-width="1"/>
+<line x1="392.0" y1="50" x2="392.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="266.0" x2="600" y2="266.0" stroke="#eee" stroke-width="1"/>
+<line x1="496.0" y1="50" x2="496.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="338.0" x2="600" y2="338.0" stroke="#eee" stroke-width="1"/>
+<text x="80.0" y="428" text-anchor="middle" fill="#444">0.4104</text>
+<text x="72" y="54.0" text-anchor="end" fill="#444">0.694</text>
+<text x="184.0" y="428" text-anchor="middle" fill="#444">0.4245</text>
+<text x="72" y="126.0" text-anchor="end" fill="#444">0.6864</text>
+<text x="288.0" y="428" text-anchor="middle" fill="#444">0.4386</text>
+<text x="72" y="198.0" text-anchor="end" fill="#444">0.6788</text>
+<text x="392.0" y="428" text-anchor="middle" fill="#444">0.4527</text>
+<text x="72" y="270.0" text-anchor="end" fill="#444">0.6712</text>
+<text x="496.0" y="428" text-anchor="middle" fill="#444">0.4667</text>
+<text x="72" y="342.0" text-anchor="end" fill="#444">0.6637</text>
+<text x="600.0" y="428" text-anchor="middle" fill="#444">0.4808</text>
+<text x="72" y="414.0" text-anchor="end" fill="#444">0.6561</text>
+<text x="320.0" y="460" text-anchor="middle" font-size="14" font-weight="600">Coverage (fraction of predictions above τ=0.7)</text>
+<text x="20" y="240.0" text-anchor="middle" font-size="14" font-weight="600" transform="rotate(-90 20 240.0)">Macro-F1 — higher is better</text>
+<circle cx="458.18181818181813" cy="66.36363636363672" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="103.63636363636351" cy="347.27945736945594" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="576.3636363636365" cy="96.56831048179544" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="530.1988636363635" cy="88.16914976444633" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="147.95454545454538" cy="393.6363636363633" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="123.02556818181797" cy="306.61383760672425" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="457.25852272727275" cy="66.36363636363672" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="538.5085227272725" cy="98.51607965267397" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="338.2912152443289" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="335.2032885100092" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="132.25852272727232" cy="382.46281951464135" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="138.72159090909062" cy="387.7075443064702" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="115.63920454545433" cy="321.65441613111756" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="119.33238636363615" cy="326.5380910278569" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="132.25852272727232" cy="365.28444555879577" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="309.58774858469974" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="561.5909090909092" cy="92.63476688792355" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="484.0340909090909" cy="71.81739004209606" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="104.55965909090887" cy="344.9896409295447" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="145.18465909090892" cy="392.11615355177474" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="132.25852272727232" cy="364.39132213409994" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="139.64488636363598" cy="390.67195397141677" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="340.48601855395276" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="526.5056818181818" cy="85.89833595059298" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="133.1818181818181" cy="372.4579368954453" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="119.33238636363615" cy="332.7424484355821" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="504.3465909090907" cy="84.91970070863977" r="8" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+<text x="516.3465909090908" y="74.91970070863977" fill="#c0392b" font-weight="bold">knee</text>
+<circle cx="527.428977272727" cy="87.01949088797625" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="133.1818181818181" cy="372.4579368954453" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="128.5653409090905" cy="353.00874912574744" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="128.5653409090905" cy="355.81163646920606" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="462.7982954545453" cy="67.50379392707782" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="496.03693181818176" cy="79.20941157840508" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="107.32954545454533" cy="318.41446838833997" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="548.6647727272725" cy="88.39718127713479" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="475.7244318181819" cy="73.63214083057255" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="135.95170454545416" cy="386.54838411697114" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="499.73011363636357" cy="84.03607859697286" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="468.33806818181824" cy="68.70095936869058" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="516.3494318181815" cy="87.18101320946414" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="128.5653409090905" cy="351.97310600562156" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="128.5653409090905" cy="349.7878040090256" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="548.6647727272725" cy="94.15497697251209" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="500.6534090909089" cy="79.93151136858518" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="540.3551136363636" cy="98.32605339210033" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="573.59375" cy="95.39964897926848" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="104.55965909090887" cy="330.12008603966825" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="126.7187499999998" cy="355.7546285910345" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="472.03125000000006" cy="68.90048694229216" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="509.8863636363637" cy="83.47550112828071" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="121.17897727272685" cy="340.48601855395276" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="511.7329545454544" cy="82.23082912152427" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="488.6505681818181" cy="77.60368967655916" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="478.49431818181796" cy="75.11434566304632" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="333.8636033729654" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="493.26704545454527" cy="77.77471331107603" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="481.26420454545445" cy="72.3209596326156" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="104.55965909090887" cy="331.07971865556357" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="127.64204545454515" cy="349.07520553187555" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="125.79545454545445" cy="349.07520553187555" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+</svg>
+<figcaption>Coverage = fraction of predictions exceeding the confidence threshold τ=0.7.
+More coverage means fewer abstentions. This view shows that raising coverage beyond
+the knee costs F1 — another real trade-off for the selective-prediction story.</figcaption>
+</figure>
+
+<h2>ECE vs Coverage</h2>
+<figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" font-family="Helvetica, Arial, sans-serif" font-size="13">
+<rect width="640" height="480" fill="white"/>
+<text x="320.0" y="30" text-anchor="middle" font-size="18" font-weight="bold">NSGA-II Pareto Front: ECE vs Coverage</text>
+<rect x="80" y="50" width="520" height="360" fill="none" stroke="#333" stroke-width="1"/>
+<line x1="184.0" y1="50" x2="184.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="122.0" x2="600" y2="122.0" stroke="#eee" stroke-width="1"/>
+<line x1="288.0" y1="50" x2="288.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="194.0" x2="600" y2="194.0" stroke="#eee" stroke-width="1"/>
+<line x1="392.0" y1="50" x2="392.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="266.0" x2="600" y2="266.0" stroke="#eee" stroke-width="1"/>
+<line x1="496.0" y1="50" x2="496.0" y2="410" stroke="#eee" stroke-width="1"/>
+<line x1="80" y1="338.0" x2="600" y2="338.0" stroke="#eee" stroke-width="1"/>
+<text x="80.0" y="428" text-anchor="middle" fill="#444">0.4104</text>
+<text x="72" y="54.0" text-anchor="end" fill="#444">0.01506</text>
+<text x="184.0" y="428" text-anchor="middle" fill="#444">0.4245</text>
+<text x="72" y="126.0" text-anchor="end" fill="#444">0.01346</text>
+<text x="288.0" y="428" text-anchor="middle" fill="#444">0.4386</text>
+<text x="72" y="198.0" text-anchor="end" fill="#444">0.01186</text>
+<text x="392.0" y="428" text-anchor="middle" fill="#444">0.4527</text>
+<text x="72" y="270.0" text-anchor="end" fill="#444">0.01026</text>
+<text x="496.0" y="428" text-anchor="middle" fill="#444">0.4667</text>
+<text x="72" y="342.0" text-anchor="end" fill="#444">0.008659</text>
+<text x="600.0" y="428" text-anchor="middle" fill="#444">0.4808</text>
+<text x="72" y="414.0" text-anchor="end" fill="#444">0.007058</text>
+<text x="320.0" y="460" text-anchor="middle" font-size="14" font-weight="600">Coverage (fraction of predictions above τ=0.7)</text>
+<text x="20" y="240.0" text-anchor="middle" font-size="14" font-weight="600" transform="rotate(-90 20 240.0)">Expected Calibration Error (ECE) — lower is better</text>
+<circle cx="458.18181818181813" cy="353.41893158388007" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="103.63636363636351" cy="66.36363636363637" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="576.3636363636365" cy="363.13589503280235" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="530.1988636363635" cy="393.6363636363637" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="147.95454545454538" cy="238.65979381443304" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="123.02556818181797" cy="273.8837863167761" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="457.25852272727275" cy="348.20056232427373" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="538.5085227272725" cy="284.95032802249307" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="124.93533270852865" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="153.18650421743206" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="132.25852272727232" cy="203.0309278350516" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="138.72159090909062" cy="218.32614807872545" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="115.63920454545433" cy="191.51452671040303" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="119.33238636363615" cy="254.539831302718" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="132.25852272727232" cy="205.28022492970953" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="260.65791940018744" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="561.5909090909092" cy="336.00937207122786" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="484.0340909090909" cy="369.70384254920344" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="104.55965909090887" cy="76.12558575445176" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="145.18465909090892" cy="268.3505154639176" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="132.25852272727232" cy="243.78819119025306" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="139.64488636363598" cy="236.5454545454546" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="100.86785379568889" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="526.5056818181818" cy="379.240862230553" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="133.1818181818181" cy="225.79381443298973" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="119.33238636363615" cy="157.41518275538897" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="504.3465909090907" cy="282.29615745079667" r="8" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+<text x="516.3465909090908" y="272.29615745079667" fill="#c0392b" font-weight="bold">knee</text>
+<circle cx="527.428977272727" cy="381.26522961574517" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="133.1818181818181" cy="225.79381443298973" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="128.5653409090905" cy="91.24086223055295" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="128.5653409090905" cy="86.78725398313027" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="462.7982954545453" cy="329.66635426429247" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="496.03693181818176" cy="306.1836925960638" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="107.32954545454533" cy="242.12371134020626" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="548.6647727272725" cy="358.50234301780694" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="475.7244318181819" cy="303.03467666354265" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="135.95170454545416" cy="182.56232427366453" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="499.73011363636357" cy="291.9681349578257" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="468.33806818181824" cy="312.7066541705717" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="516.3494318181815" cy="340.1030927835052" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="128.5653409090905" cy="110.35988753514528" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="128.5653409090905" cy="167.26710402999066" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="548.6647727272725" cy="334.07497656982196" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="500.6534090909089" cy="324.0431115276477" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="540.3551136363636" cy="317.3402061855671" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="573.59375" cy="359.6719775070291" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="104.55965909090887" cy="190.20993439550145" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="126.7187499999998" cy="82.10871602624184" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="472.03125000000006" cy="296.0618556701031" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="509.8863636363637" cy="297.6363636363637" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="121.17897727272685" cy="107.61574507966259" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="511.7329545454544" cy="341.7225866916589" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="488.6505681818181" cy="352.6541705716964" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="478.49431818181796" cy="321.11902530459236" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="120.2556818181815" cy="173.07029053420814" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="493.26704545454527" cy="337.40393626991573" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="481.26420454545445" cy="354.5885660731022" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="104.55965909090887" cy="177.56888472352392" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="127.64204545454515" cy="117.10777881911908" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+<circle cx="125.79545454545445" cy="117.10777881911908" r="4" fill="#3498db" fill-opacity="0.72" stroke="#2980b9" stroke-width="1"/>
+</svg>
+<figcaption>The two "operational" objectives that have no direct tension with F1.
+Together with the first plot they give the examiner a three-axis view of the
+Pareto surface projected onto all three pairs.</figcaption>
+</figure>
+
+</body>
+</html>

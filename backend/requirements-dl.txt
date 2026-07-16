@@ -1,0 +1,24 @@
+# Deep-learning extras for Hybrid-DL and Transformer engines.
+#
+# Why this is separate
+# --------------------
+# PyTorch wheels can be sensitive to the NumPy ABI version. numpy/pandas here
+# are pinned to the exact same versions as backend/requirements.txt (numpy
+# 1.26.4, pandas 3.0.0) so both files can be installed into a single venv —
+# install either file first, then the other:
+#
+#   python -m venv venv
+#   source venv/bin/activate
+#   pip install -r backend/requirements.txt
+#   pip install -r backend/requirements-dl.txt
+
+numpy==1.26.4
+pandas==3.0.0
+scikit-learn==1.8.0
+# torch<2.6.0 is affected by CVE-2025-32434 (torch.load with
+# weights_only=True can still execute arbitrary code for certain crafted
+# checkpoints). 2.6.2 is the latest 2.6.x patch release as of writing.
+torch==2.6.2
+transformers==4.57.1
+accelerate==1.2.1
+sentencepiece==0.2.0

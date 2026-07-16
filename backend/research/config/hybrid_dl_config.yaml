@@ -1,0 +1,185 @@
+# Hybrid CNN-BiLSTM-Attention Model Configuration
+# Master's Thesis - Computational Intelligence
+# YouTube Comment Sentiment Analysis
+
+# Model Architecture
+model:
+  embedding_dim: 300  # GloVe 300d embeddings
+  vocab_size: 20000   # Maximum vocabulary size
+  max_len: 200        # Maximum sequence length
+  num_classes: 3      # Positive, Neutral, Negative
+
+  # CNN Branch
+  cnn:
+    filter_sizes: [3, 4, 5]  # N-gram sizes to capture
+    num_filters: 128          # Filters per size (total: 384 features)
+    dropout: 0.3
+
+  # BiLSTM Branch
+  bilstm:
+    hidden_size: 128   # Hidden state size (256 total bidirectional)
+    num_layers: 2      # Stacked LSTM layers
+    dropout: 0.3       # Dropout between layers
+    bidirectional: true
+
+  # Multi-Head Attention
+  attention:
+    num_heads: 4       # Number of attention heads
+    dropout: 0.1       # Attention dropout
+
+  # Classification Head
+  classifier:
+    hidden_sizes: [256, 128]  # Dense layer dimensions
+    dropout: [0.5, 0.4]       # Dropout per layer
+    activation: 'relu'
+
+# Training Configuration
+training:
+  # Optimization
+  batch_size: 32
+  max_epochs: 50
+  learning_rate: 0.001
+  weight_decay: 0.0001  # L2 regularization
+  gradient_clip: 5.0    # Gradient clipping threshold
+
+  # Optimizer
+  optimizer: 'adamw'     # 'adam', 'adamw', 'sgd'
+  betas: [0.9, 0.999]    # Adam beta parameters
+  eps: 1.0e-8            # Adam epsilon
+
+  # Learning Rate Scheduler
+  lr_scheduler:
+    type: 'reduce_on_plateau'  # 'reduce_on_plateau', 'step', 'cosine'
+    mode: 'min'                # Minimize validation loss
+    factor: 0.5                # Reduce LR by half
+    patience: 3                # Epochs to wait
+    min_lr: 1.0e-6             # Minimum learning rate
+
+  # Early Stopping
+  early_stopping:
+    patience: 7          # Epochs without improvement
+    min_delta: 0.0001    # Minimum change to qualify as improvement
+    monitor: 'val_loss'  # Metric to monitor
+
+  # Loss Function
+  loss:
+    type: 'cross_entropy'
+    class_weights: 'balanced'  # Handle class imbalance, or [1.0, 1.0, 1.0]
+    label_smoothing: 0.0       # Label smoothing (0.0 = disabled)
+
+# Data Configuration
+data:
+  # Data Splits
+  train_ratio: 0.6
+  val_ratio: 0.2
+  test_ratio: 0.2
+  random_seed: 42
+  stratify: true  # Stratified sampling
+
+  # Preprocessing
+  max_len: 200           # Maximum sequence length
+  min_len: 3             # Minimum sequence length (words)
+  vocab_max_size: 20000  # Maximum vocabulary size
+  vocab_min_freq: 2      # Minimum word frequency
+
+  # Data Loading
+  num_workers: 4         # Parallel data loading workers
+  pin_memory: true       # Pin memory for GPU transfer
+  shuffle_train: true
+  drop_last: false
+
+# Embedding Configuration
+embeddings:
+  type: 'glove'         # 'glove', 'fasttext', 'word2vec', 'random'
+  path: './embeddings/glove.6B.300d.txt'
+  dim: 300
+  trainable: true       # Fine-tune embeddings during training
+  freeze_epochs: 0      # Epochs to freeze embeddings (0 = no freezing)
+
+  # Cache settings
+  use_cache: true
+  cache_dir: './model/hybrid_dl'
+
+# Logging & Checkpointing
+logging:
+  # TensorBoard
+  tensorboard: true
+  tensorboard_dir: './model/hybrid_dl/training_logs'
+  log_interval: 10      # Log every N batches
+
+  # Console Logging
+  verbose: true
+  print_interval: 50    # Print every N batches
+
+  # Checkpointing
+  save_best: true        # Save best model based on validation metric
+  save_last: true        # Save final epoch model
+  save_interval: 5       # Save checkpoint every N epochs
+  checkpoint_dir: './model/hybrid_dl'
+
+  # Metrics to track
+  metrics:
+    - 'accuracy'
+    - 'f1_macro'
+    - 'f1_per_class'
+    - 'precision_macro'
+    - 'recall_macro'
+    - 'loss'
+
+# Evaluation Configuration
+evaluation:
+  # Cross-Validation
+  cv_folds: 10
+  cv_stratified: true
+  cv_random_state: 42
+
+  # Bootstrap Confidence Intervals
+  bootstrap_samples: 1000
+  bootstrap_alpha: 0.05  # 95% CI
+
+  # Metrics
+  primary_metric: 'f1_macro'
+  compute_confusion_matrix: true
+  save_predictions: true
+
+# Hardware Configuration
+hardware:
+  device: 'auto'      # 'cuda', 'cpu', 'mps', or 'auto'
+  mixed_precision: false  # Use AMP for faster training (GPU only)
+  cudnn_benchmark: true   # cuDNN auto-tuner
+  deterministic: false    # Deterministic mode (slower but reproducible)
+
+# Reproducibility
+reproducibility:
+  seed: 42
+  set_seed_everywhere: true
+  cudnn_deterministic: false
+  cudnn_benchmark: true
+
+# Meta-Learner Configuration (for stacked ensemble)
+meta_learner:
+  type: 'logistic_regression'  # 'logistic_regression', 'xgboost', 'lightgbm'
+  base_models:
+    - 'logreg'
+    - 'svm'
+    - 'tfidf'
+    - 'hybrid_dl'
+
+  # Cross-Validation for Meta-Learning
+  n_folds: 5
+  random_state: 42
+
+  # Logistic Regression Parameters
+  lr_params:
+    C: 1.0
+    max_iter: 1000
+    class_weight: 'balanced'
+    solver: 'lbfgs'
+
+  # XGBoost Parameters (if type='xgboost')
+  xgb_params:
+    max_depth: 3
+    n_estimators: 100
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8

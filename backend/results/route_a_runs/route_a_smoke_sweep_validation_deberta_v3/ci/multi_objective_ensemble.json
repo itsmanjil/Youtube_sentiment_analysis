@@ -1,0 +1,82 @@
+{
+  "algorithm": "NSGA-II",
+  "objectives": [
+    "neg_macro_f1",
+    "ece",
+    "neg_coverage"
+  ],
+  "confidence_threshold": 0.7,
+  "population_size": 8,
+  "generations": 8,
+  "models": [
+    "deberta_v3",
+    "logreg",
+    "svm"
+  ],
+  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_test_deberta_v3_logreg_svm.npz",
+  "runtime_s": 0.24,
+  "evaluations": 72,
+  "pareto_front_size": 4,
+  "pareto_front": [
+    {
+      "weights": {
+        "deberta_v3": 0.691492,
+        "logreg": 0.176385,
+        "svm": 0.132122
+      },
+      "macro_f1": 0.60962,
+      "ece": 0.070558,
+      "coverage": 0.166667
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.041688,
+        "logreg": 0.79887,
+        "svm": 0.159442
+      },
+      "macro_f1": 0.688889,
+      "ece": 0.156429,
+      "coverage": 0.466667
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.663132,
+        "logreg": 0.140076,
+        "svm": 0.196792
+      },
+      "macro_f1": 0.606867,
+      "ece": 0.066835,
+      "coverage": 0.166667
+    },
+    {
+      "weights": {
+        "deberta_v3": 0.663132,
+        "logreg": 0.140076,
+        "svm": 0.196792
+      },
+      "macro_f1": 0.606867,
+      "ece": 0.066835,
+      "coverage": 0.166667
+    }
+  ],
+  "knee_point": {
+    "index": 0,
+    "weights": {
+      "deberta_v3": 0.691492,
+      "logreg": 0.176385,
+      "svm": 0.132122
+    },
+    "val": {
+      "macro_f1": 0.60962,
+      "ece": 0.070558,
+      "coverage": 0.166667
+    },
+    "test": {
+      "macro_f1": 0.697143,
+      "ece": 0.118237,
+      "coverage": 0.166667
+    }
+  },
+  "pso_baseline_val_f1": null
+}

@@ -1,0 +1,41 @@
+{
+  "splits": {
+    "train": {
+      "path": "backend/data/train.csv",
+      "rows": 516886,
+      "unique_texts": 516886,
+      "duplicate_rows": 0
+    },
+    "val": {
+      "path": "backend/data/val.csv",
+      "rows": 128854,
+      "unique_texts": 128854,
+      "duplicate_rows": 0
+    },
+    "test": {
+      "path": "backend/data/test.csv",
+      "rows": 165110,
+      "unique_texts": 165110,
+      "duplicate_rows": 0
+    }
+  },
+  "overlap_unique_texts": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+  },
+  "overlap_rows": {
+    "val_in_train": {
+      "rows": 0,
+      "rate": 0.0
+    },
+    "test_in_train": {
+      "rows": 0,
+      "rate": 0.0
+    },
+    "test_in_val": {
+      "rows": 0,
+      "rate": 0.0
+    }
+  }
+}
