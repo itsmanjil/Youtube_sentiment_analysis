@@ -11,7 +11,7 @@ Key Features:
     - Performance monitoring and logging
 
 Usage:
-    >>> from app.sentiment_engines import LogRegSentimentEngine, SVMSentimentEngine
+    >>> from src.sentiment.engines import LogRegSentimentEngine, SVMSentimentEngine
     >>> from research.computational_intelligence.fuzzy import FuzzySentimentEngine
     >>>
     >>> # Initialize fuzzy engine with existing engines
@@ -267,7 +267,7 @@ class FuzzySentimentEngine:
 
     Example
     -------
-    >>> from app.sentiment_engines import LogRegSentimentEngine, SVMSentimentEngine
+    >>> from src.sentiment.engines import LogRegSentimentEngine, SVMSentimentEngine
     >>>
     >>> fuzzy_engine = FuzzySentimentEngine(
     ...     base_engines={
@@ -347,7 +347,7 @@ class FuzzySentimentEngine:
         """
         # Import sentiment engines dynamically
         try:
-            from app.sentiment_engines import (
+            from src.sentiment.engines import (
                 TFIDFSentimentEngine,
                 LogRegSentimentEngine,
                 SVMSentimentEngine,
@@ -359,7 +359,7 @@ class FuzzySentimentEngine:
             }
         except ImportError:
             engine_classes = {}
-            logger.warning("Could not import sentiment engines from app")
+            logger.warning("Could not import sentiment engines from src.sentiment.engines")
 
         base_engines = {}
         for config in engine_configs:

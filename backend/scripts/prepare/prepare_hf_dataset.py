@@ -95,12 +95,12 @@ def _apply_youtube_preprocessing(
         The canonical `text` column is the dedupe/split column.
         stats includes filter counts (spam/language/too_short/empty_after_processing).
     """
-    # Make backend/ importable for `from app...` imports even when executed from repo root.
+    # Make backend/ importable for `from src...` imports even when executed from repo root.
     backend_dir = _backend_dir()
     if str(backend_dir) not in sys.path:
         sys.path.insert(0, str(backend_dir))
 
-    from app.youtube_preprocessor import YouTubePreprocessor
+    from src.preprocessing.youtube import YouTubePreprocessor
 
     pre = YouTubePreprocessor()
 

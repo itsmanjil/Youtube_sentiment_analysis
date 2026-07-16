@@ -22,7 +22,7 @@ import pandas as pd
 BACKEND = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BACKEND))
 
-from app.youtube_preprocessor import YouTubePreprocessor
+from src.preprocessing.youtube import YouTubePreprocessor
 
 SILVER_CSV = BACKEND / "data" / "gold_set_silver_labeled.csv"
 OUT_CSV = BACKEND / "data" / "gold_set_split_membership.csv"

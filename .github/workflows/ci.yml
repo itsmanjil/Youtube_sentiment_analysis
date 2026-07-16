@@ -5,38 +5,14 @@ on:
   push:
 
 jobs:
-  backend:
-    runs-on: ubuntu-latest
-    env:
-      DJANGO_ENV: test
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-          cache-dependency-path: backend/requirements.txt
-      - name: Install backend dependencies
-        run: python -m pip install --upgrade pip && pip install -r requirements.txt
-      - name: Django system checks
-        run: python manage.py check
-      - name: Backend test suite
-        run: python manage.py test app app_api users
-
   research-smoke:
-    # Classical-model research/ci scripts are never exercised by `manage.py
-    # test` (that suite mocks the sentiment engines) and have no other CI
-    # coverage, so a refactor of src/sentiment or src/preprocessing can
-    # silently break them. Run the lightweight ones end-to-end (small sample
-    # sizes) against the models/data already committed in the repo, so a
-    # broken import or signature change fails the build instead of only
-    # surfacing the next time someone runs the script by hand.
+    # Classical-model research/ci scripts have no other CI coverage, so a
+    # refactor of src/sentiment or src/preprocessing can silently break them.
+    # Run the lightweight ones end-to-end (small sample sizes) against the
+    # models/data already committed in the repo, so a broken import or
+    # signature change fails the build instead of only surfacing the next
+    # time someone runs the script by hand.
     runs-on: ubuntu-latest
-    env:
-      DJANGO_ENV: test
     defaults:
       run:
         working-directory: backend
@@ -59,19 +35,23 @@ jobs:
           --sample_val 200 --sample_test 200
           --output /tmp/research-smoke/
 
-  frontend:
+  notebooks-smoke:
+    # The notebooks are the thesis defense artifact — they must always
+    # execute cleanly against the committed results/figures. This catches a
+    # moved/renamed results file or a broken _common.py path before it's
+    # discovered live in the viva.
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend
+        working-directory: notebooks
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install frontend dependencies
-        run: npm ci
-      - name: Frontend test suite
-        run: npm test -- --run
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && pip install -r ../backend/requirements.txt
+      - name: Execute all notebooks
+        run: python -m jupyter nbconvert --to notebook --execute --output-dir /tmp/notebooks-smoke *.ipynb

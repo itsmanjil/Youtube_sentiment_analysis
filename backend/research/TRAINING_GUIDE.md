@@ -187,24 +187,14 @@ For thesis-level experiments:
 
 ### Preparing YouTube Comments
 
-If using the existing Django backend:
+The canonical dataset already lives under `backend/data/` (`train.csv`, `val.csv`,
+`test.csv`, produced by `scripts/prepare/prepare_hf_dataset.py`). To build a
+custom split from a labelled CSV:
 
 ```python
-# Export YouTube comments to CSV
 import pandas as pd
-from app.models import YouTubeComment
 
-# Get labeled comments
-comments = YouTubeComment.objects.filter(sentiment__isnull=False)
-
-data = []
-for comment in comments:
-    data.append({
-        'text': comment.text,
-        'label': comment.sentiment  # 'positive', 'negative', or 'neutral'
-    })
-
-df = pd.DataFrame(data)
+df = pd.read_csv('data/your_labeled_comments.csv')  # columns: text, label
 
 # Stratified split
 from sklearn.model_selection import train_test_split
@@ -813,7 +803,7 @@ To use the trained model with the existing `evaluation_framework.py`:
 
 ```python
 from research.evaluation_framework import ThesisEvaluationFramework
-from app.deep_models import HybridDLSentimentEngine
+from src.sentiment.engines.hybrid_dl_engine import HybridDLSentimentEngine
 import numpy as np
 
 # Load trained model
