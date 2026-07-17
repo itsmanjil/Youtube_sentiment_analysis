@@ -34,7 +34,6 @@ class OptimizerType(Enum):
     """Optimization algorithm."""
     PSO = "pso"
     ADAPTIVE_PSO = "adaptive_pso"
-    MOPSO = "mopso"
     NSGA2 = "nsga2"
     GRID_SEARCH = "grid_search"
     NONE = "none"

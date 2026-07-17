@@ -47,7 +47,8 @@ class TransformerSentimentEngine(BaseSentimentEngine):
     ----------
     model_name_or_path : str, optional
         HuggingFace model name or path to local model.
-        Default: 'bert-base-uncased'
+        Default: the 'deberta_v3' preset (the only preset with a shipped
+        fine-tuned checkpoint — see MODEL_PRESETS).
     num_labels : int, optional
         Number of sentiment classes.
         Default: 3 (Negative, Neutral, Positive)
@@ -94,14 +95,16 @@ class TransformerSentimentEngine(BaseSentimentEngine):
     - F1-Macro: 84-91%
     """
 
+    # Only presets with a fine-tuned checkpoint shipped under
+    # backend/models/transformers/<preset> are registered here — see
+    # src/sentiment/factory.py::_TRANSFORMER_ENGINE_ALIASES, which mirrors
+    # this same restriction at the factory layer. Other encoder presets
+    # (bert, roberta, modernbert, xlm_v, mdeberta_v3) can still be trained via
+    # research/transformers/train_encoder.py (research/transformers/model_registry.py
+    # has the full encoder registry); add a preset back here once a fine-tuned
+    # checkpoint exists on disk for it.
     MODEL_PRESETS = {
-        "bert": "bert-base-uncased",
-        "transformer": "bert-base-uncased",
-        "roberta": "cardiffnlp/twitter-roberta-base-sentiment-latest",
-        "modernbert": "answerdotai/ModernBERT-base",
         "deberta_v3": "microsoft/deberta-v3-base",
-        "xlm_v": "facebook/xlm-v-base",
-        "mdeberta_v3": "microsoft/mdeberta-v3-base",
     }
 
     def __init__(
@@ -228,14 +231,17 @@ class TransformerSentimentEngine(BaseSentimentEngine):
             self.is_fine_tuned = False
             return self.MODEL_PRESETS[self.model_preset]
 
-        local_bert_path = Config.get_model_path("bert")
-        if local_bert_path and Path(local_bert_path).exists():
-            self.model_preset = "bert"
-            return str(local_bert_path)
+        # No explicit path/preset given at all — default to the one preset
+        # that actually ships a fine-tuned checkpoint (see MODEL_PRESETS).
+        default_preset = "deberta_v3"
+        local_default_path = Config.get_model_path(default_preset)
+        if local_default_path and Path(local_default_path).exists():
+            self.model_preset = default_preset
+            return str(local_default_path)
 
-        self.model_preset = "bert"
+        self.model_preset = default_preset
         self.is_fine_tuned = False
-        return self.MODEL_PRESETS["bert"]
+        return self.MODEL_PRESETS[default_preset]
 
     def _resolve_temperature_artifact_path(
         self,
@@ -302,6 +308,14 @@ class TransformerSentimentEngine(BaseSentimentEngine):
         """
         return self.batch_analyze([text])[0]
 
+    # The analyze endpoint allows up to 2000 comments per request (see
+    # app/views.py's max_comments bound); tokenizing and running all of them
+    # through the model as a single tensor risks exhausting host memory
+    # (especially on CPU, where a batch this large can need tens of GB of
+    # attention activations). Mini-batching keeps peak memory bounded
+    # regardless of input size.
+    _INFERENCE_BATCH_SIZE = 32
+
     def batch_analyze(self, texts: List[str]) -> List[SentimentResult]:
         """
         Analyze multiple texts efficiently using batching.
@@ -319,6 +333,14 @@ class TransformerSentimentEngine(BaseSentimentEngine):
         if not texts:
             return []
 
+        results: List[SentimentResult] = []
+        for start in range(0, len(texts), self._INFERENCE_BATCH_SIZE):
+            chunk = texts[start : start + self._INFERENCE_BATCH_SIZE]
+            results.extend(self._infer_chunk(chunk))
+        return results
+
+    def _infer_chunk(self, texts: List[str]) -> List[SentimentResult]:
+        """Run inference on a single mini-batch (see _INFERENCE_BATCH_SIZE)."""
         import torch.nn.functional as F
 
         # Tokenize

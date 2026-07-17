@@ -21,11 +21,7 @@ Available Engines
 - 'meta_learner': Stacked ensemble (learns combination rules)
 - 'fuzzy_ensemble': Fuzzy inference ensemble (uncertainty-aware)
 - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
-- 'bert': BERT transformer preset
-- 'modernbert': ModernBERT transformer preset
-- 'deberta_v3': DeBERTa-v3 transformer preset
-- 'xlm_v': XLM-V transformer preset
-- 'mdeberta_v3': mDeBERTa-v3 transformer preset
+- 'deberta_v3': DeBERTa-v3 transformer preset (requires transformers)
 """
 
 from typing import Any, Dict, List, Optional
@@ -37,14 +33,12 @@ from .engines.ensemble_engine import EnsembleSentimentEngine
 from .engines.meta_learner_engine import MetaLearnerSentimentEngine
 from .engines.fuzzy_engine import FuzzyEnsembleSentimentEngine
 
+# Only presets with a fine-tuned checkpoint under backend/models/transformers/
+# are registered here — see TransformerSentimentEngine.MODEL_PRESETS for the
+# same restriction and why (no checkpoint means every request fails with "no
+# fine-tuned checkpoint found").
 _TRANSFORMER_ENGINE_ALIASES = {
-    "bert",
-    "transformer",
-    "roberta",
-    "modernbert",
     "deberta_v3",
-    "xlm_v",
-    "mdeberta_v3",
 }
 
 
@@ -81,7 +75,7 @@ def list_available_engines() -> List[str]:
     Examples
     --------
     >>> list_available_engines()
-    ['tfidf', 'logreg', 'svm', 'ensemble', 'meta_learner', 'hybrid_dl', 'bert']
+    ['tfidf', 'logreg', 'svm', 'ensemble', 'meta_learner', 'hybrid_dl', 'deberta_v3']
     """
     engines = list(_ENGINE_REGISTRY.keys())
 
@@ -115,11 +109,7 @@ def get_sentiment_engine(engine_type: str = "logreg", **kwargs) -> Any:
         - 'meta_learner': Stacked ensemble
         - 'fuzzy_ensemble': Fuzzy inference ensemble (uncertainty-aware)
         - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
-        - 'bert': BERT transformer preset (requires transformers)
-        - 'modernbert': ModernBERT transformer preset
-        - 'deberta_v3': DeBERTa-v3 transformer preset
-        - 'xlm_v': XLM-V transformer preset
-        - 'mdeberta_v3': mDeBERTa-v3 transformer preset
+        - 'deberta_v3': DeBERTa-v3 transformer preset (requires transformers)
     **kwargs
         Additional arguments passed to the engine constructor.
 
@@ -154,8 +144,8 @@ def get_sentiment_engine(engine_type: str = "logreg", **kwargs) -> Any:
     ...     defuzz_method='centroid',
     ... )
 
-    >>> # BERT transformer
-    >>> engine = get_sentiment_engine('bert', model_name_or_path='bert-base-uncased')
+    >>> # DeBERTa-v3 transformer
+    >>> engine = get_sentiment_engine('deberta_v3')
     """
     engine_type = engine_type.lower().strip()
 
@@ -211,7 +201,7 @@ def get_base_engine(engine_type: str = "logreg", **kwargs) -> Any:
         - 'logreg': TF-IDF + Logistic Regression (default)
         - 'svm': TF-IDF + Linear SVM
         - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
-        - 'bert' / 'modernbert' / 'deberta_v3' / 'xlm_v' / 'mdeberta_v3': transformer presets
+        - 'deberta_v3': transformer preset (requires transformers)
     **kwargs
         Additional arguments passed to the engine constructor.
 

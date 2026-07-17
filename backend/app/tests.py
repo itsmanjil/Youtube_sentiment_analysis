@@ -325,9 +325,9 @@ class YouTubeAnalysisAPITests(APITestCase):
         self._mock_fetcher_with_comments(mock_fetcher, comments=MOCK_COMMENTS_RAW[:3])
 
         mock_engine = MockSentimentEngine()
-        mock_engine.model_preset = "modernbert"
-        mock_engine.model_source = "answerdotai/ModernBERT-base"
-        mock_engine.model_artifact = "ModernBERT-base"
+        mock_engine.model_preset = "deberta_v3"
+        mock_engine.model_source = "microsoft/deberta-v3-base"
+        mock_engine.model_artifact = "deberta_v3"
         mock_engine.calibration_applied = False
         mock_engine.calibration_profile = "auto"
         mock_engine.temperature = 1.0
@@ -338,7 +338,7 @@ class YouTubeAnalysisAPITests(APITestCase):
 
         data = {
             "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
-            "sentiment_model": "modernbert",
+            "sentiment_model": "deberta_v3",
             "filter_spam": False,
             "filter_language": False,
         }
@@ -346,12 +346,12 @@ class YouTubeAnalysisAPITests(APITestCase):
         response = self.client.post(self.analyze_url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["model_used"], "MODERNBERT")
+        self.assertEqual(response.data["model_used"], "DEBERTA_V3")
         self.assertEqual(response.data["analysis_meta"]["model_family"], "transformer")
         self.assertEqual(response.data["analysis_meta"]["preprocessing_profile"], "transformer")
-        self.assertEqual(response.data["analysis_meta"]["transformer"]["preset"], "modernbert")
+        self.assertEqual(response.data["analysis_meta"]["transformer"]["preset"], "deberta_v3")
         self.assertEqual(response.data["analysis_meta"]["transformer"]["calibration_profile"], "auto")
-        mock_get_engine.assert_called_with("modernbert", calibration_profile="auto")
+        mock_get_engine.assert_called_with("deberta_v3", calibration_profile="auto")
 
     def test_analyze_video_missing_url(self):
         data = {"max_comments": 100}
@@ -646,7 +646,10 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
         body = response.json()
         self.assertEqual(body['status'], 'unhealthy')
-        self.assertIn('missing', body['checks']['model_artifacts'])
+        # The response must never include server-side filesystem paths — see
+        # the comment on app/views.py::index. Missing-artifact detail is
+        # logged server-side only.
+        self.assertEqual(body['checks']['model_artifacts'], 'error')
 
 
 class YouTubeSearchAPITests(APITestCase):

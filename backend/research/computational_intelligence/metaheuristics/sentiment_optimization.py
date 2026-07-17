@@ -24,7 +24,6 @@ import time
 
 from .base import OptimizationProblem, ObjectiveType, Solution, OptimizationResult
 from .pso import ParticleSwarmOptimizer, PSOConfig
-from .mopso import MultiObjectivePSO, MOPSOConfig
 from .nsga2 import NSGA2, NSGA2Config
 
 
@@ -429,7 +428,7 @@ class HyperparameterTuner:
         objective_fn : callable
             Function that takes params dict and returns objective value(s)
         algorithm : str
-            'pso', 'mopso', or 'nsga2'
+            'pso' or 'nsga2'
         n_objectives : int
             Number of objectives (1 for single, >1 for multi)
         """
@@ -524,14 +523,6 @@ class HyperparameterTuner:
         # Select optimizer
         if self.algorithm == 'pso':
             optimizer = ParticleSwarmOptimizer(
-                problem=problem,
-                population_size=self.population_size,
-                max_iterations=self.max_iterations,
-                seed=self.seed,
-                verbose=False
-            )
-        elif self.algorithm == 'mopso':
-            optimizer = MultiObjectivePSO(
                 problem=problem,
                 population_size=self.population_size,
                 max_iterations=self.max_iterations,

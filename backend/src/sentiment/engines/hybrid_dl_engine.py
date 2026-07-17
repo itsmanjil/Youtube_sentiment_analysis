@@ -290,6 +290,12 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         """
         return self.batch_analyze([text])[0]
 
+    # The analyze endpoint allows up to 2000 comments per request (see
+    # app/views.py's max_comments bound); running all of them through the
+    # model as a single tensor risks exhausting host memory (especially on
+    # CPU). Mini-batching keeps peak memory bounded regardless of input size.
+    _INFERENCE_BATCH_SIZE = 32
+
     def batch_analyze(self, texts: List[str]) -> List[SentimentResult]:
         """
         Analyze multiple texts efficiently using batching.
@@ -307,6 +313,14 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         if not texts:
             return []
 
+        results: List[SentimentResult] = []
+        for start in range(0, len(texts), self._INFERENCE_BATCH_SIZE):
+            chunk = texts[start : start + self._INFERENCE_BATCH_SIZE]
+            results.extend(self._infer_chunk(chunk))
+        return results
+
+    def _infer_chunk(self, texts: List[str]) -> List[SentimentResult]:
+        """Run inference on a single mini-batch (see _INFERENCE_BATCH_SIZE)."""
         token_lists = [self._tokenize(text) for text in texts]
         encoded = [self._encode(tokens) for tokens in token_lists]
         token_ids = [row[0] for row in encoded]

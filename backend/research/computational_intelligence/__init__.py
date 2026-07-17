@@ -6,9 +6,8 @@ sentiment analysis:
 
 - Fuzzy Logic: uncertainty-aware ensemble fusion (see .fuzzy)
 - Metaheuristics: PSO and NSGA-II ensemble weight optimization (see
-  .metaheuristics — MOPSO and the optimizer wrapper classes there are
-  exploratory scaffolding, not used in reported results; see that
-  submodule's docstring)
+  .metaheuristics — the optimizer wrapper classes there are exploratory
+  scaffolding, not used in reported results; see that submodule's docstring)
 
 An earlier revision of this docstring additionally claimed "Neural
 Architecture Search: Evolutionary architecture optimization" and
@@ -25,7 +24,6 @@ Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis
 from .fuzzy import FuzzySentimentClassifier, FuzzyEvaluator
 from .metaheuristics import (
     ParticleSwarmOptimizer,
-    MultiObjectivePSO,
     NSGA2,
     EnsembleWeightOptimizer,
     HyperparameterTuner,
@@ -37,7 +35,6 @@ __all__ = [
     'FuzzyEvaluator',
     # Metaheuristics
     'ParticleSwarmOptimizer',
-    'MultiObjectivePSO',
     'NSGA2',
     'EnsembleWeightOptimizer',
     'HyperparameterTuner',

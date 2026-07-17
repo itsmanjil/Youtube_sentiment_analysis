@@ -55,18 +55,17 @@ _MODEL_ALIASES = {
     "fuzzy": "fuzzy_ensemble",
     "fuzzy-ensemble": "fuzzy_ensemble",
     "deberta-v3": "deberta_v3",
-    "xlm-v": "xlm_v",
-    "mdeberta-v3": "mdeberta_v3",
 }
 
+# Only presets with a fine-tuned checkpoint under backend/models/transformers/
+# are exposed here — bert/roberta/modernbert/xlm_v/mdeberta_v3 have no shipped
+# artifact and would only ever fail with "no fine-tuned checkpoint found"
+# (see TransformerSentimentEngine.__init__). Training a new preset is still
+# possible via research/transformers/train_encoder.py and its own registry
+# (research/transformers/model_registry.py); once a checkpoint exists under
+# backend/models/transformers/<preset>, add it back here.
 _TRANSFORMER_MODELS = {
-    "bert",
-    "transformer",
-    "roberta",
-    "modernbert",
     "deberta_v3",
-    "xlm_v",
-    "mdeberta_v3",
 }
 
 # Canonical sentiment_model names the factory (src/sentiment/factory.py) can
@@ -1235,26 +1234,34 @@ search_youtube_videos.cls.throttle_scope = "search"
 @api_view(["GET"])
 @permission_classes((AllowAny,))
 def index(request):
+    # Unauthenticated (AllowAny) so load balancers / uptime monitors can poll
+    # it — so the response must never include exception text (can embed
+    # connection details) or server-side filesystem paths. Real detail goes
+    # to the server log only.
     checks = {}
 
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
         checks["database"] = "ok"
-    except DjangoDBError as exc:
-        checks["database"] = f"error: {exc}"
+    except DjangoDBError:
+        logger.exception("Health check: database connectivity failed")
+        checks["database"] = "error"
 
     missing_artifacts = [
-        str(path)
+        path
         for path in (
             Config.MODELS_DIR / "logreg" / "model.sav",
             Config.MODELS_DIR / "logreg" / "tfidfVectorizer.pickle",
         )
         if not path.exists()
     ]
-    checks["model_artifacts"] = (
-        "ok" if not missing_artifacts else f"missing: {', '.join(missing_artifacts)}"
-    )
+    if missing_artifacts:
+        logger.error(
+            "Health check: missing model artifacts: %s",
+            ", ".join(str(path) for path in missing_artifacts),
+        )
+    checks["model_artifacts"] = "ok" if not missing_artifacts else "error"
 
     healthy = all(value == "ok" for value in checks.values())
     return JsonResponse(

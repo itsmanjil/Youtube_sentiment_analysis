@@ -2,7 +2,7 @@
 """
 Metaheuristics Demo for Thesis
 
-EXPLORATORY — NOT USED IN REPORTED RESULTS. This script runs PSO, MOPSO, and
+EXPLORATORY — NOT USED IN REPORTED RESULTS. This script runs PSO and
 NSGA-II on toy/synthetic optimization problems (e.g. sklearn's
 make_classification) purely to illustrate the algorithms' mechanics. None of
 its output feeds any pinned results/ or results/runtime/ artifact. In
@@ -34,10 +34,6 @@ from research.computational_intelligence.metaheuristics.pso import (
     ParticleSwarmOptimizer,
     AdaptivePSO,
     PSOConfig,
-)
-from research.computational_intelligence.metaheuristics.mopso import (
-    MultiObjectivePSO,
-    MOPSOConfig,
 )
 from research.computational_intelligence.metaheuristics.nsga2 import (
     NSGA2,
@@ -197,38 +193,6 @@ def demo_adaptive_pso():
     print(f"  Runtime: {result.runtime:.3f}s")
 
 
-def demo_mopso():
-    """Demo Multi-Objective PSO on ZDT1."""
-    print("\n" + "=" * 60)
-    print("DEMO 3: Multi-Objective PSO (MOPSO)")
-    print("=" * 60)
-
-    problem = ZDT1Problem(n_dims=10)
-    print(f"\nProblem: {problem.name}")
-    print(f"Objectives: {problem.objectives}")
-    print(f"Expected Pareto front: f2 = 1 - sqrt(f1)")
-
-    mopso = MultiObjectivePSO(
-        problem=problem,
-        population_size=50,
-        max_iterations=100,
-        config=MOPSOConfig(archive_size=50),
-        seed=42,
-        verbose=False
-    )
-
-    result = mopso.optimize()
-
-    print(f"\nResults:")
-    print(f"  Pareto front size: {len(result.pareto_front)}")
-    print(f"  Runtime: {result.runtime:.3f}s")
-
-    # Show some Pareto solutions
-    print(f"\n  Sample Pareto solutions (f1, f2):")
-    for i, sol in enumerate(result.pareto_front[:5]):
-        print(f"    {i+1}. ({sol.fitness[0]:.4f}, {sol.fitness[1]:.4f})")
-
-
 def demo_nsga2():
     """Demo NSGA-II on ZDT1."""
     print("\n" + "=" * 60)
@@ -296,7 +260,7 @@ def demo_ensemble_optimization():
 
 
 def demo_comparison():
-    """Compare PSO, MOPSO, NSGA-II."""
+    """Compare PSO and Adaptive PSO."""
     print("\n" + "=" * 60)
     print("DEMO 6: Algorithm Comparison")
     print("=" * 60)
@@ -346,7 +310,6 @@ def main():
 
     demo_pso()
     demo_adaptive_pso()
-    demo_mopso()
     demo_nsga2()
     demo_ensemble_optimization()
     demo_comparison()
@@ -367,12 +330,7 @@ def main():
        - Better for multimodal problems
        - Automatic stagnation detection
 
-    3. MOPSO (Multi-Objective PSO)
-       - Handles multiple conflicting objectives
-       - External archive for Pareto front
-       - Crowding-based leader selection
-
-    4. NSGA-II
+    3. NSGA-II
        - Classic multi-objective evolutionary algorithm
        - Fast non-dominated sorting
        - SBX crossover, polynomial mutation
