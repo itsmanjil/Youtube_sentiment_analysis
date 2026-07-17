@@ -4,9 +4,9 @@ Classical-model text preprocessing (TF-IDF baselines and derived ensembles).
 Why this exists
 ---------------
 The codebase previously applied extra preprocessing steps (stopword removal,
-negation handling, etc.) only inside the inference API layer, while training
-and evaluation scripts used raw `text` from CSV. That creates train/inference
-skew, which is a thesis-grade validity risk.
+negation handling, etc.) only inside the Django API layer, while training and
+evaluation scripts used raw `text` from CSV. That creates train/inference skew,
+which is a thesis-grade validity risk.
 
 This module centralizes the preprocessing so it can be applied consistently
 in:

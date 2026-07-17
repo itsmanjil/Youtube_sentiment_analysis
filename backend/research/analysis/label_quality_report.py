@@ -16,7 +16,7 @@ What this script does
      - Per-class confusion between the two labelling systems
 
 3. Computes model performance on the gold set (from pre-computed JSON if present,
-   or by running live inference against the pinned model artifacts).
+   or by running live inference against the mounted Django models).
 
 4. Writes:
      - results/label_quality_report.md   — thesis-ready Markdown

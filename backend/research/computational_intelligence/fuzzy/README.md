@@ -205,7 +205,7 @@ print(f"Fuzziness: {result.uncertainty_metrics['fuzziness']:.4f}")
 ### Integration with Existing Engines
 
 ```python
-from src.sentiment.engines import LogRegSentimentEngine, SVMSentimentEngine
+from app.sentiment_engines import LogRegSentimentEngine, SVMSentimentEngine
 from research.computational_intelligence.fuzzy import FuzzySentimentEngine
 
 # Create fuzzy engine with existing engines

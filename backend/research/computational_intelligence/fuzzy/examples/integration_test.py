@@ -36,7 +36,7 @@ def test_engine_loading():
 
     # Try loading LogReg
     try:
-        from src.sentiment.engines import LogRegSentimentEngine
+        from app.sentiment_engines import LogRegSentimentEngine
         engines['logreg'] = LogRegSentimentEngine()
         engine_status['logreg'] = 'LOADED'
         print(f"  LogReg: LOADED")
@@ -46,7 +46,7 @@ def test_engine_loading():
 
     # Try loading SVM
     try:
-        from src.sentiment.engines import SVMSentimentEngine
+        from app.sentiment_engines import SVMSentimentEngine
         engines['svm'] = SVMSentimentEngine()
         engine_status['svm'] = 'LOADED'
         print(f"  SVM: LOADED")
@@ -56,7 +56,7 @@ def test_engine_loading():
 
     # Try loading TF-IDF
     try:
-        from src.sentiment.engines import TFIDFSentimentEngine
+        from app.sentiment_engines import TFIDFSentimentEngine
         engines['tfidf'] = TFIDFSentimentEngine()
         engine_status['tfidf'] = 'LOADED'
         print(f"  TF-IDF: LOADED")

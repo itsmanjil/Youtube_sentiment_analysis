@@ -1,8 +1,0 @@
-# Demo-only dependency — install AFTER backend/requirements.txt:
-#   pip install -r backend/requirements.txt
-#   pip install -r demo/requirements.txt
-# Run from the repo root:
-#   streamlit run demo/app.py
-streamlit==1.59.2
-# Scrapes comments from a YouTube URL directly — free, no API key.
-youtube-comment-downloader==0.1.78

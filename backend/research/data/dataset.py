@@ -2,7 +2,7 @@
 PyTorch Dataset Classes for Sentiment Analysis Training
 
 Provides flexible dataset classes for training the hybrid CNN-BiLSTM-Attention model.
-Supports in-memory datasets and CSV files.
+Supports in-memory datasets, CSV files, and integration with existing Django models.
 """
 
 import torch
@@ -219,6 +219,62 @@ class CSVSentimentDataset(SentimentDataset):
         super().__init__(texts, labels, vocab, max_len, label_map)
 
         print(f"[OK] Loaded {len(self)} samples from {csv_path}")
+        print(f"   Label distribution: {pd.Series(self.labels).value_counts().to_dict()}")
+
+
+class DjangoSentimentDataset(SentimentDataset):
+    """
+    Load sentiment dataset from Django models (YouTubeComment)
+
+    Integrates with existing Django backend to load comments from database.
+
+    Args:
+        queryset: Django QuerySet of YouTubeComment objects
+        vocab: Vocabulary object
+        text_field: Field name for text (default: 'text')
+        label_field: Field name for label (default: 'sentiment')
+        max_len: Maximum sequence length
+        label_map: Optional label mapping
+
+    Example:
+        >>> from app.models import YouTubeComment
+        >>> comments = YouTubeComment.objects.filter(sentiment__isnull=False)
+        >>> dataset = DjangoSentimentDataset(
+        ...     queryset=comments,
+        ...     vocab=vocab,
+        ...     text_field='text',
+        ...     label_field='sentiment'
+        ... )
+    """
+
+    def __init__(
+        self,
+        queryset,
+        vocab: Vocabulary,
+        text_field: str = 'text',
+        label_field: str = 'sentiment',
+        max_len: int = 200,
+        label_map: Optional[Dict[str, int]] = None
+    ):
+        # Extract texts and labels from queryset
+        texts = []
+        labels = []
+
+        for obj in queryset:
+            text = getattr(obj, text_field, None)
+            label = getattr(obj, label_field, None)
+
+            if text is not None and label is not None:
+                texts.append(str(text))
+                labels.append(label)
+
+        if not texts:
+            raise ValueError("No valid samples found in queryset. "
+                           f"Check that '{text_field}' and '{label_field}' fields exist.")
+
+        super().__init__(texts, labels, vocab, max_len, label_map)
+
+        print(f"[OK] Loaded {len(self)} samples from Django queryset")
         print(f"   Label distribution: {pd.Series(self.labels).value_counts().to_dict()}")
 
 

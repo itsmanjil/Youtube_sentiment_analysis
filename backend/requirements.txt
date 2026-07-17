@@ -1,9 +1,18 @@
-# Research-only dependencies (Python 3.11+). Deep-learning extras
-# (Hybrid-DL / Transformers) are in backend/requirements-dl.txt.
-# pandas/numpy are pinned to versions that satisfy BOTH files so a single venv
-# can install requirements.txt followed by requirements-dl.txt (or vice versa).
+# Pinned to backend/Pipfile.lock (Python 3.11+). Regenerate with `pipenv requirements`
+# (note: Pipfile.lock must be regenerated separately after changing pins here).
+# Deep-learning extras (Hybrid-DL / Transformers) are in backend/requirements-dl.txt.
+# pandas/numpy are pinned to versions that satisfy BOTH files so a single venv can
+# install requirements.txt followed by requirements-dl.txt (or vice versa) without
+# the two-venv workaround previously documented in requirements-dl.txt.
 
-# nltk is pinned to a known-CVE fix floor (pip-audit, 2026-07-11).
+# django/nltk/yt-dlp/python-dotenv are pinned to known-CVE fix floors
+# (pip-audit, 2026-07-11); django stays on the 5.2.x LTS line rather than
+# jumping to 6.0.
+django==5.2.16
+djangorestframework==3.16.1
+django-cors-headers==4.9.0
+djangorestframework-simplejwt==5.5.1
+psycopg2-binary==2.9.11
 nltk==3.9.4
 numpy==1.26.4
 # Matches the environment that actually produced the pinned model artifacts
@@ -11,13 +20,14 @@ numpy==1.26.4
 # numpy>=1.26.0 on Python <3.14 (this project targets 3.11+), which
 # numpy==1.26.4 above satisfies without a numpy bump.
 pandas==3.0.0
+python-dotenv==1.2.2
 scikit-learn==1.8.0
+google-api-python-client==2.188.0
+google-auth-httplib2==0.3.0
+google-auth-oauthlib==1.2.4
+youtube-comment-downloader==0.1.78
+yt-dlp==2026.6.9
 emoji==2.15.0
 langdetect==1.0.9
 wordcloud==1.9.6
 matplotlib==3.10.8
-
-# Notebooks (research narrative lives in notebooks/)
-jupyterlab==4.6.1
-ipykernel==7.1.0
-nbconvert==7.17.1

@@ -587,7 +587,7 @@ class FuzzyEnsembleSentimentEngine:
     and applies fuzzy inference for uncertainty-aware classification.
 
     Usage with existing system:
-        >>> from src.sentiment.engines import LogRegSentimentEngine, SVMSentimentEngine
+        >>> from app.sentiment_engines import LogRegSentimentEngine, SVMSentimentEngine
         >>> from computational_intelligence.fuzzy import FuzzyEnsembleSentimentEngine
         >>>
         >>> fuzzy_engine = FuzzyEnsembleSentimentEngine(
