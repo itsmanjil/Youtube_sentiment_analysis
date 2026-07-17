@@ -24,7 +24,7 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
@@ -37,7 +37,7 @@ from src.utils.config import Config
 
 
 def _utc_slug() -> str:
-    return datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
 
 def _slugify(value: str) -> str:
@@ -133,7 +133,7 @@ def main() -> None:
     manifest_path = run_dir / "run_manifest.json"
 
     manifest = {
-        "created_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "run_tag": run_tag,
         "split_dir": str(split_dir),
         "train_csv": str(train_csv),

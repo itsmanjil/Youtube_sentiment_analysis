@@ -1,7 +1,7 @@
 
 import inspect
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ class YouTubeScraper:
             time_str = time_str.lower().strip()
             if not re.search(r"[a-z]", time_str):
                 return None
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
 
             # Parse patterns like "X seconds/minutes/hours/days/weeks/months/years ago"
             patterns = [
@@ -164,9 +164,9 @@ class YouTubeScraper:
                         date_obj = datetime.strptime(upload_date, '%Y%m%d')
                         upload_date = date_obj.isoformat()
                     except:
-                        upload_date = datetime.now().isoformat()
+                        upload_date = datetime.now(timezone.utc).isoformat()
                 else:
-                    upload_date = datetime.now().isoformat()
+                    upload_date = datetime.now(timezone.utc).isoformat()
 
                 return {
                     'title': info.get('title', f'Video {video_id}'),
@@ -201,7 +201,7 @@ class YouTubeScraper:
             'description': '',
             'channel': 'Unknown',
             'channel_id': '',
-            'published_at': datetime.now().isoformat(),
+            'published_at': datetime.now(timezone.utc).isoformat(),
             'view_count': 0,
             'like_count': 0,
             'comment_count': 0,

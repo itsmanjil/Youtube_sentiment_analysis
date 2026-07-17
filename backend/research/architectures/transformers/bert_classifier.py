@@ -100,7 +100,7 @@ class BERTSentimentClassifier(nn.Module):
     - Use warmup for first 10% of training steps
     - Gradient clipping at 1.0 is recommended
 
-    For training, see: scripts/train/train_transformer.py
+    For training, see: research/transformers/train_encoder.py
     """
 
     def __init__(

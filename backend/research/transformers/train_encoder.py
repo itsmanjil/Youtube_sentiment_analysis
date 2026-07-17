@@ -16,7 +16,7 @@ import json
 import sys
 from collections import Counter
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Iterable, Optional, Sequence, Tuple
 
@@ -38,7 +38,7 @@ TEXT_COLUMN_PRIORITY = ["text", "text_transformer", "text_raw", "text_classical"
 
 
 def _utcnow() -> str:
-    return datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def resolve_text_column(
@@ -123,7 +123,7 @@ def summarize_split_provenance(split_metadata: Optional[dict]) -> Optional[str]:
 
 
 def build_run_name(model_preset: str) -> str:
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     return f"{model_preset}_{timestamp}"
 
 

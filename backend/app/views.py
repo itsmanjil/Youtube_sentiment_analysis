@@ -690,51 +690,71 @@ def _execute_analysis_job(job_id):
             item['confidence'] = confidence_from_probs(result.probs)
 
         # Step 5: Save comments to database
+        #
+        # Batched via bulk_create instead of one update_or_create()/create()
+        # per comment (up to `max_comments`, i.e. up to 2000 individual
+        # queries): id-bearing comments are upserted in a single
+        # INSERT ... ON CONFLICT DO UPDATE, id-less ones in a single plain
+        # INSERT. This trades the old per-comment error isolation (one
+        # malformed comment used to fail only itself) for one failure
+        # covering the whole batch — acceptable here since Step 6's
+        # analytics are computed from `processed_comments` in memory, not
+        # from these rows, so a save failure is already non-fatal to the
+        # analysis result either way.
         logger.debug("Saving processed comments to database")
+        without_id_comments = []
+        # Keyed by comment_id so a duplicate id within the same batch keeps
+        # only the last occurrence — bulk_create(update_conflicts=True)
+        # cannot upsert the same conflict key twice within one statement
+        # (unlike the old sequential update_or_create() loop, which just
+        # updated the same row twice).
+        with_id_comments = {}
         for item in processed_comments:
-            try:
-                # `comment_id` is globally unique in the DB. Coerce a missing/blank
-                # id to None (NULL) rather than '' — SQL treats multiple NULLs as
-                # distinct for uniqueness, whereas multiple '' comments would
-                # collide into a single row and silently overwrite each other.
-                comment_id = item.get('comment_id') or None
-                # `published_at` is a non-nullable DateTimeField, but scraper mode
-                # can yield None for unparseable relative timestamps ("2 days
-                # ago"-style strings that don't match any known pattern) — fall
-                # back to now() rather than raising IntegrityError on save.
-                published_at = item['published_at'] or timezone.now()
-                defaults = {
-                    'video': video,
-                    'text': item['text'],
-                    'author': item['author'],
-                    'likes': item['likes'],
-                    'published_at': published_at,
-                    'is_reply': item['is_reply'],
-                    'sentiment': item['sentiment'],
-                    'sentiment_score': item['sentiment_score'],
-                    'is_spam': item.get('metadata', {}).get('is_spam', False),
-                    'language': item['metadata']['language']
-                }
-                if comment_id is None:
-                    # `update_or_create(comment_id=None)` does a `.get(comment_id=None)`
-                    # lookup first; since SQL treats every NULL as distinct for the
-                    # unique constraint but Django's ORM `.get()` does not, the second
-                    # id-less comment in a batch would match the first one's row and
-                    # silently overwrite it instead of inserting a new row.
-                    YouTubeComment.objects.create(comment_id=None, **defaults)
-                else:
-                    YouTubeComment.objects.update_or_create(
-                        comment_id=comment_id,
-                        defaults=defaults,
-                    )
-            except Exception as e:
-                logger.warning(
-                    "Failed to save comment %s for video %s: %s",
-                    item.get('comment_id', ''),
-                    video.video_id,
-                    e,
+            # `published_at` is a non-nullable DateTimeField, but scraper mode
+            # can yield None for unparseable relative timestamps ("2 days
+            # ago"-style strings that don't match any known pattern) — fall
+            # back to now() rather than raising IntegrityError on save.
+            published_at = item['published_at'] or timezone.now()
+            fields = dict(
+                video=video,
+                text=item['text'],
+                author=item['author'],
+                likes=item['likes'],
+                published_at=published_at,
+                is_reply=item['is_reply'],
+                sentiment=item['sentiment'],
+                sentiment_score=item['sentiment_score'],
+                is_spam=item.get('metadata', {}).get('is_spam', False),
+                language=item['metadata']['language'],
+            )
+            # `comment_id` is globally unique in the DB. Coerce a missing/blank
+            # id to None (NULL) rather than '' — SQL treats multiple NULLs as
+            # distinct for uniqueness, whereas multiple '' comments would
+            # collide into a single row and silently overwrite each other.
+            comment_id = item.get('comment_id') or None
+            if comment_id is None:
+                without_id_comments.append(YouTubeComment(comment_id=None, **fields))
+            else:
+                with_id_comments[comment_id] = YouTubeComment(comment_id=comment_id, **fields)
+
+        try:
+            if without_id_comments:
+                YouTubeComment.objects.bulk_create(without_id_comments)
+            if with_id_comments:
+                YouTubeComment.objects.bulk_create(
+                    list(with_id_comments.values()),
+                    update_conflicts=True,
+                    unique_fields=["comment_id"],
+                    update_fields=[
+                        "video", "text", "author", "likes", "published_at",
+                        "is_reply", "sentiment", "sentiment_score", "is_spam",
+                        "language",
+                    ],
                 )
-                continue
+        except Exception:
+            logger.exception(
+                "Failed to bulk-save comments for video %s", video.video_id
+            )
 
         # Step 6: Generate analytics
         logger.debug("Generating analysis aggregates")

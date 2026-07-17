@@ -18,7 +18,7 @@ Input -> Embedding -> [CNN Branch] ---------+
 
 Total Parameters: ~2.5M (trainable)
 
-For training, see: scripts/train/train_hybrid_dl.py
+For training, see: research/train_hybrid_dl.py
 For architecture details, see: research/architectures/hybrid_cnn_bilstm.py
 """
 
@@ -109,7 +109,7 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
     will raise an ImportError when initialized.
 
     The model must be trained before use. See:
-    - scripts/train/train_hybrid_dl.py for training
+    - research/train_hybrid_dl.py for training
     - research/architectures/hybrid_cnn_bilstm.py for architecture
     """
 
@@ -143,7 +143,7 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         if not model_path.exists():
             raise FileNotFoundError(
                 f"Model not found: {model_path}. "
-                "Train using: python scripts/train/train_hybrid_dl.py"
+                "Train using: python research/train_hybrid_dl.py"
             )
 
         if not vocab_path.exists():

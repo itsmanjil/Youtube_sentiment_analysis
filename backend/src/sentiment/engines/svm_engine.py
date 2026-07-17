@@ -118,7 +118,7 @@ class SVMSentimentEngine(BaseSentimentEngine):
                 f"Model files not found. Expected:\n"
                 f"  - {model_path}\n"
                 f"  - {vectorizer_path}\n"
-                f"Train models using: python scripts/train/train_classical.py --model svm"
+                f"Train models using: python train_svm_youtube.py"
             )
         except Exception as exc:
             raise RuntimeError(

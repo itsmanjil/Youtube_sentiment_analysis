@@ -88,7 +88,7 @@ class TransformerSentimentEngine(BaseSentimentEngine):
         pip install transformers
 
     For best results, fine-tune the model on YouTube comment data.
-    See: scripts/train/train_transformer.py
+    See: research/transformers/train_encoder.py
 
     Expected Performance (after fine-tuning):
     - Accuracy: 85-92% (significantly higher than classical models)

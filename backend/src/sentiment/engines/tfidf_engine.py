@@ -113,7 +113,7 @@ class TFIDFSentimentEngine(BaseSentimentEngine):
                 f"Model files not found. Expected:\n"
                 f"  - {model_path}\n"
                 f"  - {vectorizer_path}\n"
-                f"Train models using: python scripts/train/train_classical.py --model tfidf"
+                f"Train models using: python train_tfidf_youtube.py"
             )
         except Exception as exc:
             raise RuntimeError(

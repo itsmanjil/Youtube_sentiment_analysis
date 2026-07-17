@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from itertools import combinations
 from pathlib import Path
 from typing import Dict, Iterable, List
@@ -34,7 +34,7 @@ from research.transformers.prob_cube_io import load_probability_cube
 
 
 def _utcnow() -> str:
-    return datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
 def _preds_from_probs(prob_matrix: np.ndarray, labels: List[str]) -> List[str]:
