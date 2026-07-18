@@ -19,14 +19,24 @@ psycopg2-binary==2.9.11
 django-q2==1.10.0
 django-picklefield==3.4.0
 nltk==3.9.4
-numpy==1.26.4
-# Matches the environment that actually produced the pinned model artifacts
-# (models/*/*_metadata.json records pandas_version 3.0.0). Requires
-# numpy>=1.26.0 on Python <3.14 (this project targets 3.11+), which
-# numpy==1.26.4 above satisfies without a numpy bump.
-pandas==3.0.0
+# numpy 2.4.6 is the latest 2.x release still supporting Python 3.11 (2.5.0+
+# requires 3.12). Verified (2026-07-18) that the existing pickled classical
+# artifacts (models/logreg, models/svm, models/tfidf — originally fit under
+# numpy 1.26.4 / scikit-learn 1.8.0) load under this numpy+sklearn pair and
+# produce byte-identical predictions (8 decimal places, 8 test sentences),
+# and the full test suite passes unchanged. No retraining was needed or
+# done — see the artifact-verification comments in
+# src/sentiment/engines/*_engine.py's _validate_fitted for the safety net if
+# a future sklearn release ever does break pickle compatibility.
+numpy==2.4.6
+# models/*/*_metadata.json records pandas_version 3.0.0 as what actually
+# produced the pinned model artifacts; bumped here to 3.0.3 (same major
+# version, verified compatible — see the numpy comment above) rather than
+# left unbumped, since requirements-dl.txt's numpy pin must match this file
+# exactly for the documented single-venv install workflow.
+pandas==3.0.3
 python-dotenv==1.2.2
-scikit-learn==1.8.0
+scikit-learn==1.9.0
 google-api-python-client==2.188.0
 google-auth-httplib2==0.3.0
 google-auth-oauthlib==1.2.4

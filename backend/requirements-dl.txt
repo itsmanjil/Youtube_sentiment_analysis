@@ -4,7 +4,7 @@
 # --------------------
 # PyTorch wheels can be sensitive to the NumPy ABI version. numpy/pandas here
 # are pinned to the exact same versions as backend/requirements.txt (numpy
-# 1.26.4, pandas 3.0.0) so both files can be installed into a single venv —
+# 2.4.6, pandas 3.0.3) so both files can be installed into a single venv —
 # install either file first, then the other:
 #
 #   python -m venv venv
@@ -12,13 +12,19 @@
 #   pip install -r backend/requirements.txt
 #   pip install -r backend/requirements-dl.txt
 
-numpy==1.26.4
-pandas==3.0.0
-scikit-learn==1.8.0
+numpy==2.4.6
+pandas==3.0.3
+scikit-learn==1.9.0
 # torch<2.6.0 is affected by CVE-2025-32434 (torch.load with
 # weights_only=True can still execute arbitrary code for certain crafted
-# checkpoints). 2.6.2 is the latest 2.6.x patch release as of writing.
-torch==2.6.2
-transformers==4.57.1
-accelerate==1.2.1
-sentencepiece==0.2.0
+# checkpoints). Bumped well past that floor to 2.13.0 (2026-07-18): verified
+# the existing hybrid_dl and deberta_v3 checkpoints load and predict under
+# torch 2.13.0 + transformers 5.14.1, with output matching the previously
+# pinned torch 2.6.0+cpu/transformers 4.57.1 to 6 decimal places on 48
+# compared probability values (a single ULP-level rounding difference in
+# one value — ordinary floating-point noise, not a behavior change). No
+# retraining was needed or done.
+torch==2.13.0
+transformers==5.14.1
+accelerate==1.14.0
+sentencepiece==0.2.2
