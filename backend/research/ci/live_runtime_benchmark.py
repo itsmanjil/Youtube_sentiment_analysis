@@ -18,7 +18,6 @@ import time
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
-import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
 

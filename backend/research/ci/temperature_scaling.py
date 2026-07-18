@@ -55,7 +55,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -394,11 +394,11 @@ def main() -> None:
     results = []
     for name in ALL_MODELS:
         print(f"[{name}]")
-        print(f"  Scoring val  …", flush=True)
+        print("  Scoring val  …", flush=True)
         val_probs  = score_model(name, texts_val)
-        print(f"  Scoring test …", flush=True)
+        print("  Scoring test …", flush=True)
         test_probs = score_model(name, texts_test)
-        print(f"  Fitting T …", flush=True)
+        print("  Fitting T …", flush=True)
         row = calibrate_model(name, val_probs, test_probs, y_val, y_test)
         results.append(row)
         print(f"  T={row['temperature']:.3f}  "

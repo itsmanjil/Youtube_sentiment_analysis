@@ -137,7 +137,7 @@ def demo_pso():
     problem = SphereProblem(n_dims=10)
     print(f"\nProblem: {problem.name}")
     print(f"Dimensions: {problem.n_variables}")
-    print(f"Optimal solution: x* = [0, 0, ..., 0], f(x*) = 0")
+    print("Optimal solution: x* = [0, 0, ..., 0], f(x*) = 0")
 
     pso = ParticleSwarmOptimizer(
         problem=problem,
@@ -154,7 +154,7 @@ def demo_pso():
 
     result = pso.optimize()
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Best fitness: {result.best_fitness:.6f}")
     print(f"  Best position: [{', '.join(f'{x:.4f}' for x in result.best_solution.position[:5])}...]")
     print(f"  Iterations: {result.iterations}")
@@ -175,7 +175,7 @@ def demo_adaptive_pso():
     problem = RastriginProblem(n_dims=10)
     print(f"\nProblem: {problem.name} (multimodal)")
     print(f"Dimensions: {problem.n_variables}")
-    print(f"Optimal solution: x* = [0, 0, ..., 0], f(x*) = 0")
+    print("Optimal solution: x* = [0, 0, ..., 0], f(x*) = 0")
 
     apso = AdaptivePSO(
         problem=problem,
@@ -187,7 +187,7 @@ def demo_adaptive_pso():
 
     result = apso.optimize()
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Best fitness: {result.best_fitness:.6f}")
     print(f"  Best position: [{', '.join(f'{x:.4f}' for x in result.best_solution.position[:5])}...]")
     print(f"  Runtime: {result.runtime:.3f}s")
@@ -217,12 +217,12 @@ def demo_nsga2():
 
     result = nsga2.optimize()
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Pareto front size: {len(result.pareto_front)}")
     print(f"  Runtime: {result.runtime:.3f}s")
 
     # Show Pareto solutions
-    print(f"\n  Sample Pareto solutions (f1, f2):")
+    print("\n  Sample Pareto solutions (f1, f2):")
     for i, sol in enumerate(result.pareto_front[:5]):
         f = np.atleast_1d(sol.fitness)
         print(f"    {i+1}. ({f[0]:.4f}, {f[1]:.4f})")
@@ -252,7 +252,7 @@ def demo_ensemble_optimization():
     weights = result.best_solution.position
     weights = weights / np.sum(weights)
 
-    print(f"\nResults:")
+    print("\nResults:")
     print(f"  Found weights: [{', '.join(f'{w:.4f}' for w in weights)}]")
     print(f"  Optimal weights: [{', '.join(f'{w:.4f}' for w in problem.optimal)}]")
     print(f"  Simulated accuracy: {-result.best_fitness:.4f}")
@@ -269,7 +269,7 @@ def demo_comparison():
     n_runs = 5
 
     print(f"\nProblem: Sphere (20D), {n_runs} runs each")
-    print(f"Population: 30, Iterations: 100")
+    print("Population: 30, Iterations: 100")
 
     results = {'PSO': [], 'Adaptive PSO': []}
 
@@ -296,7 +296,7 @@ def demo_comparison():
         res = apso.optimize()
         results['Adaptive PSO'].append(res.best_fitness)
 
-    print(f"\nResults (mean ± std):")
+    print("\nResults (mean ± std):")
     for alg, fits in results.items():
         print(f"  {alg:15s}: {np.mean(fits):.6f} ± {np.std(fits):.6f}")
 

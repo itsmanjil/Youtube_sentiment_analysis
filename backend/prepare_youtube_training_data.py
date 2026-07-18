@@ -185,7 +185,7 @@ class YouTubeDataPreparer:
             stats['kept'] += 1
 
         # Print statistics
-        print(f"   ✅ Preprocessing complete:")
+        print("   ✅ Preprocessing complete:")
         print(f"      Kept:             {stats['kept']}")
         print(f"      Spam filtered:    {stats['spam_filtered']}")
         print(f"      Language filtered: {stats['language_filtered']}")
@@ -244,7 +244,7 @@ class YouTubeDataPreparer:
         # Print label distribution
         from collections import Counter
         label_counts = Counter([c['label'] for c in labeled])
-        print(f"   📊 Label distribution:")
+        print("   📊 Label distribution:")
         for label, count in label_counts.items():
             print(f"      {label:10s}: {count:4d} ({count/len(labeled)*100:.1f}%)")
 
@@ -293,7 +293,7 @@ class YouTubeDataPreparer:
         # Print label distribution
         from collections import Counter
         label_counts = Counter([c['label'] for c in comments])
-        print(f"   📊 Label distribution:")
+        print("   📊 Label distribution:")
         for label, count in label_counts.items():
             print(f"      {label:10s}: {count:4d} ({count/len(comments)*100:.1f}%)")
 
@@ -344,11 +344,11 @@ class YouTubeDataPreparer:
         label_counts = Counter([c['label'] for c in validated])
         total = len(validated)
 
-        print(f"   ✅ Validation complete:")
+        print("   ✅ Validation complete:")
         print(f"      Kept:       {stats['kept']}")
         print(f"      Duplicates: {stats['duplicates_removed']}")
         print(f"      Empty:      {stats['empty_removed']}")
-        print(f"\n   📊 Final label distribution:")
+        print("\n   📊 Final label distribution:")
 
         for label, count in label_counts.items():
             pct = count / total * 100
@@ -359,7 +359,7 @@ class YouTubeDataPreparer:
         max_pct = max(label_counts.values()) / total * 100
         if max_pct > 80:
             print(f"\n   ⚠️  Warning: Dataset is imbalanced ({max_pct:.1f}% in one class)")
-            print(f"      Consider collecting more diverse samples for better model training.")
+            print("      Consider collecting more diverse samples for better model training.")
 
         return validated
 
@@ -432,7 +432,7 @@ class YouTubeDataPreparer:
                 stratify=train_val['label'],
             )
 
-        print(f"   ✅ Split complete:")
+        print("   ✅ Split complete:")
         print(f"      Train: {len(train)} samples")
         print(f"      Val:   {len(val)} samples")
         print(f"      Test:  {len(test)} samples")
@@ -488,7 +488,7 @@ class YouTubeDataPreparer:
                 stratify=df['label'],
             )
 
-        print(f"   ✅ Split complete:")
+        print("   ✅ Split complete:")
         print(f"      Train: {len(train)} samples")
         print(f"      Val:   {len(val)} samples")
 
@@ -774,8 +774,8 @@ def main():
     print("="*80)
     print("\nNext steps:")
     print(f"1. Review the data in: {args.output_dir}")
-    print(f"2. Train a model:")
-    print(f"   python research/train_hybrid_dl.py \\")
+    print("2. Train a model:")
+    print("   python research/train_hybrid_dl.py \\")
     print(f"       --train_csv {paths['train']} \\")
     print(f"       --val_csv {paths['val']} \\")
     print(f"       --test_csv {paths['test']}")

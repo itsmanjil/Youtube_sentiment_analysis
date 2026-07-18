@@ -24,8 +24,8 @@ Reference:
 Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
-from typing import Dict, List, Optional, Tuple, Union, Callable
-from dataclasses import dataclass, field
+from typing import Dict, List, Tuple, Union
+from dataclasses import dataclass
 from enum import Enum
 import numpy as np
 

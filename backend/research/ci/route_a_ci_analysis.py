@@ -34,7 +34,6 @@ from pathlib import Path
 from typing import List
 
 import numpy as np
-from scipy.optimize import minimize_scalar
 from sklearn.metrics import accuracy_score, f1_score
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -300,7 +299,7 @@ def run_entropy_gated(
             )
     lines += [
         "\n## Cascade (uncertain → first model)\n",
-        f"| τ | Ensemble% | Fallback% | Accuracy | Macro-F1 |",
+        "| τ | Ensemble% | Fallback% | Accuracy | Macro-F1 |",
         "|---|-----------|-----------|----------|----------|",
     ]
     for r in cascade_results:
@@ -437,7 +436,7 @@ def build_master_table(
         f"| **{nf_test['ece']:.4f}** | {nf_test['brier']:.4f} |",
         f"| Entropy-gated ({eg_output['ensemble_mode']}) | {ens_eg['macro_f1']:.4f} "
         f"| {ens_eg['accuracy']:.4f} | — | — |",
-        f"\n## Selective Prediction (AURC / AUCA)\n",
+        "\n## Selective Prediction (AURC / AUCA)\n",
         f"Entropy-gated AURC = **{eg_output['aurc']:.4f}**\n",
         "| Model | AUCA | AUC-F1 | Acc@100% |",
         "|-------|------|--------|----------|",

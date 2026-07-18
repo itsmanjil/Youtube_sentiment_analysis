@@ -24,7 +24,7 @@ Available Engines
 - 'deberta_v3': DeBERTa-v3 transformer preset (requires transformers)
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 from .engines.tfidf_engine import TFIDFSentimentEngine
 from .engines.logreg_engine import LogRegSentimentEngine

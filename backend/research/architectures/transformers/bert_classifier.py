@@ -42,7 +42,7 @@ Language Understanding. NAACL-HLT.
 
 import torch
 import torch.nn as nn
-from typing import Dict, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
 
 class BERTSentimentClassifier(nn.Module):
@@ -113,7 +113,7 @@ class BERTSentimentClassifier(nn.Module):
         super().__init__()
 
         try:
-            from transformers import BertModel, BertConfig
+            from transformers import BertModel
         except ImportError:
             raise ImportError(
                 "BERTSentimentClassifier requires the transformers library. "

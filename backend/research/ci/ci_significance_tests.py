@@ -48,7 +48,7 @@ import math
 import sys
 from itertools import combinations
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -226,7 +226,7 @@ def build_report(
     ]
 
     lines += [
-        f"\n## Key Findings\n",
+        "\n## Key Findings\n",
         f"- **{len(sig_pairs)}/{len(pairs_sorted)}** pairs are statistically significant (p_adj < {ALPHA})",
         f"- **CI vs Classical** significant pairs: {len(ci_vs_classical)}",
         f"- **CI vs CI** significant pairs: {len(ci_internal)}\n",

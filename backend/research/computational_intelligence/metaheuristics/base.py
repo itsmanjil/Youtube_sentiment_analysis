@@ -14,7 +14,7 @@ Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import (
-    List, Dict, Tuple, Optional, Callable, Any, Union, TypeVar, Generic
+    List, Dict, Tuple, Callable, Any, Union
 )
 import numpy as np
 from enum import Enum

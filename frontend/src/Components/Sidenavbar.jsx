@@ -1,6 +1,5 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 
 function Sidenavbar() {

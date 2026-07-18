@@ -17,8 +17,6 @@ try:
     import matplotlib
     matplotlib.use('Agg')  # Non-interactive backend for server
     import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
-    from matplotlib.colors import LinearSegmentedColormap
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     MATPLOTLIB_AVAILABLE = False
@@ -844,11 +842,11 @@ class ThesisFigureGenerator:
         lines = ["% Auto-generated figure includes", ""]
         for fig_path in self.generated_figures:
             fig_name = Path(fig_path).stem
-            lines.append(f"\\begin{{figure}}[htbp]")
-            lines.append(f"  \\centering")
+            lines.append("\\begin{figure}[htbp]")
+            lines.append("  \\centering")
             lines.append(f"  \\includegraphics[width=0.8\\textwidth]{{{fig_path}}}")
             lines.append(f"  \\caption{{{fig_name.replace('_', ' ').title()}}}")
             lines.append(f"  \\label{{fig:{fig_name}}}")
-            lines.append(f"\\end{{figure}}")
+            lines.append("\\end{figure}")
             lines.append("")
         return '\n'.join(lines)

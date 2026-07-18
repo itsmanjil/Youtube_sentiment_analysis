@@ -15,7 +15,7 @@ import json
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Dict, List, Sequence
+from typing import Dict, Sequence
 
 import numpy as np
 

@@ -30,7 +30,6 @@ are reproducible with --seed.
 
 import argparse
 import json
-import random
 import sys
 from pathlib import Path
 
@@ -41,7 +40,6 @@ from sklearn.metrics import confusion_matrix
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.sentiment import get_sentiment_engine, normalize_label
-from src.utils import SENTIMENT_LABELS
 
 
 LABELS = ["Negative", "Neutral", "Positive"]

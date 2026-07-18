@@ -363,7 +363,7 @@ if __name__ == "__main__":
         classifier_hidden_sizes=[256, 128],
     )
 
-    print(f"\nModel Architecture:")
+    print("\nModel Architecture:")
     print(model)
     print(f"\nTotal Parameters: {count_parameters(model):,}")
 

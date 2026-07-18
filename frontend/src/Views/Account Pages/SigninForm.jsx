@@ -1,4 +1,4 @@
-import { React, useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
 
@@ -11,8 +11,6 @@ const SigninForm = () => {
     email: "",
     password: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const { email, password } = inputData;
 
   const { isError } = useContext(AuthContext);
@@ -26,9 +24,7 @@ const SigninForm = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     await loginUser(email, password);
-    setIsSubmitting(false);
   };
 
   return (

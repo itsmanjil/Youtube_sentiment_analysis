@@ -8,7 +8,7 @@ Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from enum import Enum
 from pathlib import Path
 import json

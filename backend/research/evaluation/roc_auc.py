@@ -20,7 +20,6 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import label_binarize
@@ -131,7 +130,7 @@ def build_markdown(rows: List[Dict], n_samples: int, csv_path: str) -> str:
         "# ROC-AUC Evaluation (One-vs-Rest)\n",
         f"- Dataset: `{csv_path}`",
         f"- Samples: `{n_samples}`",
-        f"- Method: One-vs-Rest (OvR) per class; macro-average across classes",
+        "- Method: One-vs-Rest (OvR) per class; macro-average across classes",
         "",
         "## Macro and Weighted AUC",
         "",

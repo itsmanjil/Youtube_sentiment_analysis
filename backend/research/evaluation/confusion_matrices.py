@@ -125,7 +125,7 @@ def build_markdown(results: List[Dict], n_samples: int, csv_path: str) -> str:
         "# Confusion Matrices — All Models\n",
         f"- Dataset: `{csv_path}`",
         f"- Samples: `{n_samples}`",
-        f"- Label order: Negative / Neutral / Positive",
+        "- Label order: Negative / Neutral / Positive",
         "",
         "## Per-Class Precision / Recall / F1 Summary",
         "",

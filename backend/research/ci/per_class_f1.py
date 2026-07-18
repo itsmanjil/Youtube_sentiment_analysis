@@ -34,7 +34,7 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import classification_report, f1_score, precision_recall_fscore_support
+from sklearn.metrics import f1_score, precision_recall_fscore_support
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BACKEND_ROOT))

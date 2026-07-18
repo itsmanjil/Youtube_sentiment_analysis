@@ -273,8 +273,8 @@ def build_report(
         "- **Entropy**: normalised Shannon entropy H ∈ [0, 1]",
         "- **Decision rule**: predict when H < τ, abstain (or cascade) when H ≥ τ\n",
         "## Baseline (τ = 1.0, coverage = 100%)\n",
-        f"| Metric | Value |",
-        f"|--------|-------|",
+        "| Metric | Value |",
+        "|--------|-------|",
         f"| Accuracy | {full_acc:.4f} |",
         f"| Macro-F1 | {full_f1:.4f} |",
         f"| AURC (risk-coverage) | {aurc:.4f} |",
@@ -302,7 +302,7 @@ def build_report(
     lines += [
         "\n## Cascade Results (no abstention — uncertain → Stage 2)\n",
         f"| τ | Ensemble% | {stage2_name}% | Accuracy | Macro-F1 |",
-        f"|---|-----------|" + "-" * (len(stage2_name) + 2) + "|----------|----------|",
+        "|---|-----------|" + "-" * (len(stage2_name) + 2) + "|----------|----------|",
     ]
     for r in cascade_results:
         lines.append(

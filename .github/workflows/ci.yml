@@ -5,6 +5,29 @@ on:
   push:
 
 jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - name: Install lint/audit tooling
+        run: python -m pip install --upgrade pip && pip install -r requirements-dev.txt
+      - name: Ruff (unused imports/vars, undefined names)
+        run: ruff check .
+      # --ignore-vuln PYSEC-2026-597 excludes the nltk 3.9.4 (latest as of
+      # writing) path-traversal CVE-2026-12243, which has no fix release yet
+      # (see requirements.txt's nltk pin comment) — remove the ignore once a
+      # patched nltk ships.
+      - name: pip-audit (requirements.txt)
+        run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2026-597
+
   backend:
     runs-on: ubuntu-latest
     env:
@@ -73,5 +96,11 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install frontend dependencies
         run: npm ci
+      - name: Lint (eslint)
+        run: npm run lint
+      - name: Dependency audit
+        run: npm audit --omit=dev --audit-level=high
       - name: Frontend test suite
         run: npm test -- --run
+      - name: Production build
+        run: npm run build

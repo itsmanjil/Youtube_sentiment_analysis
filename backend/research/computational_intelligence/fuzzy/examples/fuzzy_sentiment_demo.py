@@ -26,15 +26,11 @@ project_root = Path(__file__).resolve().parents[5]
 sys.path.insert(0, str(project_root / 'backend'))
 
 import numpy as np
-import json
 
 # Import fuzzy modules
 from research.computational_intelligence.fuzzy import (
     FuzzySentimentClassifier,
     FuzzyEvaluator,
-    TriangularMF,
-    GaussianMF,
-    TrapezoidalMF,
     create_three_class_mfs,
 )
 from research.computational_intelligence.fuzzy.defuzzification import (
@@ -110,7 +106,7 @@ def demo_fuzzy_inference():
     print(f"  Score: {result.crisp_score:.4f}")
     print(f"  Confidence: {result.confidence:.4f}")
     print(f"  Fuzziness: {result.uncertainty_metrics['fuzziness']:.4f}")
-    print(f"  -> Higher fuzziness indicates model disagreement!")
+    print("  -> Higher fuzziness indicates model disagreement!")
 
     # Scenario 3: Ambiguous sentiment
     print("\nScenario 3: Ambiguous sentiment (near boundary)")
@@ -143,8 +139,8 @@ def demo_defuzzification_comparison():
     )
 
     print("\nBimodal fuzzy output (simulating model disagreement):")
-    print(f"  Peak 1: score=0.30 (negative region)")
-    print(f"  Peak 2: score=0.75 (positive region)")
+    print("  Peak 1: score=0.30 (negative region)")
+    print("  Peak 2: score=0.75 (positive region)")
 
     print("\nDefuzzification Results:")
     print("-" * 40)

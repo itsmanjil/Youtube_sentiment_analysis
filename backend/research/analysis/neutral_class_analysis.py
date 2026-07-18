@@ -25,7 +25,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -152,9 +152,9 @@ def main() -> None:
         "",
         f"- Model: `{args.model}`",
         f"- Val/Test sample size: {len(val):,} / {len(test):,}",
-        f"- Intervention: scale Neutral probability by `alpha` before argmax",
-        f"  (prior adjustment / threshold tuning; no retraining).",
-        f"- `alpha` selected on validation, reported on held-out test.",
+        "- Intervention: scale Neutral probability by `alpha` before argmax",
+        "  (prior adjustment / threshold tuning; no retraining).",
+        "- `alpha` selected on validation, reported on held-out test.",
         "",
         "## 1. Error-Direction Analysis (baseline, test split)",
         "",

@@ -1,6 +1,5 @@
-import React from 'react';
 import { render, screen, waitFor, within } from '@testing-library/react';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import Dashboard from './Dashboard';
 import AuthContext from '../../context/AuthContext';
 import axiosInstance from '../../axios';

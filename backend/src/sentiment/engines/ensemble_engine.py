@@ -29,9 +29,7 @@ Weights can be optimized using various methods:
 - Bayesian optimization
 """
 
-import json
 import math
-from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from src.utils import SENTIMENT_LABELS, normalize_probs

@@ -25,7 +25,6 @@ sys.path.insert(0, str(project_root))
 from .config import (
     ExperimentConfig,
     ExperimentType,
-    OptimizerType,
 )
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -397,7 +396,7 @@ class ThesisExperiment:
 
     def _create_synthetic_dataset(self, n_samples: int = 1000) -> Any:
         """Create synthetic dataset for testing."""
-        from research.benchmarks.base import Dataset, DatasetSplit, SentimentLabel
+        from research.benchmarks.base import DatasetSplit, SentimentLabel
 
         np.random.seed(self.config.random_seed)
 

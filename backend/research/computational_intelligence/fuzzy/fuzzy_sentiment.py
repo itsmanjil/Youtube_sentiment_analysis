@@ -54,7 +54,6 @@ from typing import Dict, List, Optional, Tuple, Union, Any
 from dataclasses import dataclass, field
 import numpy as np
 import json
-from pathlib import Path
 
 # NumPy 2.0+ compatibility: trapz was renamed to trapezoid
 try:
@@ -63,24 +62,16 @@ except AttributeError:
     _trapz = np.trapz
 
 from .membership_functions import (
-    MembershipFunction,
-    TriangularMF,
-    TrapezoidalMF,
-    GaussianMF,
     create_three_class_mfs,
-    create_sentiment_mfs_triangular,
-    create_sentiment_mfs_gaussian,
 )
 from .fuzzy_inference import (
     FuzzyVariable,
     FuzzyRule,
     FuzzyInferenceSystem,
-    create_sentiment_fis,
     FuzzyOperator,
 )
 from .defuzzification import (
     Defuzzifier,
-    DefuzzMethod,
     compute_uncertainty_metrics,
     compare_defuzzification_methods,
 )

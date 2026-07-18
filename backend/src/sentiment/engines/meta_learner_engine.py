@@ -35,12 +35,11 @@ This ensures meta-learner sees predictions that base models
 have never trained on, preventing label leakage.
 """
 
-import json
 import pickle
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.utils import normalize_probs
 from src.utils.runtime_artifacts import verify_model_artifact_hash
 from src.utils.config import get_model_path
 from src.preprocessing import ClassicalPreprocessConfig

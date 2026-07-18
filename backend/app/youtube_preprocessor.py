@@ -75,9 +75,9 @@ class YouTubePreprocessor:
 
     def detect_language(self, text):
         try:
-            from langdetect import detect, LangDetectException
+            from langdetect import detect
             return detect(text)
-        except (ImportError, Exception):
+        except Exception:
             # If langdetect not available or fails, assume English
             return 'en'
 

@@ -13,7 +13,6 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 import numpy as np
-from scipy import stats
 
 
 def load_all_data(results_dir, experiment_name):
@@ -66,7 +65,7 @@ def generate_markdown_report(data, output_path):
     
     if 'test_results' in data:
         test = data['test_results']
-        lines.append(f"**Hybrid CNN-BiLSTM Model Performance:**")
+        lines.append("**Hybrid CNN-BiLSTM Model Performance:**")
         lines.append(f"- Accuracy: {test.get('accuracy', 0)*100:.2f}%")
         lines.append(f"- F1-Macro: {test.get('f1_macro', 0)*100:.2f}%")
         lines.append(f"- Cohen's Kappa: {test.get('cohen_kappa', 0):.4f}")

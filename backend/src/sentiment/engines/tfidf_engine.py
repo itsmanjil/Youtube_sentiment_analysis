@@ -25,14 +25,13 @@ Where:
     P(t_i|c) = probability of term t_i given class c
 """
 
-import json
 import pickle
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
 from src.utils.runtime_artifacts import verify_model_artifact_hash
-from src.utils.config import get_model_path, Config
+from src.utils.config import get_model_path
 from src.preprocessing import (
     ClassicalPreprocessConfig,
     preprocess_classical_text,

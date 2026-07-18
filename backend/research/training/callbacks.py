@@ -14,7 +14,7 @@ All callbacks follow a consistent interface for easy integration with the Traine
 import torch
 import numpy as np
 from pathlib import Path
-from typing import Optional, Dict, Any, Callable
+from typing import Optional, Dict
 from datetime import datetime
 import json
 

@@ -40,7 +40,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
-    classification_report,
     cohen_kappa_score,
     confusion_matrix,
 )
@@ -156,8 +155,8 @@ def build_markdown(agreement: dict, distribution: dict, gold_metrics: dict | Non
         "",
         "## 2. Inter-Annotator Agreement",
         "",
-        f"| Metric | Value |",
-        f"|--------|-------|",
+        "| Metric | Value |",
+        "|--------|-------|",
         f"| Gold Set Size | {agreement['n_samples']} |",
         f"| Percent Agreement | {agreement['percent_agreement']}% |",
         f"| Cohen's Kappa (κ) | **{agreement['cohen_kappa']}** |",

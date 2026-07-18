@@ -4,15 +4,13 @@ Implements k-fold cross-validation, statistical testing, and comprehensive metri
 """
 
 import numpy as np
-import pandas as pd
 from sklearn.model_selection import StratifiedKFold, GroupKFold
 from sklearn.metrics import (
     accuracy_score, precision_recall_fscore_support,
-    confusion_matrix, classification_report,
-    roc_auc_score, cohen_kappa_score
+    confusion_matrix, cohen_kappa_score
 )
 from scipy import stats
-from typing import Dict, List, Tuple, Any
+from typing import Dict, Tuple, Any
 import json
 from datetime import datetime
 from pathlib import Path

@@ -1,6 +1,5 @@
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { HashLink } from "react-router-hash-link";
 // Landing-theme styles (.ex-header, .ex-form-1, .offcanvas-collapse): needed
 // for direct loads of /signin, which otherwise render an unstyled navbar.
 import "../Pages/Homepage.css";

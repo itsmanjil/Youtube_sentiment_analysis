@@ -42,7 +42,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import List, Sequence
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -563,7 +563,7 @@ def main() -> None:
     print("MULTI-OBJECTIVE NSGA-II RESULTS")
     print("=" * 60)
     print(f"Pareto front: {len(pareto)} solutions")
-    print(f"\nKnee-point weights:")
+    print("\nKnee-point weights:")
     for m, w in zip(model_names, knee_weights):
         print(f"  {m:>8s}: {w:.4f}")
     print(f"\nValidation  →  F1={-val_objectives[0]:.4f}  "

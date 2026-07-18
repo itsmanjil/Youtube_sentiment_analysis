@@ -16,7 +16,7 @@ Reference:
 Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 import numpy as np
 from dataclasses import dataclass
 

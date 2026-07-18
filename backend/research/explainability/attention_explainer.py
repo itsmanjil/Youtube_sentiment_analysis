@@ -30,7 +30,7 @@ Serrano & Smith (2019). Is Attention Interpretable?
 """
 
 import numpy as np
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 from pathlib import Path
 
 
@@ -187,7 +187,6 @@ class AttentionExplainer:
 
     def _explain_hybrid(self, text: str) -> Dict[str, Any]:
         """Extract attention from Hybrid CNN-BiLSTM-Attention model."""
-        import torch
 
         # Tokenize using simple whitespace
         tokens = text.lower().split()

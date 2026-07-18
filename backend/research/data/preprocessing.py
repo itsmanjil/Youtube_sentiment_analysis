@@ -8,7 +8,6 @@ for the hybrid sentiment analysis model.
 import re
 import pickle
 from collections import Counter
-from pathlib import Path
 
 
 class Vocabulary:

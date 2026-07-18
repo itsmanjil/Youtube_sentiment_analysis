@@ -24,8 +24,6 @@ This results in well-calibrated probability estimates, making it
 suitable for ensemble methods and confidence-based filtering.
 """
 
-import json
-import math
 import pickle
 from pathlib import Path
 from typing import Dict, List, Optional, Union

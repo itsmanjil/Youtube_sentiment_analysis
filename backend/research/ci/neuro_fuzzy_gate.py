@@ -100,7 +100,7 @@ import json
 import math
 import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 from scipy.optimize import minimize
@@ -113,7 +113,6 @@ sys.path.insert(0, str(BACKEND_ROOT))
 from src.sentiment import coerce_sentiment_result, get_sentiment_engine, normalize_label
 from src.utils import SENTIMENT_LABELS, normalize_probs
 from research.evaluation.calibration import compute_calibration_metrics
-from research.computational_intelligence.fuzzy.membership_functions import GaussianMF
 from research.transformers.prob_cube_io import load_probability_cube
 
 LABELS: List[str] = list(SENTIMENT_LABELS)

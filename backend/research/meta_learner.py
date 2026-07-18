@@ -522,7 +522,7 @@ class MetaLearnerEnsemble:
             train_acc = accuracy_score(label_indices, train_preds)
             train_f1 = f1_score(label_indices, train_preds, average='macro')
 
-            print(f"\n[OK] Meta-learner trained successfully")
+            print("\n[OK] Meta-learner trained successfully")
             print(f"   Training accuracy (OOF): {train_acc:.4f}")
             print(f"   Training F1 (OOF):      {train_f1:.4f}")
 

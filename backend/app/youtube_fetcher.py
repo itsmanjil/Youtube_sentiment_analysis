@@ -2,7 +2,6 @@
 from googleapiclient.discovery import build
 import os
 import re
-from datetime import datetime
 
 
 class YouTubeFetcher:

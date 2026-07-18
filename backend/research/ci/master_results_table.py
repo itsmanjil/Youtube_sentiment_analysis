@@ -119,7 +119,7 @@ def main() -> None:
 
     lines += [
         "\n### 1d. Selective Prediction (Entropy-Gated)\n",
-        f"Full ensemble (neuro-fuzzy mode)  "
+        "Full ensemble (neuro-fuzzy mode)  "
         + (f"F1={eg_classical['full_ensemble']['macro_f1']:.4f}  AURC={eg_classical['aurc']:.4f}"
            if eg_classical else "— (not found)"),
         "",

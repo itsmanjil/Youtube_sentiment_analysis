@@ -1,11 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { useNavigate, Link, NavLink } from "react-router-dom";
+import { useContext, useEffect, useRef, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 // Landing-theme styles (.ex-header, .offcanvas-collapse, .labels) — must be
 // imported here too, or a direct load of /search renders an unstyled navbar
 // that collapses open over the page content.
 import "./Homepage.css";
 import axiosInstance from "../../axios";
-import { HashLink } from "react-router-hash-link";
 import AuthContext from "../../context/AuthContext";
 import usePageTitle from "../../utils/usePageTitle";
 // import Navbar from "../../Components/Navbar";
@@ -187,7 +186,7 @@ function Search() {
     }
     try {
       return { value: JSON.parse(modelComparison), error: null };
-    } catch (err) {
+    } catch {
       return { value: null, error: "Model comparison JSON must be valid JSON." };
     }
   };
@@ -203,7 +202,7 @@ function Search() {
         throw new Error("Invalid weights format.");
       }
       return weights;
-    } catch (err) {
+    } catch {
       return null;
     }
   };
@@ -224,7 +223,7 @@ function Search() {
         }
         setEnsembleWeights(JSON.stringify(weights));
         setEnsembleWeightsError("");
-      } catch (err) {
+      } catch {
         setEnsembleWeightsError("Invalid JSON weights file.");
       }
     };

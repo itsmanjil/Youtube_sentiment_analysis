@@ -6,7 +6,7 @@ Implements Expected Calibration Error (ECE) and multiclass Brier score.
 
 from __future__ import annotations
 
-from typing import Iterable, List, Sequence, Tuple
+from typing import Iterable, Sequence, Tuple
 
 import numpy as np
 

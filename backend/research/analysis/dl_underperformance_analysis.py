@@ -33,10 +33,8 @@ Run with --sample N to use a random subset (faster iteration during dev).
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression

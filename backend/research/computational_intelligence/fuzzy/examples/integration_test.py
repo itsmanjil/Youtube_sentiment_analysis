@@ -22,7 +22,7 @@ sys.path.insert(0, str(backend_root))
 import os
 os.chdir(backend_root)
 
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 
 def test_engine_loading():
@@ -39,7 +39,7 @@ def test_engine_loading():
         from app.sentiment_engines import LogRegSentimentEngine
         engines['logreg'] = LogRegSentimentEngine()
         engine_status['logreg'] = 'LOADED'
-        print(f"  LogReg: LOADED")
+        print("  LogReg: LOADED")
     except Exception as e:
         engine_status['logreg'] = f'FAILED: {e}'
         print(f"  LogReg: FAILED - {e}")
@@ -49,7 +49,7 @@ def test_engine_loading():
         from app.sentiment_engines import SVMSentimentEngine
         engines['svm'] = SVMSentimentEngine()
         engine_status['svm'] = 'LOADED'
-        print(f"  SVM: LOADED")
+        print("  SVM: LOADED")
     except Exception as e:
         engine_status['svm'] = f'FAILED: {e}'
         print(f"  SVM: FAILED - {e}")
@@ -59,7 +59,7 @@ def test_engine_loading():
         from app.sentiment_engines import TFIDFSentimentEngine
         engines['tfidf'] = TFIDFSentimentEngine()
         engine_status['tfidf'] = 'LOADED'
-        print(f"  TF-IDF: LOADED")
+        print("  TF-IDF: LOADED")
     except Exception as e:
         engine_status['tfidf'] = f'FAILED: {e}'
         print(f"  TF-IDF: FAILED - {e}")
@@ -115,10 +115,8 @@ def test_fuzzy_integration(engines: Dict[str, Any]):
         print("  SKIPPED: Need at least 2 engines for fuzzy integration")
         return None
 
-    from research.computational_intelligence.fuzzy import FuzzySentimentClassifier
     from research.computational_intelligence.fuzzy.engine_integration import (
         FuzzySentimentEngine,
-        EngineAdapter,
     )
 
     # Create fuzzy engine with loaded engines
@@ -130,8 +128,8 @@ def test_fuzzy_integration(engines: Dict[str, Any]):
         defuzz_method='centroid'
     )
 
-    print(f"  Fuzzy engine created successfully!")
-    print(f"  Configuration:")
+    print("  Fuzzy engine created successfully!")
+    print("  Configuration:")
     info = fuzzy_engine.get_model_info()
     for key, value in info.items():
         print(f"    {key}: {value}")
@@ -252,7 +250,7 @@ def test_batch_processing(engines: Dict[str, Any]):
     results = fuzzy_engine.analyze_batch(test_texts)
     elapsed = time.time() - start_time
 
-    print(f"\n  Results:")
+    print("\n  Results:")
     print(f"    Total samples: {len(results)}")
     print(f"    Total time: {elapsed:.3f}s")
     print(f"    Avg per sample: {elapsed/len(results)*1000:.2f}ms")
@@ -262,17 +260,17 @@ def test_batch_processing(engines: Dict[str, Any]):
     confidences = [r.confidence for r in results]
     fuzziness = [r.fuzziness_index for r in results]
 
-    print(f"\n  Label Distribution:")
+    print("\n  Label Distribution:")
     for label in ['Positive', 'Neutral', 'Negative']:
         count = labels.count(label)
         print(f"    {label}: {count} ({count/len(labels)*100:.1f}%)")
 
-    print(f"\n  Confidence Stats:")
+    print("\n  Confidence Stats:")
     print(f"    Mean: {sum(confidences)/len(confidences):.3f}")
     print(f"    Min:  {min(confidences):.3f}")
     print(f"    Max:  {max(confidences):.3f}")
 
-    print(f"\n  Fuzziness Stats:")
+    print("\n  Fuzziness Stats:")
     print(f"    Mean: {sum(fuzziness)/len(fuzziness):.3f}")
     print(f"    Min:  {min(fuzziness):.3f}")
     print(f"    Max:  {max(fuzziness):.3f}")

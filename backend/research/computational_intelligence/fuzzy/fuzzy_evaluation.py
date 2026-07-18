@@ -27,11 +27,9 @@ Reference:
 Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 import numpy as np
-from collections import defaultdict
-import json
 
 
 @dataclass

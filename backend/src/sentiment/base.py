@@ -21,7 +21,7 @@ coerce_sentiment_result
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple, Union
 
-from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.utils import normalize_probs
 from src.utils.runtime_artifacts import load_runtime_artifact_json
 
 

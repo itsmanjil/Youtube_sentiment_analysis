@@ -24,7 +24,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Pt, RGBColor, Inches
+from docx.shared import Pt, Inches
 
 BACKEND = Path(__file__).resolve().parents[1]
 DOCS = BACKEND / "docs"

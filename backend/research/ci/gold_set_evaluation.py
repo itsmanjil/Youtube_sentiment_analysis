@@ -257,7 +257,7 @@ def main():
     primary_name    = "Human-Reconciled Gold Labels" if has_human else "Silver Labels (auto-annotated pre-human fallback)"
     primary_ref_key = "human_ref" if has_human else "silver_ref"
 
-    md = [f"# Gold Set Evaluation (300 samples)\n"]
+    md = ["# Gold Set Evaluation (300 samples)\n"]
 
     # IAA section
     if iaa:

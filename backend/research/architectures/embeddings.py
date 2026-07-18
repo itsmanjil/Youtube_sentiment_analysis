@@ -14,7 +14,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 from pathlib import Path
-import pickle
 
 
 def load_glove_embeddings(glove_path, embedding_dim=300):
@@ -94,7 +93,7 @@ def create_embedding_matrix(word2idx, embeddings_dict, embedding_dim=300):
         'oov_words': vocab_size - found
     }
 
-    print(f"Embedding Matrix Created:")
+    print("Embedding Matrix Created:")
     print(f"  Vocabulary size: {vocab_size}")
     print(f"  Found in pre-trained: {found} ({coverage:.2%})")
     print(f"  Out-of-vocabulary: {vocab_size - found}")

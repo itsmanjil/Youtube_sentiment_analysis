@@ -1,5 +1,3 @@
-import React from "react";
-import { Link } from "react-router-dom";
 import Navbar from "../../Components/Navbar";
 import RegisterForm from "./RegisterForm";
 // Landing-theme styles (.ex-header, .ex-form-1, .offcanvas-collapse): needed

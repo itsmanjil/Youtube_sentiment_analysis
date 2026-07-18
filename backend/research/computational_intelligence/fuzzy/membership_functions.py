@@ -24,7 +24,7 @@ Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
 from abc import ABC, abstractmethod
-from typing import Union, List, Tuple, Optional
+from typing import Union, Tuple
 import numpy as np
 
 

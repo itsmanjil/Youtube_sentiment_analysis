@@ -8,11 +8,11 @@ with appropriate settings for sentiment analysis training.
 import torch
 from torch.utils.data import DataLoader, Dataset, random_split, SubsetRandomSampler
 import numpy as np
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional
 from pathlib import Path
 import pickle
 
-from .dataset import SentimentDataset, CSVSentimentDataset, InMemoryDataset
+from .dataset import SentimentDataset, CSVSentimentDataset
 from .preprocessing import Vocabulary
 
 

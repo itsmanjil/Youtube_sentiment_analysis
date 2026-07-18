@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useCallback } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import Sidenavbar from "../../Components/Sidenavbar";
 import { Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -6,7 +6,7 @@ import AuthContext from "../../context/AuthContext";
 import axiosInstance from "../../axios";
 import usePageTitle from "../../utils/usePageTitle";
 
-function Profile(props) {
+function Profile() {
   usePageTitle("Profile");
   const { authToken } = useContext(AuthContext);
   const [user, setUser] = useState({});

@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import json
 import sys
-import time
 from pathlib import Path
 
 import numpy as np
@@ -25,9 +24,8 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.model_selection import StratifiedKFold, PredefinedSplit
-from sklearn.metrics import f1_score, accuracy_score, classification_report
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import f1_score, accuracy_score
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_ROOT))

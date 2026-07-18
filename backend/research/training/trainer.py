@@ -19,7 +19,6 @@ except Exception as exc:  # TensorBoard can fail due to protobuf version mismatc
     _TENSORBOARD_IMPORT_ERROR = exc
 else:
     _TENSORBOARD_IMPORT_ERROR = None
-import numpy as np
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from datetime import datetime

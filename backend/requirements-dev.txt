@@ -1,0 +1,8 @@
+# Dev/CI-only tooling — not part of the runtime dependency set in
+# requirements.txt. Install alongside requirements.txt for linting and
+# dependency-vulnerability scanning:
+#
+#   pip install -r requirements.txt -r requirements-dev.txt
+
+ruff==0.15.22
+pip-audit==2.10.1

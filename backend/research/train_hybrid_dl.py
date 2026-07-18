@@ -28,7 +28,6 @@ Version: 1.0.0
 import argparse
 import yaml
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingLR
 from pathlib import Path
@@ -42,11 +41,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from architectures.hybrid_cnn_bilstm import HybridCNNBiLSTM
 from architectures.embeddings import EmbeddingManager
-from data.preprocessing import Vocabulary
-from data.data_loaders import load_from_csv, create_stratified_split_loaders, CSVSentimentDataset, create_data_loaders
+from data.data_loaders import load_from_csv
 from training.trainer import HybridDLTrainer
 from training.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler, ProgressLogger, TrainingHistory
-from training.evaluator import evaluate_model
 
 
 def load_config(config_path: str) -> dict:
@@ -327,7 +324,7 @@ def main():
         dropout_classifier=model_config.get('classifier', {}).get('dropout', [0.5, 0.4])
     )
 
-    print(f"[OK] Model created")
+    print("[OK] Model created")
     print(f"   Total parameters: {sum(p.numel() for p in model.parameters()):,}")
     print(f"   Trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}\n")
 
@@ -361,7 +358,7 @@ def main():
             print("   Embeddings trainable")
 
         coverage = embedding_manager.compute_coverage(vocab.word2idx, embeddings_dict)
-        print(f"[OK] GloVe embeddings loaded")
+        print("[OK] GloVe embeddings loaded")
         print(f"   Vocabulary coverage: {coverage:.2%}\n")
 
     # ====================
@@ -410,7 +407,7 @@ def main():
             optimizer,
             T_max=training_config.get('max_epochs', 50)
         )
-        print(f"[OK] LR Scheduler: CosineAnnealingLR")
+        print("[OK] LR Scheduler: CosineAnnealingLR")
 
     # Callbacks
     callbacks = []
@@ -445,7 +442,7 @@ def main():
         save_best_only=True,
         verbose=True
     ))
-    print(f"[OK] Model Checkpoint (saving best model)")
+    print("[OK] Model Checkpoint (saving best model)")
 
     # Learning rate scheduler callback
     if scheduler is not None:
@@ -523,14 +520,14 @@ def main():
     print("TRAINING COMPLETE!")
     print(f"{'='*80}")
     print(f"\n[OUTPUT] All outputs saved to: {output_dir}")
-    print(f"   - Configuration: config.yaml")
-    print(f"   - Vocabulary: vocab.pkl")
-    print(f"   - Best model: checkpoints/")
-    print(f"   - Final model: final_model.pt")
-    print(f"   - Training history: training_history.json")
+    print("   - Configuration: config.yaml")
+    print("   - Vocabulary: vocab.pkl")
+    print("   - Best model: checkpoints/")
+    print("   - Final model: final_model.pt")
+    print("   - Training history: training_history.json")
     if test_loader:
-        print(f"   - Test results: test_results.json")
-    print(f"\n[INFO] View training curves:")
+        print("   - Test results: test_results.json")
+    print("\n[INFO] View training curves:")
     print(f"   tensorboard --logdir={config.get('tensorboard_dir', './runs')}")
     print()
 

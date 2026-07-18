@@ -29,7 +29,6 @@ from src.sentiment.engines.meta_learner_engine import MetaLearnerSentimentEngine
 from research.ci.gold_set_evaluation import (
     evaluate,
     _filter_by_reference,
-    load_iaa_metrics,
 )
 
 SILVER_CSV = BACKEND / "data" / "gold_set_silver_labeled.csv"

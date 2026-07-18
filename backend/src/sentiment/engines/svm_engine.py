@@ -31,7 +31,6 @@ Note: These are not calibrated probabilities. For better calibration,
 use Platt scaling or isotonic regression during training.
 """
 
-import json
 import pickle
 from pathlib import Path
 from typing import Dict, List, Optional, Union

@@ -14,15 +14,14 @@ Features:
 Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
-from typing import Dict, List, Tuple, Any, Optional, Callable
+from typing import Dict, Any, Callable
 from dataclasses import dataclass, field
 import numpy as np
-from pathlib import Path
 import json
 import time
 from datetime import datetime
 
-from .base import Dataset, DatasetSplit, SentimentLabel, DatasetManager
+from .base import Dataset, DatasetSplit, SentimentLabel
 
 
 @dataclass
@@ -294,7 +293,7 @@ class BenchmarkEvaluator:
                 pred_label = self._normalize_label(pred)
                 predictions.append(pred_label)
                 true_labels.append(label.value)
-            except Exception as e:
+            except Exception:
                 predictions.append(1)  # Default to neutral
                 true_labels.append(label.value)
 

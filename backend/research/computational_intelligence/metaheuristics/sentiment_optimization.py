@@ -17,14 +17,13 @@ Do not cite these classes as having produced any pinned result.
 Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
-from typing import List, Dict, Tuple, Any, Optional, Callable
+from typing import List, Dict, Tuple, Any, Callable
 import numpy as np
-from dataclasses import dataclass
 import time
 
-from .base import OptimizationProblem, ObjectiveType, Solution, OptimizationResult
-from .pso import ParticleSwarmOptimizer, PSOConfig
-from .nsga2 import NSGA2, NSGA2Config
+from .base import OptimizationProblem, ObjectiveType, OptimizationResult
+from .pso import ParticleSwarmOptimizer
+from .nsga2 import NSGA2
 
 
 class EnsembleWeightProblem(OptimizationProblem):

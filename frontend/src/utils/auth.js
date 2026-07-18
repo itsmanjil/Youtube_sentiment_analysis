@@ -14,7 +14,7 @@ export const parseStoredAuthToken = (rawValue) => {
   try {
     const parsed = JSON.parse(rawValue);
     return parsed && typeof parsed === "object" ? parsed : null;
-  } catch (err) {
+  } catch {
     return looksLikeJwt(rawValue) ? { access: rawValue } : null;
   }
 };
@@ -42,7 +42,7 @@ export const decodeAccessToken = (accessToken) => {
 
   try {
     return jwtDecode(accessToken);
-  } catch (err) {
+  } catch {
     return null;
   }
 };

@@ -1,7 +1,6 @@
 
 import json
 import math
-import os
 import re
 import logging
 import threading
@@ -662,7 +661,7 @@ def _execute_analysis_job(job_id):
             # "Invalid engine type: ..." — safe, no server-side paths.
             _fail_job(job, str(exc), 400)
             return
-        except (RuntimeError, ImportError, FileNotFoundError) as exc:
+        except (RuntimeError, ImportError, FileNotFoundError):
             # These can embed absolute server-side model/vectorizer paths
             # (see FileNotFoundError raised by e.g. LogRegSentimentEngine.__init__,
             # and src.sentiment.engines.artifact_utils.format_model_load_error) —

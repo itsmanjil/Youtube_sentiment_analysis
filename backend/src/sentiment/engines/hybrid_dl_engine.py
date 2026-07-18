@@ -22,12 +22,11 @@ For training, see: research/train_hybrid_dl.py
 For architecture details, see: research/architectures/hybrid_cnn_bilstm.py
 """
 
-import io
 import json
 import pickle
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from src.utils import normalize_probs
 from src.utils.config import get_model_path

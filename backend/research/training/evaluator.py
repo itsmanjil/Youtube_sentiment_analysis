@@ -206,7 +206,7 @@ class SentimentEvaluator:
         print("="*80)
 
         # Main metrics
-        print(f"\nOverall Metrics:")
+        print("\nOverall Metrics:")
         print(f"  Accuracy:       {metrics.get('accuracy', 0):.4f}")
         print(f"  F1-Macro:       {metrics.get('f1_macro', 0):.4f}")
         print(f"  Precision-Macro: {metrics.get('precision_macro', 0):.4f}")
@@ -214,14 +214,14 @@ class SentimentEvaluator:
         print(f"  Cohen's Kappa:  {metrics.get('cohen_kappa', 0):.4f}")
 
         # Per-class metrics
-        print(f"\nPer-Class F1 Scores:")
+        print("\nPer-Class F1 Scores:")
         for class_name in self.class_names:
             key = f'f1_{class_name.lower()}'
             if key in metrics:
                 print(f"  {class_name:10s}: {metrics[key]:.4f}")
 
         # Confusion matrix
-        print(f"\nConfusion Matrix:")
+        print("\nConfusion Matrix:")
         cm = self.get_confusion_matrix()
         print(f"{'':12s}", end='')
         for name in self.class_names:
@@ -235,7 +235,7 @@ class SentimentEvaluator:
             print()
 
         # Classification report
-        print(f"\nDetailed Classification Report:")
+        print("\nDetailed Classification Report:")
         print(self.get_classification_report())
 
         print("="*80 + "\n")

@@ -7,11 +7,10 @@ publication-ready LaTeX tables and figures.
 Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 """
 
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, field
+from typing import Dict, List, Any
+from dataclasses import dataclass
 from pathlib import Path
 import numpy as np
-import json
 from datetime import datetime
 
 

@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
-from typing import List, Dict, Tuple, Optional, Union
+from typing import List, Dict, Optional, Union
 import pickle
 from pathlib import Path
 
@@ -17,7 +17,7 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-from .preprocessing import tokenize, Vocabulary
+from .preprocessing import Vocabulary
 
 
 class SentimentDataset(Dataset):

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState } from "react";
 //kun component lai k chainxa tei line   send a data from a component to all child components.
 
 //focusing on emmail in login
@@ -20,13 +20,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
   BarChart,
   Bar,
-  ComposedChart,
-  ScatterChart,
-  Scatter,
 } from "recharts";
 import axiosInstance from "../../axios";
 import { jwtDecode } from "jwt-decode";
@@ -49,7 +44,6 @@ const renderCustomizedLabel = ({
   innerRadius,
   outerRadius,
   percent,
-  index,
 }) => {
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -67,7 +61,7 @@ const renderCustomizedLabel = ({
     </text>
   );
 };
-function Dashboard(props) {
+function Dashboard() {
   usePageTitle("Dashboard");
   const navigate = useNavigate();
   const location = useLocation();
@@ -159,7 +153,6 @@ function Dashboard(props) {
             let totalComments = 0;
             let totalPositive = 0;
             let totalNegative = 0;
-            let totalNeutral = 0;
 
             analyses.forEach((analysis) => {
               const positive = analysis.sentiment_data?.Positive || 0;
@@ -170,7 +163,6 @@ function Dashboard(props) {
               totalComments += total;
               totalPositive += positive;
               totalNegative += negative;
-              totalNeutral += neutral;
             });
 
             const avgPositive = totalComments > 0 ? ((totalPositive / totalComments) * 100).toFixed(1) : 0;
@@ -276,7 +268,7 @@ function Dashboard(props) {
           }
         }
       }
-    } catch (err) {
+    } catch {
       setHasSearched(false);
     }
   };

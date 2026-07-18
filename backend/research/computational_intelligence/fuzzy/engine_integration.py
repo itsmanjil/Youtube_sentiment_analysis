@@ -30,7 +30,7 @@ Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Union, Type
+from typing import Dict, List, Any
 from dataclasses import dataclass
 import time
 import logging
@@ -41,7 +41,6 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 from .fuzzy_sentiment import FuzzySentimentClassifier, FuzzySentimentResult
-from .fuzzy_evaluation import FuzzyEvaluator
 
 
 logger = logging.getLogger(__name__)
