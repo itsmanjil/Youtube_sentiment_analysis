@@ -6,6 +6,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCurrentPng } from "recharts-to-png";
 import Sidenavbar from "../../Components/Sidenavbar";
+import StatCard from "../../Components/StatCard";
 import { Link, useLocation } from "react-router-dom";
 import FileSaver from "file-saver";
 import {
@@ -503,67 +504,51 @@ function Dashboard() {
                 )}
               </div>
               <div className="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div className="card h-100" style={{ borderLeft: "4px solid var(--yt-red)" }}>
-                  <div className="card-header p-3 pt-2">
-                    <div className="d-flex align-items-center">
-                      <i className="fas fa-comments me-2" style={{ fontSize: "20px", color: "var(--yt-red)" }} aria-hidden="true"></i>
-                      <p className="text-sm mb-0 text-capitalize">Total Comments</p>
-                    </div>
-                    <h3 className="mb-0 mt-2">{sentimentTotalCount}</h3>
-                  </div>
-                  <hr className="dark horizontal my-0" />
-                </div>
+                <StatCard
+                  icon="fas fa-comments me-2"
+                  iconSize="20px"
+                  iconColor="var(--yt-red)"
+                  borderColor="var(--yt-red)"
+                  label="Total Comments"
+                  value={sentimentTotalCount}
+                  valueTag="h3"
+                />
               </div>
               <div className="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div className="card h-100" style={{ borderLeft: `4px solid ${SENTIMENT_COLORS.Positive}` }}>
-                  <div className="card-header p-3 pt-2">
-                    <div className="d-flex align-items-center">
-                      <i className="fas fa-thumbs-up me-2" style={{ fontSize: "18px", color: SENTIMENT_COLORS.Positive }} aria-hidden="true"></i>
-                      <p className="text-sm mb-0 text-capitalize">Positive Comments</p>
-                    </div>
-                    <h4 className="mb-0 mt-2" style={{ color: SENTIMENT_COLORS.Positive }}>
-                      {sentimentBreakdown && sentimentBreakdown[2] ? sentimentBreakdown[2].value : 0}
-                    </h4>
-                    {percentOfTotal(sentimentBreakdown?.[2]?.value) && (
-                      <p className="text-xs text-muted mb-0">{percentOfTotal(sentimentBreakdown[2].value)}</p>
-                    )}
-                  </div>
-                  <hr className="dark horizontal my-0" />
-                </div>
+                <StatCard
+                  icon="fas fa-thumbs-up me-2"
+                  iconSize="18px"
+                  iconColor={SENTIMENT_COLORS.Positive}
+                  borderColor={SENTIMENT_COLORS.Positive}
+                  label="Positive Comments"
+                  value={sentimentBreakdown && sentimentBreakdown[2] ? sentimentBreakdown[2].value : 0}
+                  valueColor={SENTIMENT_COLORS.Positive}
+                  percent={percentOfTotal(sentimentBreakdown?.[2]?.value)}
+                />
               </div>
               <div className="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div className="card h-100" style={{ borderLeft: `4px solid ${SENTIMENT_COLORS.Negative}` }}>
-                  <div className="card-header p-3 pt-2">
-                    <div className="d-flex align-items-center">
-                      <i className="fas fa-thumbs-down me-2" style={{ fontSize: "18px", color: SENTIMENT_COLORS.Negative }} aria-hidden="true"></i>
-                      <p className="text-sm mb-0 text-capitalize">Negative Comments</p>
-                    </div>
-                    <h4 className="mb-0 mt-2" style={{ color: SENTIMENT_COLORS.Negative }}>
-                      {sentimentBreakdown && sentimentBreakdown[0] ? sentimentBreakdown[0].value : 0}
-                    </h4>
-                    {percentOfTotal(sentimentBreakdown?.[0]?.value) && (
-                      <p className="text-xs text-muted mb-0">{percentOfTotal(sentimentBreakdown[0].value)}</p>
-                    )}
-                  </div>
-                  <hr className="dark horizontal my-0" />
-                </div>
+                <StatCard
+                  icon="fas fa-thumbs-down me-2"
+                  iconSize="18px"
+                  iconColor={SENTIMENT_COLORS.Negative}
+                  borderColor={SENTIMENT_COLORS.Negative}
+                  label="Negative Comments"
+                  value={sentimentBreakdown && sentimentBreakdown[0] ? sentimentBreakdown[0].value : 0}
+                  valueColor={SENTIMENT_COLORS.Negative}
+                  percent={percentOfTotal(sentimentBreakdown?.[0]?.value)}
+                />
               </div>
               <div className="col-xl-3 col-sm-6">
-                <div className="card h-100" style={{ borderLeft: `4px solid ${SENTIMENT_COLORS.Neutral}` }}>
-                  <div className="card-header p-3 pt-2">
-                    <div className="d-flex align-items-center">
-                      <i className="fas fa-minus-circle me-2" style={{ fontSize: "18px", color: SENTIMENT_COLORS.Neutral }} aria-hidden="true"></i>
-                      <p className="text-sm mb-0 text-capitalize">Neutral Comments</p>
-                    </div>
-                    <h4 className="mb-0 mt-2" style={{ color: SENTIMENT_COLORS.Neutral }}>
-                      {sentimentBreakdown && sentimentBreakdown[1] ? sentimentBreakdown[1].value : 0}
-                    </h4>
-                    {percentOfTotal(sentimentBreakdown?.[1]?.value) && (
-                      <p className="text-xs text-muted mb-0">{percentOfTotal(sentimentBreakdown[1].value)}</p>
-                    )}
-                  </div>
-                  <hr className="dark horizontal my-0" />
-                </div>
+                <StatCard
+                  icon="fas fa-minus-circle me-2"
+                  iconSize="18px"
+                  iconColor={SENTIMENT_COLORS.Neutral}
+                  borderColor={SENTIMENT_COLORS.Neutral}
+                  label="Neutral Comments"
+                  value={sentimentBreakdown && sentimentBreakdown[1] ? sentimentBreakdown[1].value : 0}
+                  valueColor={SENTIMENT_COLORS.Neutral}
+                  percent={percentOfTotal(sentimentBreakdown?.[1]?.value)}
+                />
               </div>
             </div>
             {(confidenceStats || analysisMeta || modelUsed) && (

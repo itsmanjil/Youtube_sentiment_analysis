@@ -428,6 +428,545 @@ def _fail_job(job, message, http_status):
     job.save(update_fields=["status", "error_message", "error_status", "updated_at"])
 
 
+def _fetch_comments(job, p, user):
+    """Step 1: Fetch video metadata + raw comments via the YouTube API or
+    scraper, validating the result. Returns (video_id, video_metadata,
+    comments_raw) on success, or None if the job was already failed — the
+    caller must return immediately in that case."""
+    video_url = p["video_url"]
+    max_comments = p["max_comments"]
+    use_api = p["use_api"]
+
+    logger.debug("Fetching comments from %s", video_url)
+    if use_api:
+        try:
+            fetcher = YouTubeFetcher()
+            video_id = fetcher.extract_video_id(video_url)
+            if video_id is None:
+                _fail_job(job, f"Invalid YouTube URL: {video_url}", 400)
+                return None
+            video_metadata = fetcher.fetch_video_metadata(video_id)
+            comments_raw = fetcher.fetch_comments(video_url, max_results=max_comments)
+        except HttpError as e:
+            # Never surface str(e)/repr(e) here: HttpError.__str__ always
+            # embeds the full request URL (self.uri), which for this
+            # client includes `key=<YOUTUBE_API_KEY>` as a query
+            # parameter — that would leak the shared API key to whichever
+            # user's request happened to fail.
+            status_code = getattr(e.resp, "status", None)
+            try:
+                error_details = json.loads(e.content).get('error', {})
+                reason = error_details.get('errors', [{}])[0].get('reason')
+                message = error_details.get('message') or (
+                    f"YouTube API request failed with status {status_code}."
+                )
+
+                if reason == 'quotaExceeded':
+                    _fail_job(job, "YouTube API daily quota exceeded. Please try again tomorrow or use scraper mode (use_api: false).", 429); return None
+                elif reason == 'developerKeyInvalid':
+                    _fail_job(job, "The provided YOUTUBE_API_KEY is invalid. Please check your .env file and ensure it is correct.", 401); return None
+                elif reason == 'commentsDisabled':
+                    _fail_job(job, "Comments are disabled for this video.", 403); return None
+                elif status_code == 404:
+                    _fail_job(job, "Video not found. Please check the URL.", 404); return None
+                else:
+                    _fail_job(job, f"A YouTube API error occurred: {message}", 502); return None
+            except (json.JSONDecodeError, KeyError, IndexError, AttributeError):
+                logger.warning(
+                    "Unparseable YouTube API error response (status=%s)", status_code
+                )
+                _fail_job(
+                    job,
+                    f"A YouTube API error occurred (status {status_code}).",
+                    502,
+                )
+                return None
+        except ValueError as e:
+            # Local configuration error raised by YouTubeFetcher.__init__
+            # (e.g. missing YOUTUBE_API_KEY) — safe to surface verbatim,
+            # it never touches the network or embeds request details.
+            _fail_job(job, str(e), 502)
+            return None
+        except Exception:
+            logger.exception(
+                "Unexpected error using the YouTube API client for user=%s video_url=%s",
+                getattr(user, "id", None),
+                video_url,
+            )
+            _fail_job(
+                job,
+                "An unexpected error occurred with the YouTube API client. Please ensure your YOUTUBE_API_KEY is correctly set in the .env file.",
+                502,
+            )
+            return None
+    else:
+        try:
+            scraper = YouTubeScraper()
+            video_id = scraper.extract_video_id(video_url)
+            if video_id is None:
+                _fail_job(job, f"Invalid YouTube URL: {video_url}", 400)
+                return None
+            video_metadata = scraper.fetch_video_metadata(video_id)
+            comments_raw = scraper.fetch_comments(video_url, max_results=max_comments)
+        except (RuntimeError, ImportError) as e:
+            # YouTubeScraper deliberately raises only these two exception
+            # types, both with pre-sanitized, human-authored messages
+            # (missing youtube-comment-downloader install; comments
+            # disabled/private/region-locked/blocked) — see
+            # youtube_scraper.py, which itself takes care never to let
+            # raw yt-dlp/downloader exception text (which can embed local
+            # paths or other internals) propagate this far. Safe to
+            # surface verbatim.
+            _fail_job(job, f"Scraper error: {str(e)}", 502)
+            return None
+        except Exception:
+            # Anything else is an exception type the scraper module
+            # never intentionally raises (see above) — treat it the same
+            # as the API-mode catch-all a few lines up: log the real
+            # detail server-side, return a generic client-safe message.
+            logger.exception(
+                "Unexpected scraper error for user=%s video_url=%s",
+                getattr(user, "id", None),
+                video_url,
+            )
+            _fail_job(
+                job,
+                "An unexpected error occurred while scraping YouTube. Please try again later.",
+                502,
+            )
+            return None
+
+    if not video_metadata:
+        _fail_job(job, "Video not found. It may be private, deleted, or the URL is incorrect.", 404)
+        return None
+
+    if not comments_raw:
+        _fail_job(job, "No comments found for this video", 404)
+        return None
+
+    logger.debug("Fetched %s raw comments", len(comments_raw))
+    return video_id, video_metadata, comments_raw
+
+
+def _get_or_update_video(video_id, video_metadata):
+    """Step 2: Save or update video metadata. Returns the YouTubeVideo."""
+    video, created = YouTubeVideo.objects.get_or_create(
+        video_id=video_id,
+        defaults={
+            'title': video_metadata['title'],
+            'description': video_metadata.get('description', ''),
+            'channel_name': video_metadata['channel'],
+            'channel_id': video_metadata.get('channel_id', ''),
+            'published_at': video_metadata['published_at'],
+            'view_count': video_metadata.get('view_count', 0),
+            'like_count': video_metadata.get('like_count', 0),
+            'comment_count': video_metadata.get('comment_count', 0),
+            'thumbnail_url': video_metadata.get('thumbnail_url', '')
+        }
+    )
+
+    if not created:
+        # Update metadata if video already exists
+        video.view_count = video_metadata.get('view_count', video.view_count)
+        video.like_count = video_metadata.get('like_count', video.like_count)
+        video.comment_count = video_metadata.get('comment_count', video.comment_count)
+        video.save()
+
+    return video
+
+
+def _preprocess_comments(job, p, sentiment_model, comments_raw):
+    """Step 3: Preprocess + filter raw comments. Returns (processed_comments,
+    filter_stats, processing_profile) on success, or None if the job was
+    already failed — the caller must return immediately in that case."""
+    logger.debug("Preprocessing comments")
+    preprocessor = YouTubePreprocessor()
+    processing_profile = _get_processing_profile(sentiment_model)
+    processed_comments, filter_stats = preprocessor.batch_preprocess(
+        comments_raw,
+        profile=processing_profile,
+        emoji_mode=p["emoji_mode"],
+        check_spam=p["filter_spam"],
+        check_lang=p["filter_language"]
+    )
+
+    if not processed_comments:
+        _fail_job(job, "All comments were filtered out. Try different filter settings.", 400)
+        return None
+
+    logger.debug("Processed %s comments after filtering", len(processed_comments))
+    return processed_comments, filter_stats, processing_profile
+
+
+def _build_engine_kwargs(sentiment_model, p):
+    """Step 4a: Build the get_sentiment_engine() kwargs for the requested
+    model family."""
+    engine_kwargs = {}
+    if sentiment_model == "ensemble":
+        engine_kwargs = {
+            "base_models": p["ensemble_models"],
+            "weights": p["ensemble_weights"],
+            "weights_optimization": p["ensemble_weights_optimization"],
+        }
+    elif sentiment_model == "meta_learner":
+        # meta_learner_path is always None here: enforced at the view layer
+        # (meta_learner_path overrides are rejected there with a 400 before
+        # a job is ever created).
+        if p["meta_learner_models"]:
+            engine_kwargs["base_models"] = p["meta_learner_models"]
+    elif sentiment_model == "fuzzy_ensemble":
+        engine_kwargs = {
+            "base_models": p["fuzzy_models"],
+            "mf_type": p["fuzzy_mf_type"] or "gaussian",
+            "defuzz_method": p["fuzzy_defuzz_method"] or "centroid",
+            "t_norm": p["fuzzy_t_norm"] or "min",
+            "t_conorm": p["fuzzy_t_conorm"] or "max",
+            "alpha_cut": p["fuzzy_alpha_cut"],
+            "resolution": p["fuzzy_resolution"],
+            "confidence_threshold": p["confidence_threshold"],
+        }
+    elif _is_transformer_model(sentiment_model):
+        engine_kwargs = {
+            "calibration_profile": p["calibration_profile"],
+        }
+    return engine_kwargs
+
+
+def _run_sentiment_analysis(job, sentiment_model, engine_kwargs, processed_comments, user):
+    """Step 4b: Construct the sentiment engine and run batch_analyze,
+    mutating processed_comments in place with sentiment/score/probs/
+    confidence. Returns the engine on success, or None if the job was
+    already failed — the caller must return immediately in that case."""
+    logger.debug("Running sentiment analysis using %s", sentiment_model)
+    try:
+        engine = get_sentiment_engine(sentiment_model, **engine_kwargs)
+    except ValueError as exc:
+        # "Invalid engine type: ..." — safe, no server-side paths.
+        _fail_job(job, str(exc), 400)
+        return None
+    except (RuntimeError, ImportError, FileNotFoundError):
+        # These can embed absolute server-side model/vectorizer paths
+        # (see FileNotFoundError raised by e.g. LogRegSentimentEngine.__init__,
+        # and src.sentiment.engines.artifact_utils.format_model_load_error) —
+        # log the real detail server-side and return a generic message.
+        logger.exception(
+            "Failed to construct sentiment engine %s for user=%s",
+            sentiment_model,
+            getattr(user, "id", None),
+        )
+        _fail_job(
+            job,
+            f"The '{sentiment_model}' model is temporarily unavailable. Please try a different model or try again later.",
+            400,
+        )
+        return None
+
+    batch_results = engine.batch_analyze(
+        [item['processed_text'] for item in processed_comments]
+    )
+    for item, raw_result in zip(processed_comments, batch_results):
+        result = coerce_sentiment_result(raw_result, sentiment_model)
+        item['sentiment'] = result.label
+        item['sentiment_score'] = result.score
+        item['sentiment_probs'] = result.probs
+        item['confidence'] = confidence_from_probs(result.probs)
+
+    return engine
+
+
+def _save_comments(video, processed_comments):
+    """Step 5: Save processed comments to the database.
+
+    Batched via bulk_create instead of one update_or_create()/create() per
+    comment (up to `max_comments`, i.e. up to 2000 individual queries):
+    id-bearing comments are upserted in a single INSERT ... ON CONFLICT DO
+    UPDATE, id-less ones in a single plain INSERT. This trades the old
+    per-comment error isolation (one malformed comment used to fail only
+    itself) for one failure covering the whole batch — acceptable here
+    since the analytics step is computed from `processed_comments` in
+    memory, not from these rows, so a save failure is already non-fatal to
+    the analysis result either way.
+    """
+    logger.debug("Saving processed comments to database")
+    without_id_comments = []
+    # Keyed by comment_id so a duplicate id within the same batch keeps
+    # only the last occurrence — bulk_create(update_conflicts=True)
+    # cannot upsert the same conflict key twice within one statement
+    # (unlike the old sequential update_or_create() loop, which just
+    # updated the same row twice).
+    with_id_comments = {}
+    for item in processed_comments:
+        # `published_at` is a non-nullable DateTimeField, but scraper mode
+        # can yield None for unparseable relative timestamps ("2 days
+        # ago"-style strings that don't match any known pattern) — fall
+        # back to now() rather than raising IntegrityError on save.
+        published_at = item['published_at'] or timezone.now()
+        fields = dict(
+            video=video,
+            text=item['text'],
+            author=item['author'],
+            likes=item['likes'],
+            published_at=published_at,
+            is_reply=item['is_reply'],
+            sentiment=item['sentiment'],
+            sentiment_score=item['sentiment_score'],
+            is_spam=item.get('metadata', {}).get('is_spam', False),
+            language=item['metadata']['language'],
+        )
+        # `comment_id` is globally unique in the DB. Coerce a missing/blank
+        # id to None (NULL) rather than '' — SQL treats multiple NULLs as
+        # distinct for uniqueness, whereas multiple '' comments would
+        # collide into a single row and silently overwrite each other.
+        comment_id = item.get('comment_id') or None
+        if comment_id is None:
+            without_id_comments.append(YouTubeComment(comment_id=None, **fields))
+        else:
+            with_id_comments[comment_id] = YouTubeComment(comment_id=comment_id, **fields)
+
+    try:
+        if without_id_comments:
+            YouTubeComment.objects.bulk_create(without_id_comments)
+        if with_id_comments:
+            YouTubeComment.objects.bulk_create(
+                list(with_id_comments.values()),
+                update_conflicts=True,
+                unique_fields=["comment_id"],
+                update_fields=[
+                    "video", "text", "author", "likes", "published_at",
+                    "is_reply", "sentiment", "sentiment_score", "is_spam",
+                    "language",
+                ],
+            )
+    except Exception:
+        logger.exception(
+            "Failed to bulk-save comments for video %s", video.video_id
+        )
+
+
+def _build_analytics(p, processed_comments):
+    """Step 6: Compute aggregate analytics from processed_comments."""
+    logger.debug("Generating analysis aggregates")
+    sentiments = [item['sentiment'] for item in processed_comments]
+    sentiment_counts = Counter(sentiments)
+    confidences = [item.get('confidence', 0.0) for item in processed_comments]
+    confidence_stats = aggregate_confidence_stats(
+        confidences,
+        threshold=p["confidence_threshold"],
+    )
+    entropies = [
+        entropy_from_probs(item.get('sentiment_probs', {}))
+        for item in processed_comments
+    ]
+    uncertainty_stats = {
+        "mean_entropy": round(sum(entropies) / len(entropies), 4) if entropies else 0.0,
+        "max_entropy": round(max(entropies), 4) if entropies else 0.0,
+        "min_entropy": round(min(entropies), 4) if entropies else 0.0,
+        "high_uncertainty_ratio": round(
+            sum(1 for e in entropies if e > 0.5) / len(entropies), 4
+        ) if entropies else 0.0,
+    }
+    sentiment_cis = bootstrap_confidence_intervals(
+        sentiments,
+        n_boot=p["bootstrap_samples"],
+        alpha=0.05,
+        seed=p["random_seed"],
+    )
+    aspect_sentiment = extract_aspect_sentiment(
+        processed_comments,
+        top_n=p["aspect_top_n"],
+        min_freq=p["aspect_min_freq"],
+    )
+    sentiment_timeline = build_hourly_sentiment(processed_comments)
+
+    sentiment_data = {
+        'Positive': sentiment_counts.get('Positive', 0),
+        'Negative': sentiment_counts.get('Negative', 0),
+        'Neutral': sentiment_counts.get('Neutral', 0)
+    }
+
+    # Like-weighted sentiment
+    like_weighted = []
+    for item in processed_comments:
+        likes = item['likes']
+        if likes > 0:
+            like_weighted.append({
+                'likes': likes,
+                'sentiment': item['sentiment'],
+                'text': item['text'][:100],
+                'author': item['author']
+            })
+
+    like_weighted.sort(key=lambda x: x['likes'], reverse=True)
+
+    # Top words for word clouds
+    positive_words = []
+    negative_words = []
+
+    for item in processed_comments:
+        words = (
+            item.get('processed_text_classical')
+            or item.get('processed_text')
+            or ''
+        ).split()
+        if item['sentiment'] == 'Positive':
+            positive_words.extend(words)
+        elif item['sentiment'] == 'Negative':
+            negative_words.extend(words)
+
+    top_positive = Counter(positive_words).most_common(50)
+    top_negative = Counter(negative_words).most_common(50)
+
+    return {
+        "confidence_stats": confidence_stats,
+        "uncertainty_stats": uncertainty_stats,
+        "sentiment_cis": sentiment_cis,
+        "aspect_sentiment": aspect_sentiment,
+        "sentiment_timeline": sentiment_timeline,
+        "sentiment_data": sentiment_data,
+        "like_weighted": like_weighted,
+        "top_positive": top_positive,
+        "top_negative": top_negative,
+    }
+
+
+def _build_analysis_meta(sentiment_model, engine, processing_profile, p, analytics):
+    """Step 6b: Build the analysis_meta dict (model-family-specific
+    diagnostic metadata)."""
+    analysis_meta = {
+        "model_family": _get_model_family(sentiment_model),
+        "model_artifact": getattr(engine, "model_artifact", None),
+        "preprocessing_profile": processing_profile,
+        "runtime_artifacts": get_runtime_artifact_metadata(),
+        # Per-file sha256 verification against the pinned manifest (see
+        # src/utils/runtime_artifacts.py::verify_model_artifact_hash).
+        # None = no pinned hash to verify against; True/False = verified
+        # match/mismatch for the actual model file this engine loaded.
+        "artifact_verified": getattr(engine, "artifact_verified", None),
+        "confidence_stats": analytics["confidence_stats"],
+        "uncertainty_stats": analytics["uncertainty_stats"],
+        "sentiment_confidence_intervals": analytics["sentiment_cis"],
+        "aspect_sentiment": analytics["aspect_sentiment"],
+        "bootstrap_samples": p["bootstrap_samples"],
+        "random_seed": p["random_seed"],
+    }
+    if _is_transformer_model(sentiment_model):
+        analysis_meta["transformer"] = {
+            "preset": getattr(engine, "model_preset", None),
+            "source": getattr(engine, "model_source", None),
+            "artifact": getattr(engine, "model_artifact", None),
+            "is_fine_tuned": getattr(engine, "is_fine_tuned", None),
+            "max_length": getattr(engine, "max_length", None),
+            "device": str(getattr(engine, "device", "")),
+            "calibration_profile": getattr(engine, "calibration_profile", p["calibration_profile"]),
+            "calibration_applied": getattr(engine, "calibration_applied", False),
+            "temperature": getattr(engine, "temperature", None),
+            "temperature_artifact_path": getattr(engine, "temperature_artifact_path", None),
+        }
+    if sentiment_model == "ensemble":
+        analysis_meta["ensemble"] = {
+            "models": getattr(engine, "requested_models", p["ensemble_models"]),
+            "models_used": getattr(engine, "base_models", p["ensemble_models"]),
+            "weights": getattr(engine, "weights", p["ensemble_weights"]),
+            "weights_source": getattr(engine, "weights_source", p["ensemble_weights_source"]),
+            "weights_optimization_requested": p["ensemble_weights_optimization"],
+            "model_errors": getattr(engine, "model_errors", {}),
+        }
+    if sentiment_model == "meta_learner":
+        meta_model_artifact = None
+        if getattr(engine, "meta_model_path", None):
+            meta_model_artifact = Path(engine.meta_model_path).name
+        analysis_meta["meta_learner"] = {
+            "model_artifact": meta_model_artifact,
+            "base_models": getattr(engine, "base_models", p["meta_learner_models"]),
+            "base_models_source": getattr(engine, "base_models_source", None),
+            "feature_type": getattr(engine, "feature_type", None),
+            "meta_learner_type": getattr(engine, "meta_learner_type", None),
+            "model_errors": getattr(engine, "model_errors", {}),
+        }
+    if sentiment_model == "fuzzy_ensemble":
+        analysis_meta["fuzzy"] = {
+            "requested_models": getattr(engine, "requested_models", p["fuzzy_models"]),
+            "base_models": getattr(engine, "base_models", p["fuzzy_models"]),
+            "mf_type": getattr(engine, "mf_type", p["fuzzy_mf_type"]),
+            "defuzz_method": getattr(engine, "defuzz_method", p["fuzzy_defuzz_method"]),
+            "t_norm": getattr(engine, "t_norm", p["fuzzy_t_norm"]),
+            "t_conorm": getattr(engine, "t_conorm", p["fuzzy_t_conorm"]),
+            "alpha_cut": getattr(engine, "alpha_cut", p["fuzzy_alpha_cut"]),
+            "resolution": getattr(engine, "resolution", p["fuzzy_resolution"]),
+            "confidence_threshold": getattr(engine, "confidence_threshold", p["confidence_threshold"]),
+            "nf_gate_active": bool(getattr(engine, "_nf_mfs", {})),
+            "model_errors": getattr(engine, "model_errors", {}),
+        }
+    # Expose temperature calibration for any engine that has it
+    if hasattr(engine, "temperature"):
+        analysis_meta["calibration"] = {
+            "temperature": getattr(engine, "temperature", 1.0),
+            "applied": getattr(engine, "calibration_applied", False),
+        }
+    if isinstance(p["model_comparison"], list):
+        analysis_meta["model_comparison"] = p["model_comparison"]
+
+    return analysis_meta
+
+
+def _build_result_payload(video, sentiment_model, processed_comments, filter_stats, analytics, analysis_meta, analysis_id):
+    """Steps 8-9: Calculate percentages and assemble the job.result payload
+    (the same shape the synchronous endpoint returns directly)."""
+    sentiment_data = analytics["sentiment_data"]
+    top_positive = analytics["top_positive"]
+    top_negative = analytics["top_negative"]
+    like_weighted = analytics["like_weighted"]
+
+    total = len(processed_comments)
+    sentiment_ratio = {
+        'positive_percent': round(sentiment_data['Positive'] / total * 100, 2) if total > 0 else 0,
+        'negative_percent': round(sentiment_data['Negative'] / total * 100, 2) if total > 0 else 0,
+        'neutral_percent': round(sentiment_data['Neutral'] / total * 100, 2) if total > 0 else 0
+    }
+
+    return {
+        'msg': 'Analysis complete',
+        'video': {
+            'id': video.video_id,
+            'title': video.title,
+            'channel': video.channel_name,
+            'view_count': video.view_count,
+            'like_count': video.like_count,
+            'comment_count': video.comment_count,
+            'thumbnail_url': video.thumbnail_url
+        },
+        'sentiment_data': sentiment_data,
+        'sentiment_ratio': sentiment_ratio,
+        'total_analyzed': total,
+        'filtered': {
+            'spam': filter_stats['filtered_spam'],
+            'language': filter_stats['filtered_language'],
+            'short': filter_stats['filtered_short'],
+            # Total comments actually filtered out (spam + language +
+            # short) — NOT filter_stats['total'], which is len(comments)
+            # fetched *before* filtering. Keeping this consistent with
+            # get_user_youtube_analyses()'s 'filtered.total' below, since
+            # the frontend displays this field as "Total Filtered".
+            'total': (
+                filter_stats['filtered_spam']
+                + filter_stats['filtered_language']
+                + filter_stats['filtered_short']
+            ),
+        },
+        'like_weighted_sentiment': like_weighted[:10],
+        'top_words_positive': [{'word': w, 'count': c} for w, c in top_positive[:20]],
+        'top_words_negative': [{'word': w, 'count': c} for w, c in top_negative[:20]],
+        'confidence_stats': analytics["confidence_stats"],
+        'uncertainty_stats': analytics["uncertainty_stats"],
+        'sentiment_confidence_intervals': analytics["sentiment_cis"],
+        'aspect_sentiment': analytics["aspect_sentiment"],
+        'sentiment_timeline': analytics["sentiment_timeline"],
+        'analysis_meta': analysis_meta,
+        'analysis_id': analysis_id,
+        'model_used': sentiment_model.upper()
+    }
+
+
 def _execute_analysis_job(job_id):
     job = AnalysisJob.objects.select_related("user").get(id=job_id)
     job.status = AnalysisJob.STATUS_RUNNING
@@ -436,471 +975,39 @@ def _execute_analysis_job(job_id):
     user = job.user
     p = job.request_params
     video_url = p["video_url"]
-    max_comments = p["max_comments"]
-    use_api = p["use_api"]
-    filter_spam = p["filter_spam"]
-    filter_language = p["filter_language"]
-    bootstrap_samples = p["bootstrap_samples"]
-    random_seed = p["random_seed"]
-    aspect_top_n = p["aspect_top_n"]
-    aspect_min_freq = p["aspect_min_freq"]
-    confidence_threshold = p["confidence_threshold"]
-    fuzzy_alpha_cut = p["fuzzy_alpha_cut"]
-    fuzzy_resolution = p["fuzzy_resolution"]
-    emoji_mode = p["emoji_mode"]
     sentiment_model = p["sentiment_model"]
-    calibration_profile = p["calibration_profile"]
-    ensemble_models = p["ensemble_models"]
-    ensemble_weights_optimization = p["ensemble_weights_optimization"]
-    ensemble_weights = p["ensemble_weights"]
-    ensemble_weights_source = p["ensemble_weights_source"]
-    meta_learner_models = p["meta_learner_models"]
-    # Always None: enforced at the view layer (meta_learner_path overrides
-    # are rejected there with a 400 before a job is ever created).
-    meta_learner_path = None
-    fuzzy_models = p["fuzzy_models"]
-    fuzzy_mf_type = p["fuzzy_mf_type"]
-    fuzzy_defuzz_method = p["fuzzy_defuzz_method"]
-    fuzzy_t_norm = p["fuzzy_t_norm"]
-    fuzzy_t_conorm = p["fuzzy_t_conorm"]
-    model_comparison = p["model_comparison"]
 
     try:
-        # Step 1: Fetch comments
-        logger.debug("Fetching comments from %s", video_url)
-        if use_api:
-            try:
-                fetcher = YouTubeFetcher()
-                video_id = fetcher.extract_video_id(video_url)
-                if video_id is None:
-                    _fail_job(job, f"Invalid YouTube URL: {video_url}", 400)
-                    return
-                video_metadata = fetcher.fetch_video_metadata(video_id)
-                comments_raw = fetcher.fetch_comments(video_url, max_results=max_comments)
-            except HttpError as e:
-                # Never surface str(e)/repr(e) here: HttpError.__str__ always
-                # embeds the full request URL (self.uri), which for this
-                # client includes `key=<YOUTUBE_API_KEY>` as a query
-                # parameter — that would leak the shared API key to whichever
-                # user's request happened to fail.
-                status_code = getattr(e.resp, "status", None)
-                try:
-                    error_details = json.loads(e.content).get('error', {})
-                    reason = error_details.get('errors', [{}])[0].get('reason')
-                    message = error_details.get('message') or (
-                        f"YouTube API request failed with status {status_code}."
-                    )
+        fetched = _fetch_comments(job, p, user)
+        if fetched is None:
+            return
+        video_id, video_metadata, comments_raw = fetched
 
-                    if reason == 'quotaExceeded':
-                        _fail_job(job, "YouTube API daily quota exceeded. Please try again tomorrow or use scraper mode (use_api: false).", 429); return
-                    elif reason == 'developerKeyInvalid':
-                        _fail_job(job, "The provided YOUTUBE_API_KEY is invalid. Please check your .env file and ensure it is correct.", 401); return
-                    elif reason == 'commentsDisabled':
-                        _fail_job(job, "Comments are disabled for this video.", 403); return
-                    elif status_code == 404:
-                        _fail_job(job, "Video not found. Please check the URL.", 404); return
-                    else:
-                        _fail_job(job, f"A YouTube API error occurred: {message}", 502); return
-                except (json.JSONDecodeError, KeyError, IndexError, AttributeError):
-                    logger.warning(
-                        "Unparseable YouTube API error response (status=%s)", status_code
-                    )
-                    _fail_job(
-                        job,
-                        f"A YouTube API error occurred (status {status_code}).",
-                        502,
-                    )
-                    return
-            except ValueError as e:
-                # Local configuration error raised by YouTubeFetcher.__init__
-                # (e.g. missing YOUTUBE_API_KEY) — safe to surface verbatim,
-                # it never touches the network or embeds request details.
-                _fail_job(job, str(e), 502)
-                return
-            except Exception:
-                logger.exception(
-                    "Unexpected error using the YouTube API client for user=%s video_url=%s",
-                    getattr(user, "id", None),
-                    video_url,
-                )
-                _fail_job(
-                    job,
-                    "An unexpected error occurred with the YouTube API client. Please ensure your YOUTUBE_API_KEY is correctly set in the .env file.",
-                    502,
-                )
-                return
-        else:
-            try:
-                scraper = YouTubeScraper()
-                video_id = scraper.extract_video_id(video_url)
-                if video_id is None:
-                    _fail_job(job, f"Invalid YouTube URL: {video_url}", 400)
-                    return
-                video_metadata = scraper.fetch_video_metadata(video_id)
-                comments_raw = scraper.fetch_comments(video_url, max_results=max_comments)
-            except (RuntimeError, ImportError) as e:
-                # YouTubeScraper deliberately raises only these two exception
-                # types, both with pre-sanitized, human-authored messages
-                # (missing youtube-comment-downloader install; comments
-                # disabled/private/region-locked/blocked) — see
-                # youtube_scraper.py, which itself takes care never to let
-                # raw yt-dlp/downloader exception text (which can embed local
-                # paths or other internals) propagate this far. Safe to
-                # surface verbatim.
-                _fail_job(job, f"Scraper error: {str(e)}", 502)
-                return
-            except Exception:
-                # Anything else is an exception type the scraper module
-                # never intentionally raises (see above) — treat it the same
-                # as the API-mode catch-all a few lines up: log the real
-                # detail server-side, return a generic client-safe message.
-                logger.exception(
-                    "Unexpected scraper error for user=%s video_url=%s",
-                    getattr(user, "id", None),
-                    video_url,
-                )
-                _fail_job(
-                    job,
-                    "An unexpected error occurred while scraping YouTube. Please try again later.",
-                    502,
-                )
-                return
+        video = _get_or_update_video(video_id, video_metadata)
 
-        if not video_metadata:
-            _fail_job(job, "Video not found. It may be private, deleted, or the URL is incorrect.", 404)
+        preprocessed = _preprocess_comments(job, p, sentiment_model, comments_raw)
+        if preprocessed is None:
+            return
+        processed_comments, filter_stats, processing_profile = preprocessed
+
+        engine_kwargs = _build_engine_kwargs(sentiment_model, p)
+        engine = _run_sentiment_analysis(job, sentiment_model, engine_kwargs, processed_comments, user)
+        if engine is None:
             return
 
-        if not comments_raw:
-            _fail_job(job, "No comments found for this video", 404)
-            return
+        _save_comments(video, processed_comments)
 
-        logger.debug("Fetched %s raw comments", len(comments_raw))
+        analytics = _build_analytics(p, processed_comments)
+        analysis_meta = _build_analysis_meta(sentiment_model, engine, processing_profile, p, analytics)
 
-        # Step 2: Save or update video metadata
-        video, created = YouTubeVideo.objects.get_or_create(
-            video_id=video_id,
-            defaults={
-                'title': video_metadata['title'],
-                'description': video_metadata.get('description', ''),
-                'channel_name': video_metadata['channel'],
-                'channel_id': video_metadata.get('channel_id', ''),
-                'published_at': video_metadata['published_at'],
-                'view_count': video_metadata.get('view_count', 0),
-                'like_count': video_metadata.get('like_count', 0),
-                'comment_count': video_metadata.get('comment_count', 0),
-                'thumbnail_url': video_metadata.get('thumbnail_url', '')
-            }
-        )
-
-        if not created:
-            # Update metadata if video already exists
-            video.view_count = video_metadata.get('view_count', video.view_count)
-            video.like_count = video_metadata.get('like_count', video.like_count)
-            video.comment_count = video_metadata.get('comment_count', video.comment_count)
-            video.save()
-
-        # Step 3: Preprocess comments
-        logger.debug("Preprocessing comments")
-        preprocessor = YouTubePreprocessor()
-        processing_profile = _get_processing_profile(sentiment_model)
-        processed_comments, filter_stats = preprocessor.batch_preprocess(
-            comments_raw,
-            profile=processing_profile,
-            emoji_mode=emoji_mode,
-            check_spam=filter_spam,
-            check_lang=filter_language
-        )
-
-        if not processed_comments:
-            _fail_job(job, "All comments were filtered out. Try different filter settings.", 400)
-            return
-
-        logger.debug("Processed %s comments after filtering", len(processed_comments))
-
-        # Step 4: Sentiment Analysis
-        logger.debug("Running sentiment analysis using %s", sentiment_model)
-        engine_kwargs = {}
-        if sentiment_model == "ensemble":
-            engine_kwargs = {
-                "base_models": ensemble_models,
-                "weights": ensemble_weights,
-                "weights_optimization": ensemble_weights_optimization,
-            }
-        elif sentiment_model == "meta_learner":
-            if meta_learner_path:
-                engine_kwargs["meta_model_path"] = meta_learner_path
-            if meta_learner_models:
-                engine_kwargs["base_models"] = meta_learner_models
-        elif sentiment_model == "fuzzy_ensemble":
-            engine_kwargs = {
-                "base_models": fuzzy_models,
-                "mf_type": fuzzy_mf_type or "gaussian",
-                "defuzz_method": fuzzy_defuzz_method or "centroid",
-                "t_norm": fuzzy_t_norm or "min",
-                "t_conorm": fuzzy_t_conorm or "max",
-                "alpha_cut": fuzzy_alpha_cut,
-                "resolution": fuzzy_resolution,
-                "confidence_threshold": confidence_threshold,
-            }
-        elif _is_transformer_model(sentiment_model):
-            engine_kwargs = {
-                "calibration_profile": calibration_profile,
-            }
-        try:
-            engine = get_sentiment_engine(sentiment_model, **engine_kwargs)
-        except ValueError as exc:
-            # "Invalid engine type: ..." — safe, no server-side paths.
-            _fail_job(job, str(exc), 400)
-            return
-        except (RuntimeError, ImportError, FileNotFoundError):
-            # These can embed absolute server-side model/vectorizer paths
-            # (see FileNotFoundError raised by e.g. LogRegSentimentEngine.__init__,
-            # and src.sentiment.engines.artifact_utils.format_model_load_error) —
-            # log the real detail server-side and return a generic message.
-            logger.exception(
-                "Failed to construct sentiment engine %s for user=%s",
-                sentiment_model,
-                getattr(user, "id", None),
-            )
-            _fail_job(
-                job,
-                f"The '{sentiment_model}' model is temporarily unavailable. Please try a different model or try again later.",
-                400,
-            )
-            return
-
-        batch_results = engine.batch_analyze(
-            [item['processed_text'] for item in processed_comments]
-        )
-        for item, raw_result in zip(processed_comments, batch_results):
-            result = coerce_sentiment_result(raw_result, sentiment_model)
-            item['sentiment'] = result.label
-            item['sentiment_score'] = result.score
-            item['sentiment_probs'] = result.probs
-            item['confidence'] = confidence_from_probs(result.probs)
-
-        # Step 5: Save comments to database
-        #
-        # Batched via bulk_create instead of one update_or_create()/create()
-        # per comment (up to `max_comments`, i.e. up to 2000 individual
-        # queries): id-bearing comments are upserted in a single
-        # INSERT ... ON CONFLICT DO UPDATE, id-less ones in a single plain
-        # INSERT. This trades the old per-comment error isolation (one
-        # malformed comment used to fail only itself) for one failure
-        # covering the whole batch — acceptable here since Step 6's
-        # analytics are computed from `processed_comments` in memory, not
-        # from these rows, so a save failure is already non-fatal to the
-        # analysis result either way.
-        logger.debug("Saving processed comments to database")
-        without_id_comments = []
-        # Keyed by comment_id so a duplicate id within the same batch keeps
-        # only the last occurrence — bulk_create(update_conflicts=True)
-        # cannot upsert the same conflict key twice within one statement
-        # (unlike the old sequential update_or_create() loop, which just
-        # updated the same row twice).
-        with_id_comments = {}
-        for item in processed_comments:
-            # `published_at` is a non-nullable DateTimeField, but scraper mode
-            # can yield None for unparseable relative timestamps ("2 days
-            # ago"-style strings that don't match any known pattern) — fall
-            # back to now() rather than raising IntegrityError on save.
-            published_at = item['published_at'] or timezone.now()
-            fields = dict(
-                video=video,
-                text=item['text'],
-                author=item['author'],
-                likes=item['likes'],
-                published_at=published_at,
-                is_reply=item['is_reply'],
-                sentiment=item['sentiment'],
-                sentiment_score=item['sentiment_score'],
-                is_spam=item.get('metadata', {}).get('is_spam', False),
-                language=item['metadata']['language'],
-            )
-            # `comment_id` is globally unique in the DB. Coerce a missing/blank
-            # id to None (NULL) rather than '' — SQL treats multiple NULLs as
-            # distinct for uniqueness, whereas multiple '' comments would
-            # collide into a single row and silently overwrite each other.
-            comment_id = item.get('comment_id') or None
-            if comment_id is None:
-                without_id_comments.append(YouTubeComment(comment_id=None, **fields))
-            else:
-                with_id_comments[comment_id] = YouTubeComment(comment_id=comment_id, **fields)
-
-        try:
-            if without_id_comments:
-                YouTubeComment.objects.bulk_create(without_id_comments)
-            if with_id_comments:
-                YouTubeComment.objects.bulk_create(
-                    list(with_id_comments.values()),
-                    update_conflicts=True,
-                    unique_fields=["comment_id"],
-                    update_fields=[
-                        "video", "text", "author", "likes", "published_at",
-                        "is_reply", "sentiment", "sentiment_score", "is_spam",
-                        "language",
-                    ],
-                )
-        except Exception:
-            logger.exception(
-                "Failed to bulk-save comments for video %s", video.video_id
-            )
-
-        # Step 6: Generate analytics
-        logger.debug("Generating analysis aggregates")
-        sentiments = [item['sentiment'] for item in processed_comments]
-        sentiment_counts = Counter(sentiments)
-        confidences = [item.get('confidence', 0.0) for item in processed_comments]
-        confidence_stats = aggregate_confidence_stats(
-            confidences,
-            threshold=confidence_threshold,
-        )
-        entropies = [
-            entropy_from_probs(item.get('sentiment_probs', {}))
-            for item in processed_comments
-        ]
-        uncertainty_stats = {
-            "mean_entropy": round(sum(entropies) / len(entropies), 4) if entropies else 0.0,
-            "max_entropy": round(max(entropies), 4) if entropies else 0.0,
-            "min_entropy": round(min(entropies), 4) if entropies else 0.0,
-            "high_uncertainty_ratio": round(
-                sum(1 for e in entropies if e > 0.5) / len(entropies), 4
-            ) if entropies else 0.0,
-        }
-        sentiment_cis = bootstrap_confidence_intervals(
-            sentiments,
-            n_boot=bootstrap_samples,
-            alpha=0.05,
-            seed=random_seed,
-        )
-        aspect_sentiment = extract_aspect_sentiment(
-            processed_comments,
-            top_n=aspect_top_n,
-            min_freq=aspect_min_freq,
-        )
-        sentiment_timeline = build_hourly_sentiment(processed_comments)
-
-        sentiment_data = {
-            'Positive': sentiment_counts.get('Positive', 0),
-            'Negative': sentiment_counts.get('Negative', 0),
-            'Neutral': sentiment_counts.get('Neutral', 0)
-        }
-
-        # Like-weighted sentiment
-        like_weighted = []
-        for item in processed_comments:
-            likes = item['likes']
-            if likes > 0:
-                like_weighted.append({
-                    'likes': likes,
-                    'sentiment': item['sentiment'],
-                    'text': item['text'][:100],
-                    'author': item['author']
-                })
-
-        like_weighted.sort(key=lambda x: x['likes'], reverse=True)
-
-        # Top words for word clouds
-        positive_words = []
-        negative_words = []
-
-        for item in processed_comments:
-            words = (
-                item.get('processed_text_classical')
-                or item.get('processed_text')
-                or ''
-            ).split()
-            if item['sentiment'] == 'Positive':
-                positive_words.extend(words)
-            elif item['sentiment'] == 'Negative':
-                negative_words.extend(words)
-
-        top_positive = Counter(positive_words).most_common(50)
-        top_negative = Counter(negative_words).most_common(50)
-
-        analysis_meta = {
-            "model_family": _get_model_family(sentiment_model),
-            "model_artifact": getattr(engine, "model_artifact", None),
-            "preprocessing_profile": processing_profile,
-            "runtime_artifacts": get_runtime_artifact_metadata(),
-            # Per-file sha256 verification against the pinned manifest (see
-            # src/utils/runtime_artifacts.py::verify_model_artifact_hash).
-            # None = no pinned hash to verify against; True/False = verified
-            # match/mismatch for the actual model file this engine loaded.
-            "artifact_verified": getattr(engine, "artifact_verified", None),
-            "confidence_stats": confidence_stats,
-            "uncertainty_stats": uncertainty_stats,
-            "sentiment_confidence_intervals": sentiment_cis,
-            "aspect_sentiment": aspect_sentiment,
-            "bootstrap_samples": bootstrap_samples,
-            "random_seed": random_seed,
-        }
-        if _is_transformer_model(sentiment_model):
-            analysis_meta["transformer"] = {
-                "preset": getattr(engine, "model_preset", None),
-                "source": getattr(engine, "model_source", None),
-                "artifact": getattr(engine, "model_artifact", None),
-                "is_fine_tuned": getattr(engine, "is_fine_tuned", None),
-                "max_length": getattr(engine, "max_length", None),
-                "device": str(getattr(engine, "device", "")),
-                "calibration_profile": getattr(engine, "calibration_profile", calibration_profile),
-                "calibration_applied": getattr(engine, "calibration_applied", False),
-                "temperature": getattr(engine, "temperature", None),
-                "temperature_artifact_path": getattr(engine, "temperature_artifact_path", None),
-            }
-        if sentiment_model == "ensemble":
-            analysis_meta["ensemble"] = {
-                "models": getattr(engine, "requested_models", ensemble_models),
-                "models_used": getattr(engine, "base_models", ensemble_models),
-                "weights": getattr(engine, "weights", ensemble_weights),
-                "weights_source": getattr(engine, "weights_source", ensemble_weights_source),
-                "weights_optimization_requested": ensemble_weights_optimization,
-                "model_errors": getattr(engine, "model_errors", {}),
-            }
-        if sentiment_model == "meta_learner":
-            meta_model_artifact = None
-            if getattr(engine, "meta_model_path", None):
-                meta_model_artifact = Path(engine.meta_model_path).name
-            analysis_meta["meta_learner"] = {
-                "model_artifact": meta_model_artifact,
-                "base_models": getattr(engine, "base_models", meta_learner_models),
-                "base_models_source": getattr(engine, "base_models_source", None),
-                "feature_type": getattr(engine, "feature_type", None),
-                "meta_learner_type": getattr(engine, "meta_learner_type", None),
-                "model_errors": getattr(engine, "model_errors", {}),
-            }
-        if sentiment_model == "fuzzy_ensemble":
-            analysis_meta["fuzzy"] = {
-                "requested_models": getattr(engine, "requested_models", fuzzy_models),
-                "base_models": getattr(engine, "base_models", fuzzy_models),
-                "mf_type": getattr(engine, "mf_type", fuzzy_mf_type),
-                "defuzz_method": getattr(engine, "defuzz_method", fuzzy_defuzz_method),
-                "t_norm": getattr(engine, "t_norm", fuzzy_t_norm),
-                "t_conorm": getattr(engine, "t_conorm", fuzzy_t_conorm),
-                "alpha_cut": getattr(engine, "alpha_cut", fuzzy_alpha_cut),
-                "resolution": getattr(engine, "resolution", fuzzy_resolution),
-                "confidence_threshold": getattr(engine, "confidence_threshold", confidence_threshold),
-                "nf_gate_active": bool(getattr(engine, "_nf_mfs", {})),
-                "model_errors": getattr(engine, "model_errors", {}),
-            }
-        # Expose temperature calibration for any engine that has it
-        if hasattr(engine, "temperature"):
-            analysis_meta["calibration"] = {
-                "temperature": getattr(engine, "temperature", 1.0),
-                "applied": getattr(engine, "calibration_applied", False),
-            }
-        if isinstance(model_comparison, list):
-            analysis_meta["model_comparison"] = model_comparison
-
-        # Step 7: Save analysis
         analysis = YouTubeAnalysis.objects.create(
             user=user,
             video=video,
-            sentiment_data=sentiment_data,
-            hour_data=sentiment_timeline,
-            like_weighted_sentiment=like_weighted[:20],
-            top_words_positive=[{'word': w, 'count': c} for w, c in top_positive],
-            top_words_negative=[{'word': w, 'count': c} for w, c in top_negative],
+            sentiment_data=analytics["sentiment_data"],
+            hour_data=analytics["sentiment_timeline"],
+            like_weighted_sentiment=analytics["like_weighted"][:20],
+            top_words_positive=[{'word': w, 'count': c} for w, c in analytics["top_positive"]],
+            top_words_negative=[{'word': w, 'count': c} for w, c in analytics["top_negative"]],
             total_comments_analyzed=len(processed_comments),
             filtered_spam_count=filter_stats['filtered_spam'],
             filtered_language_count=filter_stats['filtered_language'],
@@ -909,14 +1016,6 @@ def _execute_analysis_job(job_id):
             analysis_meta=analysis_meta,
         )
 
-        # Step 8: Calculate percentages
-        total = len(processed_comments)
-        sentiment_ratio = {
-            'positive_percent': round(sentiment_data['Positive'] / total * 100, 2) if total > 0 else 0,
-            'negative_percent': round(sentiment_data['Negative'] / total * 100, 2) if total > 0 else 0,
-            'neutral_percent': round(sentiment_data['Neutral'] / total * 100, 2) if total > 0 else 0
-        }
-
         logger.debug(
             "Analysis complete for user=%s video=%s model=%s",
             user.id,
@@ -924,49 +1023,11 @@ def _execute_analysis_job(job_id):
             sentiment_model,
         )
 
-        # Step 9: Record the result
         job.status = AnalysisJob.STATUS_DONE
-        job.result = {
-            'msg': 'Analysis complete',
-            'video': {
-                'id': video.video_id,
-                'title': video.title,
-                'channel': video.channel_name,
-                'view_count': video.view_count,
-                'like_count': video.like_count,
-                'comment_count': video.comment_count,
-                'thumbnail_url': video.thumbnail_url
-            },
-            'sentiment_data': sentiment_data,
-            'sentiment_ratio': sentiment_ratio,
-            'total_analyzed': len(processed_comments),
-            'filtered': {
-                'spam': filter_stats['filtered_spam'],
-                'language': filter_stats['filtered_language'],
-                'short': filter_stats['filtered_short'],
-                # Total comments actually filtered out (spam + language +
-                # short) — NOT filter_stats['total'], which is len(comments)
-                # fetched *before* filtering. Keeping this consistent with
-                # get_user_youtube_analyses()'s 'filtered.total' below, since
-                # the frontend displays this field as "Total Filtered".
-                'total': (
-                    filter_stats['filtered_spam']
-                    + filter_stats['filtered_language']
-                    + filter_stats['filtered_short']
-                ),
-            },
-            'like_weighted_sentiment': like_weighted[:10],
-            'top_words_positive': [{'word': w, 'count': c} for w, c in top_positive[:20]],
-            'top_words_negative': [{'word': w, 'count': c} for w, c in top_negative[:20]],
-            'confidence_stats': confidence_stats,
-            'uncertainty_stats': uncertainty_stats,
-            'sentiment_confidence_intervals': sentiment_cis,
-            'aspect_sentiment': aspect_sentiment,
-            'sentiment_timeline': sentiment_timeline,
-            'analysis_meta': analysis_meta,
-            'analysis_id': analysis.id,
-            'model_used': sentiment_model.upper()
-        }
+        job.result = _build_result_payload(
+            video, sentiment_model, processed_comments, filter_stats,
+            analytics, analysis_meta, analysis.id,
+        )
         job.save(update_fields=["status", "result", "updated_at"])
 
     except Exception:
