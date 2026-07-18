@@ -33,6 +33,9 @@ google-auth-oauthlib==1.2.4
 youtube-comment-downloader==0.1.78
 yt-dlp==2026.6.9
 emoji==2.15.0
-langdetect==1.0.9
+# Replaced langdetect (2010-era, unreliable on short YouTube comment text —
+# see app/youtube_preprocessor.py). 2.1.1 is the latest release still
+# supporting Python 3.11 (2.2.0+ requires 3.12).
+lingua-language-detector==2.1.1
 wordcloud==1.9.6
 matplotlib==3.10.8

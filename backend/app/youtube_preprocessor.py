@@ -4,14 +4,27 @@ import string
 import emoji
 from nltk.tokenize import word_tokenize
 
-# Ensure deterministic language detection when langdetect is used.
-# Without this, results may vary run-to-run, which is a thesis-grade reproducibility risk.
+# lingua replaced langdetect here: langdetect is a 2010-era port that
+# confidently mis-assigns short English YouTube slang to the wrong specific
+# language ("lol" -> es, "gg wp" -> tl, "wow" -> pl in ad-hoc testing) and
+# raises on punctuation-only text ("No features in text."). lingua can
+# instead report "undetermined" for low-signal text, which detect_language()
+# below treats the same way the old code treated a langdetect exception —
+# assume English rather than filter the comment out. lingua is also
+# deterministic by construction (n-gram/rule matching, no random seeding
+# needed, unlike langdetect's DetectorFactory.seed).
+#
+# Built once at import time rather than per-request: constructing the
+# all-languages detector is fast (~0.4s), but its first real detection call
+# lazily builds internal n-gram tries and takes ~10s — paying that during
+# process/worker startup instead of on the first live analyze request.
 try:  # pragma: no cover - depends on optional runtime environment
-    from langdetect import DetectorFactory
+    from lingua import LanguageDetectorBuilder
 
-    DetectorFactory.seed = 0
+    _LANGUAGE_DETECTOR = LanguageDetectorBuilder.from_all_languages().build()
+    _LANGUAGE_DETECTOR.detect_language_of("warm up the lazily-built n-gram tries")
 except Exception:
-    pass
+    _LANGUAGE_DETECTOR = None
 
 
 class YouTubePreprocessor:
@@ -74,11 +87,18 @@ class YouTubePreprocessor:
         return False
 
     def detect_language(self, text):
+        if _LANGUAGE_DETECTOR is None:
+            # lingua not available in this environment — assume English.
+            return 'en'
         try:
-            from langdetect import detect
-            return detect(text)
+            language = _LANGUAGE_DETECTOR.detect_language_of(text)
+            if language is None:
+                # Low-signal text (too short, punctuation/emoji-only, or
+                # genuinely ambiguous) — assume English rather than filter
+                # the comment out, same policy as the except-branch above.
+                return 'en'
+            return language.iso_code_639_1.name.lower()
         except Exception:
-            # If langdetect not available or fails, assume English
             return 'en'
 
     def convert_emojis(self, text, mode='remove'):
