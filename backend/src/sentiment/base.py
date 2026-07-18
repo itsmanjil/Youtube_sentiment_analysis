@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple, Union
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
+from src.utils.runtime_artifacts import load_runtime_artifact_json
 
 
 def normalize_label(label: Optional[Union[str, int]]) -> str:
@@ -287,3 +288,30 @@ class BaseSentimentEngine:
             List of sentiment analysis results.
         """
         return [self.analyze(text) for text in texts]
+
+    def _load_temperature(self, model_name: str) -> Tuple[float, bool]:
+        """Load fitted temperature from research results; return (T, applied).
+
+        `applied` reflects the artifact's `kept` flag, not just row presence:
+        results/runtime/.../temperature_scaling.json pins `temperature=1.0`
+        (a no-op) for models where the fitted T made held-out ECE worse than
+        uncalibrated (see that file's `_note`). Hardcoding `applied=True`
+        here for any matching row misreports those no-op pins as "calibrated"
+        to callers (analysis_meta, the live runtime benchmark, thesis Table 6).
+        """
+        try:
+            data = load_runtime_artifact_json("temperature_scaling") or {}
+            for entry in data.get("models", []):
+                if entry.get("model") == model_name:
+                    return float(entry["temperature"]), bool(entry.get("kept", True))
+        except Exception:
+            pass
+        return 1.0, False
+
+    def _apply_temperature(self, probs: Dict[str, float]) -> Dict[str, float]:
+        """Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)."""
+        if self.temperature == 1.0:
+            return probs
+        scaled = {k: max(v, 1e-10) ** (1.0 / self.temperature) for k, v in probs.items()}
+        total = sum(scaled.values())
+        return {k: v / total for k, v in scaled.items()}

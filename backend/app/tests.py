@@ -954,6 +954,13 @@ class LiveWiringEngineTests(SimpleTestCase):
         ), patch(
             "src.sentiment.engines.ensemble_engine.load_runtime_artifact_json",
             side_effect=_artifact_loader,
+        ), patch(
+            # _load_temperature is inherited from BaseSentimentEngine, which
+            # has its own module-level `load_runtime_artifact_json` binding —
+            # patching only ensemble_engine's binding above (used for the
+            # pso/nsga2 weight artifacts) does not intercept it.
+            "src.sentiment.base.load_runtime_artifact_json",
+            side_effect=_artifact_loader,
         ):
             pso_engine = EnsembleSentimentEngine(weights_optimization="pso")
             nsga2_engine = EnsembleSentimentEngine(weights_optimization="nsga2")
@@ -996,6 +1003,13 @@ class LiveWiringEngineTests(SimpleTestCase):
             return_value=MagicMock(),
         ), patch(
             "src.sentiment.engines.ensemble_engine.load_runtime_artifact_json",
+            side_effect=_artifact_loader,
+        ), patch(
+            # _load_temperature is inherited from BaseSentimentEngine, which
+            # has its own module-level `load_runtime_artifact_json` binding —
+            # patching only ensemble_engine's binding above (used for the
+            # pso/nsga2 weight artifacts) does not intercept it.
+            "src.sentiment.base.load_runtime_artifact_json",
             side_effect=_artifact_loader,
         ):
             pso_engine = EnsembleSentimentEngine(weights_optimization="pso")

@@ -39,7 +39,7 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
-from src.utils.runtime_artifacts import load_runtime_artifact_json, verify_model_artifact_hash
+from src.utils.runtime_artifacts import verify_model_artifact_hash
 from src.utils.config import get_model_path
 from src.preprocessing import (
     ClassicalPreprocessConfig,
@@ -140,30 +140,6 @@ class SVMSentimentEngine(BaseSentimentEngine):
             # temperature here would feed the meta-learner features it was never
             # fit on, silently skewing its predictions.
             self.temperature, self.calibration_applied = 1.0, False
-
-    def _load_temperature(self, model_name: str):
-        """Load fitted temperature from research results; return (T, applied).
-
-        `applied` reflects the artifact's `kept` flag (see
-        logreg_engine.py::_load_temperature) rather than just row presence,
-        so a temperature pinned to 1.0 as a no-op isn't misreported as applied.
-        """
-        try:
-            data = load_runtime_artifact_json("temperature_scaling") or {}
-            for entry in data.get("models", []):
-                if entry.get("model") == model_name:
-                    return float(entry["temperature"]), bool(entry.get("kept", True))
-        except Exception:
-            pass
-        return 1.0, False
-
-    def _apply_temperature(self, probs: Dict[str, float]) -> Dict[str, float]:
-        """Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)."""
-        if self.temperature == 1.0:
-            return probs
-        scaled = {k: max(v, 1e-10) ** (1.0 / self.temperature) for k, v in probs.items()}
-        total = sum(scaled.values())
-        return {k: v / total for k, v in scaled.items()}
 
     def _validate_fitted(self) -> None:
         """Validate that model and vectorizer are properly fitted."""

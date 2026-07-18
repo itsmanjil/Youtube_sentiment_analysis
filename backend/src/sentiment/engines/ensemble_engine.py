@@ -174,30 +174,6 @@ class EnsembleSentimentEngine(BaseSentimentEngine):
         else:
             self.temperature, self.calibration_applied = 1.0, False
 
-    def _load_temperature(self, model_name: str):
-        """Load fitted temperature from research results; return (T, applied).
-
-        `applied` reflects the artifact's `kept` flag (see
-        logreg_engine.py::_load_temperature) rather than just row presence,
-        so a temperature pinned to 1.0 as a no-op isn't misreported as applied.
-        """
-        try:
-            data = load_runtime_artifact_json("temperature_scaling") or {}
-            for entry in data.get("models", []):
-                if entry.get("model") == model_name:
-                    return float(entry["temperature"]), bool(entry.get("kept", True))
-        except Exception:
-            pass
-        return 1.0, False
-
-    def _apply_temperature(self, probs):
-        """Apply temperature T via p_new[c] = p[c]^(1/T) / sum(...)."""
-        if self.temperature == 1.0:
-            return probs
-        scaled = {k: max(v, 1e-10) ** (1.0 / self.temperature) for k, v in probs.items()}
-        total = sum(scaled.values())
-        return {k: v / total for k, v in scaled.items()}
-
     def _normalize_weights(
         self, weights: Optional[Union[Dict[str, float], List[float]]]
     ) -> Dict[str, float]:
