@@ -10,7 +10,7 @@ function Homepage() {
   usePageTitle();
   const { isAuthenticated } = useContext(AuthContext);
   return (
-    <div data-bs-spy="scroll" data-bs-target="#navbarExample">
+    <div>
       {/* <!-- Navigation --> */}
       <Navbar />
 
