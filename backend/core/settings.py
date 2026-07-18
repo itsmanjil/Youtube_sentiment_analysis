@@ -47,8 +47,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
-    'users'
-    
+    'users',
+    'django_q',
 ]
 
 MIDDLEWARE = [
@@ -125,13 +125,31 @@ STATIC_URL = 'static/'
 _IS_TEST_ENVIRONMENT = RUNTIME_SETTINGS["environment"] == "test"
 
 # youtube/analyze/ can take far longer than any reasonable HTTP timeout for
-# large max_comments/transformer models, so it normally runs on a background
-# thread and returns a pollable job id (see app/models.py::AnalysisJob and
-# app/views.py). Tests default to running it synchronously in-request so the
-# large existing test suite (which asserts on the direct response body) does
-# not need to poll a background job; override with ANALYSIS_RUN_SYNC=true/false
-# to force either mode (e.g. for local debugging without a worker thread).
+# large max_comments/transformer models, so it normally runs on a Django-Q2
+# background worker and returns a pollable job id (see app/models.py::
+# AnalysisJob, app/views.py, and Q_CLUSTER below — requires a separate
+# `python manage.py qcluster` process; see README.md). Tests default to
+# running it synchronously in-request so the large existing test suite
+# (which asserts on the direct response body) does not need a running worker;
+# override with ANALYSIS_RUN_SYNC=true/false to force either mode (e.g. for
+# local debugging without starting a qcluster process).
 ANALYSIS_RUN_SYNC = env_bool(os.environ, "ANALYSIS_RUN_SYNC", default=_IS_TEST_ENVIRONMENT)
+
+# Django-Q2 task queue for the background path above. ORM broker (`orm:
+# "default"`) queues tasks in the same database — no Redis/RabbitMQ to run
+# or configure. `timeout`/`retry` are generous because a single analysis can
+# mean fetching + preprocessing + model inference + bootstrap resampling
+# over up to 2000 comments with a transformer model; `retry` must exceed
+# `timeout` (django-q2 requirement) or a still-running task gets requeued
+# and executed twice.
+Q_CLUSTER = {
+    "name": "youtube_sentiment_analysis",
+    "workers": 2,
+    "timeout": 1800,
+    "retry": 2000,
+    "orm": "default",
+    "catch_up": False,
+}
 
 # An AnalysisJob's background thread can die without ever updating the job
 # row (process restart/crash/OOM — the dev autoreloader alone does this on

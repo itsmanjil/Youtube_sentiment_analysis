@@ -3,7 +3,6 @@ import json
 import math
 import re
 import logging
-import threading
 from collections import Counter
 from pathlib import Path
 
@@ -15,10 +14,11 @@ logger = logging.getLogger(__name__)
 from googleapiclient.errors import HttpError
 
 from django.conf import settings
-from django.db import close_old_connections, connection
+from django.db import connection
 from django.db.utils import Error as DjangoDBError
 from django.http import JsonResponse
 from django.utils import timezone
+from django_q.tasks import async_task
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -363,7 +363,7 @@ def analyze_youtube_video(request):
     # Every validated input the background job needs, since it runs outside
     # this request/response cycle (a plain function argument list would work
     # for the synchronous/test path, but the async path needs this captured
-    # as data anyway to hand to the background thread).
+    # as data anyway to hand to the Django-Q2 worker).
     params = {
         "video_url": video_url,
         "max_comments": max_comments,
@@ -405,10 +405,12 @@ def analyze_youtube_video(request):
             status=job.error_status or 500,
         )
 
-    thread = threading.Thread(
-        target=_run_analysis_job_in_thread, args=(job.id,), daemon=True
-    )
-    thread.start()
+    # Dispatched to a Django-Q2 worker process (see Q_CLUSTER in
+    # core/settings.py) rather than run in this request/response cycle —
+    # requires `python manage.py qcluster` running; see README.md. The
+    # worker manages its own DB connections per task, unlike the old
+    # daemon-thread approach this replaced.
+    async_task(_execute_analysis_job, job.id)
     return Response(
         {
             "msg": "Analysis started",
@@ -417,17 +419,6 @@ def analyze_youtube_video(request):
         },
         status=202,
     )
-
-
-def _run_analysis_job_in_thread(job_id):
-    """Thread entry point: ensure this thread's DB connection is closed when
-    the job finishes, since it isn't tied to a request/response cycle where
-    Django would normally do that for us."""
-    close_old_connections()
-    try:
-        _execute_analysis_job(job_id)
-    finally:
-        connection.close()
 
 
 def _fail_job(job, message, http_status):
@@ -1009,7 +1000,7 @@ def get_analysis_job_status(request, job_id):
         return Response({"msg": "No such analysis job"}, status=404)
 
     if job.is_stale():
-        # The background thread almost certainly died without ever
+        # The Django-Q2 worker almost certainly died without ever
         # recording a result (process restart/crash/OOM) — resolve it now
         # instead of leaving the client to poll a job that will never move
         # out of "running"/"pending".

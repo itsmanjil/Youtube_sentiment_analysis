@@ -59,12 +59,14 @@ class AnalysisJob(models.Model):
 
     The actual analysis (comment fetch + preprocessing + model inference +
     aspect mining) can take longer than any reasonable HTTP request timeout
-    for large `max_comments`/transformer models, so the view creates one of
-    these, runs the work on a background thread, and returns immediately;
-    the frontend polls `GET youtube/analyze/status/<id>/` until `status` is
-    `done` or `failed`. Persisting job state here (rather than an in-memory
-    dict) means a status poll works correctly even if it lands on a
-    different WSGI worker process than the one running the job.
+    for large `max_comments`/transformer models, so the view dispatches the
+    work to a Django-Q2 background worker (see Q_CLUSTER in core/settings.py)
+    and returns immediately; the frontend polls
+    `GET youtube/analyze/status/<id>/` until `status` is `done` or `failed`.
+    Persisting job state here (rather than an in-memory dict) means a status
+    poll works correctly even though the job actually runs in a separate
+    `manage.py qcluster` worker process, not the WSGI process handling the
+    poll request.
     """
 
     STATUS_PENDING = "pending"
@@ -80,7 +82,7 @@ class AnalysisJob(models.Model):
 
     user = models.ForeignKey(NewUser, on_delete=models.CASCADE, related_name="analysis_jobs")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
-    # The validated request parameters, so the background thread/task has
+    # The validated request parameters, so the Django-Q2 worker task has
     # everything it needs without depending on the original HTTP request
     # object (which doesn't survive past the view function returning).
     request_params = models.JSONField()
@@ -104,7 +106,7 @@ class AnalysisJob(models.Model):
         """
         True if this job is still pending/running but hasn't been touched
         (see `_execute_analysis_job`'s `updated_at`-bumping saves) in longer
-        than settings.STALE_ANALYSIS_JOB_TIMEOUT — i.e. its worker thread
+        than settings.STALE_ANALYSIS_JOB_TIMEOUT — i.e. its Django-Q2 worker
         almost certainly died without ever recording a result.
         """
         if self.status not in (self.STATUS_PENDING, self.STATUS_RUNNING):

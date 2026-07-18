@@ -4,7 +4,7 @@ A full-stack app for analyzing YouTube video comments with Django REST Framework
 
 ## Stack
 
-- Backend: Django, Django REST Framework, SimpleJWT, scikit-learn, NLTK
+- Backend: Django, Django REST Framework, SimpleJWT, scikit-learn, NLTK, Django-Q2 (background jobs)
 - Frontend: React 19, Vite 7, React Router, Recharts, Vitest
 - Data: SQLite by default
 - CI: GitHub Actions in `.github/workflows/ci.yml`
@@ -89,6 +89,17 @@ python manage.py runserver
 
 The backend runs on `http://127.0.0.1:8000`.
 
+`youtube/analyze/` runs on a Django-Q2 background worker (see "Why
+`/analyze/` is a background job" below), which needs its own process running
+alongside `runserver`:
+
+```bash
+python manage.py qcluster
+```
+
+Without it, analysis jobs never move past `status="pending"`. Skip this by
+setting `ANALYSIS_RUN_SYNC=true` in `.env` for local debugging.
+
 ### Frontend
 
 ```bash
@@ -148,13 +159,16 @@ All API routes are rooted at `/api/`. DRF defaults to authenticated access, with
 **Why `/analyze/` is a background job:** fetching + preprocessing + running
 inference (especially transformer models) on up to 2,000 comments can take
 far longer than any reasonable HTTP timeout. The view validates input
-synchronously (still a normal `400` on bad input, no job created), then runs
-the actual work on a background thread and returns a pollable `job_id`
-(`app/models.py::AnalysisJob`) instead of blocking the request. Set
-`ANALYSIS_RUN_SYNC=true` to force the old fully-synchronous behavior (mainly
-useful for local debugging without a background thread); it defaults to
-`true` in the test environment so the existing test suite can assert on the
-response body directly, and `false` otherwise.
+synchronously (still a normal `400` on bad input, no job created), then
+dispatches the actual work to a Django-Q2 worker and returns a pollable
+`job_id` (`app/models.py::AnalysisJob`) instead of blocking the request.
+This requires a separate `python manage.py qcluster` process running
+alongside `runserver` (see Backend Quick Start above) — without it, jobs sit
+at `status="pending"` forever until `STALE_ANALYSIS_JOB_TIMEOUT` sweeps them.
+Set `ANALYSIS_RUN_SYNC=true` to force the old fully-synchronous behavior
+(mainly useful for local debugging without a qcluster process running); it
+defaults to `true` in the test environment so the existing test suite can
+assert on the response body directly, and `false` otherwise.
 
 ### Analysis Request Fields
 

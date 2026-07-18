@@ -7,14 +7,16 @@ class Command(BaseCommand):
     """
     Mark abandoned `youtube/analyze/` background jobs as failed.
 
-    A job's background thread can die without ever updating its row (process
+    A job's Django-Q2 worker can die without ever updating its row (process
     restart/crash/OOM), leaving it stuck at status="running"/"pending"
     forever — see settings.STALE_ANALYSIS_JOB_TIMEOUT. `app/views.py`'s poll
     endpoint already self-heals a stale job the next time its owner polls it,
     but a job nobody ever polls again (closed tab, abandoned session) is only
-    ever cleaned up by this command. Intended to be run periodically by an
-    external scheduler (cron, systemd timer, Windows Task Scheduler) — this
-    project has no in-process task queue (no Celery/cron) to run it for you.
+    ever cleaned up by this command. This is a sweep of our own AnalysisJob
+    rows, not something Django-Q2 does for you (it only tracks its own
+    internal task queue, not this app's job status model), so it still needs
+    to be run periodically by an external scheduler (cron, systemd timer,
+    Windows Task Scheduler).
 
     Usage:
         python manage.py cleanup_stale_analysis_jobs

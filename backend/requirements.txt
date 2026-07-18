@@ -13,6 +13,11 @@ djangorestframework==3.16.1
 django-cors-headers==4.9.0
 djangorestframework-simplejwt==5.5.1
 psycopg2-binary==2.9.11
+# Background job queue for youtube/analyze/ (see app/views.py). ORM broker —
+# no Redis/RabbitMQ needed, tasks are queued in the same database. Requires a
+# separate `python manage.py qcluster` worker process; see README.md.
+django-q2==1.10.0
+django-picklefield==3.4.0
 nltk==3.9.4
 numpy==1.26.4
 # Matches the environment that actually produced the pinned model artifacts

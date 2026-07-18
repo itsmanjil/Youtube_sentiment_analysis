@@ -752,28 +752,24 @@ class AnalysisJobAsyncAPITests(APITestCase):
         return mock_fetcher_instance
 
     @staticmethod
-    def _run_thread_target_immediately(target=None, args=(), daemon=None):
+    def _run_async_task_immediately(func, *args, **kwargs):
         """
-        Stand-in for threading.Thread that runs the target synchronously in
-        the calling (test) thread instead of a real background thread, so
-        assertions don't need to poll/sleep for a race-prone real thread to
-        finish — the job is fully done by the time `.start()` returns.
+        Stand-in for django_q.tasks.async_task that calls the target
+        synchronously in the calling (test) thread instead of dispatching to
+        a real Django-Q2 worker process, so assertions don't need to poll
+        for a separate qcluster process — the job is fully done by the time
+        async_task() returns.
         """
-
-        class _ImmediateThread:
-            def start(self):
-                target(*args)
-
-        return _ImmediateThread()
+        return func(*args, **kwargs)
 
     @override_settings(ANALYSIS_RUN_SYNC=False)
-    @patch('app.views.threading.Thread')
+    @patch('app.views.async_task')
     @patch('app.views.YouTubeFetcher')
     @patch('app.views.get_sentiment_engine')
     def test_analyze_video_returns_202_with_job_id_when_async(
-        self, mock_get_engine, mock_fetcher, mock_thread_cls
+        self, mock_get_engine, mock_fetcher, mock_async_task
     ):
-        mock_thread_cls.side_effect = self._run_thread_target_immediately
+        mock_async_task.side_effect = self._run_async_task_immediately
         self._mock_fetcher_with_comments(mock_fetcher)
         mock_get_engine.return_value = MockSentimentEngine()
 
@@ -793,9 +789,9 @@ class AnalysisJobAsyncAPITests(APITestCase):
         self.assertIn("sentiment_data", job.result)
 
     @override_settings(ANALYSIS_RUN_SYNC=False)
-    @patch('app.views.threading.Thread')
-    def test_analyze_video_job_failure_recorded_on_job_not_response(self, mock_thread_cls):
-        mock_thread_cls.side_effect = self._run_thread_target_immediately
+    @patch('app.views.async_task')
+    def test_analyze_video_job_failure_recorded_on_job_not_response(self, mock_async_task):
+        mock_async_task.side_effect = self._run_async_task_immediately
 
         response = self.client.post(self.analyze_url, {}, format='json')
 
@@ -806,12 +802,12 @@ class AnalysisJobAsyncAPITests(APITestCase):
         self.assertNotIn("job_id", response.data)
 
     @override_settings(ANALYSIS_RUN_SYNC=False)
-    @patch('app.views.threading.Thread')
+    @patch('app.views.async_task')
     @patch('app.views.YouTubeFetcher')
     def test_analyze_video_polling_status_endpoint_reflects_job_result(
-        self, mock_fetcher, mock_thread_cls
+        self, mock_fetcher, mock_async_task
     ):
-        mock_thread_cls.side_effect = self._run_thread_target_immediately
+        mock_async_task.side_effect = self._run_async_task_immediately
         mock_fetcher_instance = mock_fetcher.return_value
         mock_fetcher_instance.extract_video_id.return_value = 'HLUamwXQ218'
         mock_fetcher_instance.fetch_video_metadata.return_value = None  # video not found
