@@ -1,38 +1,30 @@
 import { jwtDecode } from "jwt-decode";
 
-export const AUTH_STORAGE_KEY = "authToken";
 const CLOCK_SKEW_MS = 60 * 1000;
 
 const looksLikeJwt = (value) =>
   typeof value === "string" && value.split(".").length === 3;
 
-export const parseStoredAuthToken = (rawValue) => {
-  if (!rawValue) {
-    return null;
-  }
+// The access token lives in memory only (this module-level variable) rather
+// than localStorage: localStorage is readable by any JS running on the page,
+// so an XSS bug anywhere would hand an attacker a live bearer token that
+// stays valid (and exfiltratable by re-reading storage) until it expires.
+// Keeping it in memory means it disappears the moment the tab/process ends,
+// and a full page reload always starts from zero. The refresh token never
+// reaches the frontend at all — it's an httpOnly cookie set by the backend
+// (see core/auth_cookies.py) — so losing the in-memory access token on
+// reload is recoverable: AuthContext's mount effect silently exchanges that
+// cookie for a fresh access token via POST token/refresh/.
+let inMemoryAuthToken = null;
 
-  try {
-    const parsed = JSON.parse(rawValue);
-    return parsed && typeof parsed === "object" ? parsed : null;
-  } catch {
-    return looksLikeJwt(rawValue) ? { access: rawValue } : null;
-  }
-};
-
-export const getStoredAuthToken = () =>
-  parseStoredAuthToken(localStorage.getItem(AUTH_STORAGE_KEY));
+export const getStoredAuthToken = () => inMemoryAuthToken;
 
 export const persistAuthToken = (authToken) => {
-  if (!authToken) {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    return;
-  }
-
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authToken));
+  inMemoryAuthToken = authToken || null;
 };
 
 export const clearStoredAuthToken = () => {
-  localStorage.removeItem(AUTH_STORAGE_KEY);
+  inMemoryAuthToken = null;
 };
 
 export const decodeAccessToken = (accessToken) => {
@@ -82,21 +74,4 @@ export const shouldRefreshAccessToken = (authToken, nowMs = Date.now()) => {
 export const getStoredAccessToken = () => {
   const authToken = getStoredAuthToken();
   return hasValidAccessToken(authToken) ? authToken.access : null;
-};
-
-export const getInitialAuthState = () => {
-  const authToken = getStoredAuthToken();
-  if (!authToken) {
-    return { authToken: null, user: null };
-  }
-
-  const user = decodeAccessToken(authToken.access);
-  if (user && !isAccessTokenExpired(authToken.access)) {
-    return { authToken, user };
-  }
-
-  // Access is missing/expired, but a valid refresh cookie may still exist
-  // (it's httpOnly, so JS can't check) — keep the record so AuthContext's
-  // init effect attempts a refresh instead of assuming the session is dead.
-  return { authToken, user: null };
 };

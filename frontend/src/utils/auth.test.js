@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, test } from "vitest";
 import {
-  getInitialAuthState,
+  clearStoredAuthToken,
+  getStoredAuthToken,
   hasValidAccessToken,
   isAccessTokenExpired,
-  parseStoredAuthToken,
   persistAuthToken,
   shouldRefreshAccessToken,
 } from "./auth";
@@ -19,31 +19,20 @@ const makeToken = (payload) =>
 
 describe("auth utils", () => {
   afterEach(() => {
-    localStorage.clear();
+    clearStoredAuthToken();
   });
 
-  test("parses JSON tokens from storage", () => {
+  test("holds the access token in memory, not localStorage", () => {
     const authToken = { access: "a" };
 
-    expect(parseStoredAuthToken(JSON.stringify(authToken))).toEqual(authToken);
-  });
+    persistAuthToken(authToken);
 
-  test("keeps an expired access token so a cookie-based refresh can be attempted", () => {
-    // The refresh token lives in an httpOnly cookie (invisible to JS), so
-    // there's no client-visible "refresh" field to check anymore — an
-    // expired/missing access token is always kept around long enough for
-    // AuthContext to attempt a refresh; only a failed refresh clears it.
-    const expiredAccess = makeToken({
-      exp: Math.floor(Date.now() / 1000) - 60,
-      user_name: "Expired",
-    });
+    expect(getStoredAuthToken()).toEqual(authToken);
+    expect(localStorage.getItem("authToken")).toBeNull();
 
-    persistAuthToken({ access: expiredAccess });
+    clearStoredAuthToken();
 
-    expect(getInitialAuthState()).toEqual({
-      authToken: { access: expiredAccess },
-      user: null,
-    });
+    expect(getStoredAuthToken()).toBeNull();
   });
 
   test("detects valid access tokens", () => {

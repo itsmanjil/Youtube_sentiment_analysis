@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import {
   clearStoredAuthToken,
   decodeAccessToken,
-  getInitialAuthState,
   hasValidAccessToken,
   persistAuthToken,
   shouldRefreshAccessToken,
@@ -16,10 +15,13 @@ export default AuthContext;
 
 export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
-  const initialAuthState = getInitialAuthState();
 
-  let [authToken, setAuthToken] = useState(initialAuthState.authToken);
-  let [user, setUser] = useState(initialAuthState.user);
+  // The access token lives in memory only (see utils/auth.js), so there is
+  // never a stored value to read on mount — every fresh load starts signed
+  // out here and, if a session actually exists, gets restored a moment
+  // later via the httpOnly refresh cookie (see the init effect below).
+  let [authToken, setAuthToken] = useState(null);
+  let [user, setUser] = useState(null);
   let [loading, setLoading] = useState(true);
 
   const [isError, SetIsError] = useState(false);
@@ -78,7 +80,15 @@ export const AuthProvider = ({ children }) => {
     navigate(redirectTo, { replace: true });
   };
 
-  let updateToken = async () => {
+  // `redirectOnFailure` is false only for the silent mount-time attempt
+  // below: at that point we don't yet know if this is an expired session
+  // or just an anonymous visitor on a public page, and forcing everyone
+  // through /signin on every page load would be wrong for the latter.
+  // ProtectedRoute already redirects unauthenticated visitors away from
+  // protected pages once `loading` resolves, so no explicit navigation is
+  // needed here for that case. The periodic/explicit refresh calls (a
+  // session that was live and then died) keep redirecting as before.
+  let updateToken = async ({ redirectOnFailure = true } = {}) => {
     try {
       // No body needed — the refresh cookie is attached automatically, and
       // the backend writes the rotated refresh token back to that cookie.
@@ -93,10 +103,12 @@ export const AuthProvider = ({ children }) => {
       }
     } catch {}
 
-    SetIsError(true);
     clearSession();
     setLoading(false);
-    navigate("/signin", { replace: true });
+    if (redirectOnFailure) {
+      SetIsError(true);
+      navigate("/signin", { replace: true });
+    }
     return false;
   };
 
@@ -113,28 +125,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      if (!authToken) {
-        setLoading(false);
-        return;
-      }
-
-      if (hasValidAccessToken(authToken)) {
-        if (!user) {
-          setUser(decodeAccessToken(authToken.access));
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Access is missing/expired but we have a prior authToken record —
-      // there may still be a valid httpOnly refresh cookie, so attempt a
-      // refresh rather than assuming the session is dead (updateToken()
-      // itself clears the session and redirects to /signin on failure).
-      await updateToken();
-    };
-
-    initializeAuth();
+    // Nothing is persisted locally, so the only way to know whether this
+    // browser has a live session is to ask: attempt one silent refresh via
+    // the httpOnly cookie. `redirectOnFailure: false` keeps a failed
+    // attempt from bouncing an anonymous visitor to /signin.
+    updateToken({ redirectOnFailure: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
