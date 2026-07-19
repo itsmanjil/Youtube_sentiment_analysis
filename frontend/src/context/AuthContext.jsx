@@ -1,11 +1,12 @@
 import axiosInstance from "../axios";
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   clearStoredAuthToken,
   decodeAccessToken,
   hasValidAccessToken,
   persistAuthToken,
+  registerRefreshHandler,
   shouldRefreshAccessToken,
 } from "../utils/auth";
 
@@ -25,6 +26,15 @@ export const AuthProvider = ({ children }) => {
   let [loading, setLoading] = useState(true);
 
   const [isError, SetIsError] = useState(false);
+
+  // Guards against two refresh attempts racing each other -- e.g. the
+  // mount-time silent refresh and an axios 401 retry (see axios.js) firing
+  // around the same moment. SimpleJWT rotates + blacklists the refresh
+  // cookie on every use, so two concurrent refresh calls would make the
+  // second one fail against an already-rotated cookie. A plain ref (not
+  // state) is fine here: AuthProvider is mounted once for the app's
+  // lifetime, and this doesn't need to trigger a re-render.
+  const refreshInFlightRef = useRef(null);
 
   const clearSession = () => {
     setAuthToken(null);
@@ -88,28 +98,40 @@ export const AuthProvider = ({ children }) => {
   // protected pages once `loading` resolves, so no explicit navigation is
   // needed here for that case. The periodic/explicit refresh calls (a
   // session that was live and then died) keep redirecting as before.
-  let updateToken = async ({ redirectOnFailure = true } = {}) => {
-    try {
-      // No body needed — the refresh cookie is attached automatically, and
-      // the backend writes the rotated refresh token back to that cookie.
-      let response = await axiosInstance.post("token/refresh/", {});
-      let data = response.data;
-
-      if (response.status === 200 && data?.access) {
-        SetIsError(false);
-        const stored = storeSession({ access: data.access });
-        setLoading(false);
-        return stored;
-      }
-    } catch {}
-
-    clearSession();
-    setLoading(false);
-    if (redirectOnFailure) {
-      SetIsError(true);
-      navigate("/signin", { replace: true });
+  let updateToken = ({ redirectOnFailure = true } = {}) => {
+    if (refreshInFlightRef.current) {
+      return refreshInFlightRef.current;
     }
-    return false;
+
+    const attempt = (async () => {
+      try {
+        // No body needed — the refresh cookie is attached automatically,
+        // and the backend writes the rotated refresh token back to it.
+        let response = await axiosInstance.post("token/refresh/", {});
+        let data = response.data;
+
+        if (response.status === 200 && data?.access) {
+          SetIsError(false);
+          const stored = storeSession({ access: data.access });
+          setLoading(false);
+          return stored;
+        }
+      } catch {}
+
+      clearSession();
+      setLoading(false);
+      if (redirectOnFailure) {
+        SetIsError(true);
+        navigate("/signin", { replace: true });
+      }
+      return false;
+    })();
+
+    refreshInFlightRef.current = attempt;
+    attempt.finally(() => {
+      refreshInFlightRef.current = null;
+    });
+    return attempt;
   };
 
   const isAuthenticated = Boolean(user && hasValidAccessToken(authToken));
@@ -132,6 +154,14 @@ export const AuthProvider = ({ children }) => {
     updateToken({ redirectOnFailure: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    // Lets axios.js's response interceptor (see axios.js) trigger a real
+    // refresh-and-retry when a request 401s between poll ticks, instead of
+    // the request just failing outright. Re-registers every render so the
+    // handler always closes over the latest state setters/navigate.
+    registerRefreshHandler(() => updateToken());
+  });
 
   useEffect(() => {
     if (!authToken) {

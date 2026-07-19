@@ -75,3 +75,21 @@ export const getStoredAccessToken = () => {
   const authToken = getStoredAuthToken();
   return hasValidAccessToken(authToken) ? authToken.access : null;
 };
+
+// Lets axios.js trigger a real refresh (POST token/refresh/ + update the
+// in-memory token + React state) without importing AuthContext directly —
+// axios.js has no React tree to sit inside, and AuthContext already owns
+// the axios instance, so the dependency runs the other way: AuthContext
+// registers its refresh function here once, on mount.
+let refreshHandler = null;
+
+export const registerRefreshHandler = (handler) => {
+  refreshHandler = handler;
+};
+
+export const requestSilentRefresh = () => {
+  if (!refreshHandler) {
+    return Promise.resolve(false);
+  }
+  return refreshHandler();
+};

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getStoredAccessToken } from "./utils/auth";
+import { getStoredAccessToken, requestSilentRefresh } from "./utils/auth";
 
 // Prefer Vite dev proxy (`/api`) but allow override for deployments.
 // Example: set `VITE_API_URL=http://127.0.0.1:8000/api/`
@@ -40,6 +40,35 @@ axiosInstance.interceptors.request.use((config) => {
     delete config.headers.Authorization;
   }
   return config;
+});
+
+// `validateStatus` above treats every sub-500 status as a resolved
+// response, not a rejected promise -- so a 401 lands in this *success*
+// handler, not an error handler. The access token lives in memory only
+// (utils/auth.js) and is proactively refreshed ~60s before it expires
+// (AuthContext's poll), but that poll can miss a tick in a backgrounded
+// tab (browsers throttle setInterval there), so a request can still land
+// with a stale token. Rather than surface that as a failed request, try
+// one silent refresh and replay the request with the new token.
+axiosInstance.interceptors.response.use(async (response) => {
+  const isAuthEndpoint = /^token\/?(refresh\/?)?$/.test(
+    response.config?.url ?? ""
+  );
+  if (response.status !== 401 || response.config?._retriedAfterRefresh || isAuthEndpoint) {
+    return response;
+  }
+
+  response.config._retriedAfterRefresh = true;
+  const refreshed = await requestSilentRefresh();
+  if (!refreshed) {
+    return response;
+  }
+
+  // Re-dispatching the same config runs it back through the request
+  // interceptor above, which reads getStoredAccessToken() fresh -- by now
+  // pointing at the token requestSilentRefresh() just stored -- so the
+  // retried request picks up the new Authorization header on its own.
+  return axiosInstance(response.config);
 });
 
 export default axiosInstance;
