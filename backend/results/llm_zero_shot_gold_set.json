@@ -1,0 +1,71 @@
+{
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "method": "zero_shot_next_token_logit_scoring",
+  "data": "data\\gold_set_human_reconciled.csv",
+  "n_samples": 291,
+  "label_distribution": {
+    "Neutral": 108,
+    "Positive": 104,
+    "Negative": 79
+  },
+  "generated_at_utc": "2026-07-19T02:32:09.716440+00:00",
+  "metrics": {
+    "accuracy": 0.646048,
+    "macro_f1": 0.607358,
+    "report": {
+      "Negative": {
+        "precision": 0.6020408163265306,
+        "recall": 0.7468354430379747,
+        "f1-score": 0.6666666666666666,
+        "support": 79.0
+      },
+      "Neutral": {
+        "precision": 0.8709677419354839,
+        "recall": 0.25,
+        "f1-score": 0.38848920863309355,
+        "support": 108.0
+      },
+      "Positive": {
+        "precision": 0.6296296296296297,
+        "recall": 0.9807692307692307,
+        "f1-score": 0.7669172932330827,
+        "support": 104.0
+      },
+      "accuracy": 0.6460481099656358,
+      "macro avg": {
+        "precision": 0.7008793959638814,
+        "recall": 0.6592015579357352,
+        "f1-score": 0.6073577228442809,
+        "support": 291.0
+      },
+      "weighted avg": {
+        "precision": 0.7117086670113733,
+        "recall": 0.6460481099656358,
+        "f1-score": 0.5992539508428913,
+        "support": 291.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        102,
+        1,
+        1
+      ],
+      [
+        43,
+        27,
+        38
+      ],
+      [
+        17,
+        3,
+        59
+      ]
+    ],
+    "calibration": {
+      "ece": 0.299284,
+      "brier": 0.623435,
+      "bins": 15
+    }
+  }
+}
