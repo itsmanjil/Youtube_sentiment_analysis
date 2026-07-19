@@ -164,6 +164,32 @@ def _verify_model_artifact_hash_uncached(
     return matches
 
 
+def verify_artifact_or_raise(
+    local_path: Path,
+    artifact_name: str,
+    version: Optional[str] = None,
+) -> Optional[bool]:
+    """
+    Verify a model artifact's hash and raise on a confirmed mismatch.
+
+    Must be called *before* the artifact is deserialized (e.g. before
+    `pickle.load`) — checking the hash only after loading can't stop a
+    tampered pickle from executing arbitrary code during deserialization,
+    it can only notice afterward. Returns `None` rather than raising when
+    the hash is merely unverifiable (no pinned manifest entry, or the file
+    can't be read), since the caller's own file-not-found/load-error
+    handling already covers that case with a clearer message.
+    """
+    verified = verify_model_artifact_hash(local_path, artifact_name, version=version)
+    if verified is False:
+        raise RuntimeError(
+            f"Refusing to load {local_path} ({artifact_name}): sha256 does not "
+            "match the pinned runtime-artifact manifest. The file may have been "
+            "tampered with or corrupted."
+        )
+    return verified
+
+
 def get_runtime_artifact_metadata(version: Optional[str] = None) -> Dict[str, Any]:
     """Return compact metadata describing the pinned runtime artifacts."""
     manifest = load_runtime_manifest(version)

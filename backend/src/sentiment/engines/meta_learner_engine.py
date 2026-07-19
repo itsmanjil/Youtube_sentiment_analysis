@@ -40,7 +40,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from src.utils import normalize_probs
-from src.utils.runtime_artifacts import verify_model_artifact_hash
+from src.utils.runtime_artifacts import verify_artifact_or_raise
 from src.utils.config import get_model_path
 from src.preprocessing import ClassicalPreprocessConfig
 from src.sentiment.base import SentimentResult, normalize_label, coerce_sentiment_result, BaseSentimentEngine
@@ -113,12 +113,12 @@ class MetaLearnerSentimentEngine(BaseSentimentEngine):
                 "Train and save using research/meta_learner.py"
             )
 
+        self.artifact_verified = {
+            "meta_learner": verify_artifact_or_raise(self.meta_model_path, "meta_learner"),
+        }
+
         with open(self.meta_model_path, "rb") as f:
             saved = pickle.load(f)
-
-        self.artifact_verified = {
-            "meta_learner": verify_model_artifact_hash(self.meta_model_path, "meta_learner"),
-        }
 
         self.meta_learner = saved.get("meta_learner")
         if self.meta_learner is None:

@@ -38,7 +38,7 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 
 from src.utils import SENTIMENT_LABELS, normalize_probs
-from src.utils.runtime_artifacts import verify_model_artifact_hash
+from src.utils.runtime_artifacts import verify_artifact_or_raise
 from src.utils.config import get_model_path
 from src.preprocessing import (
     ClassicalPreprocessConfig,
@@ -107,6 +107,11 @@ class SVMSentimentEngine(BaseSentimentEngine):
         model_path = get_model_path(model_path)
         vectorizer_path = get_model_path(vectorizer_path)
 
+        self.artifact_verified = {
+            "model": verify_artifact_or_raise(model_path, "svm_model"),
+            "vectorizer": verify_artifact_or_raise(vectorizer_path, "svm_vectorizer"),
+        }
+
         try:
             with open(model_path, "rb") as f:
                 self.model = pickle.load(f)
@@ -126,10 +131,6 @@ class SVMSentimentEngine(BaseSentimentEngine):
 
         self._validate_fitted()
         check_preprocessing_flag_consistency("svm", self.preprocess)
-        self.artifact_verified = {
-            "model": verify_model_artifact_hash(model_path, "svm_model"),
-            "vectorizer": verify_model_artifact_hash(vectorizer_path, "svm_vectorizer"),
-        }
         self.calibration_enabled = bool(calibrate)
         if self.calibration_enabled:
             self.temperature, self.calibration_applied = self._load_temperature("svm")
