@@ -1,8 +1,8 @@
 {
  "version": "route_a_live_v1",
  "created_at": "2026-04-02",
- "updated_at": "2026-07-10",
- "update_note": "Re-pinned temperature_scaling, pso_ensemble_weights, neuro_fuzzy_gate after fixing: (1) temperature-scaling keep/discard gated on test ECE instead of validation ECE (leakage), (2) a single shared ensemble temperature applied to both PSO and NSGA-II variants instead of a per-variant fit, (3) stale first-commit PSO weights (val macro-F1 0.7617, impossible on this corpus), (4) base-model engines built with calibrate=True inside ensemble/fuzzy/gate-fitting code paths, feeding weight/gate fitting a distribution different from what was served. multi_objective_ensemble.json (NSGA-II knee weights) is unchanged -- only its calibration/temperature and re-derived benchmark numbers moved.",
+ "updated_at": "2026-07-19",
+ "update_note": "Added hybrid_dl_model/hybrid_dl_vocab entries so HybridDLSentimentEngine can gate its torch.load()/pickle.load() on a pinned hash before deserializing, matching the tfidf/logreg/svm/meta_learner engines. Previous note (2026-07-10): Re-pinned temperature_scaling, pso_ensemble_weights, neuro_fuzzy_gate after fixing: (1) temperature-scaling keep/discard gated on test ECE instead of validation ECE (leakage), (2) a single shared ensemble temperature applied to both PSO and NSGA-II variants instead of a per-variant fit, (3) stale first-commit PSO weights (val macro-F1 0.7617, impossible on this corpus), (4) base-model engines built with calibrate=True inside ensemble/fuzzy/gate-fitting code paths, feeding weight/gate fitting a distribution different from what was served. multi_objective_ensemble.json (NSGA-II knee weights) is unchanged -- only its calibration/temperature and re-derived benchmark numbers moved.",
  "description": "Pinned live runtime artifacts for thesis-facing inference.",
  "artifacts": {
   "temperature_scaling": {
@@ -59,6 +59,16 @@
    "path": "models/meta_learner.pkl",
    "source_path": "models/meta_learner.pkl",
    "sha256": "fc82a5c6d39f4937e417e01af6b9763a67978ad93ba92313f02877785550081e"
+  },
+  "hybrid_dl_model": {
+   "path": "models/hybrid_dl/hybrid_v1.pt",
+   "source_path": "models/hybrid_dl/hybrid_v1.pt",
+   "sha256": "95743808f8ef8aadccf17221eae229fe1fbc1b4d579d7fee74e4d9e70e6feb2a"
+  },
+  "hybrid_dl_vocab": {
+   "path": "models/hybrid_dl/vocab.pkl",
+   "source_path": "models/hybrid_dl/vocab.pkl",
+   "sha256": "ce94d05466688a801a53a54903834ea872fdb97a5f37ca6ecf2b8d1a8fd713f5"
   }
  }
 }

@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Tuple, Union
 
 from src.utils import normalize_probs
 from src.utils.config import get_model_path
-from src.utils.runtime_artifacts import load_runtime_artifact_json
+from src.utils.runtime_artifacts import load_runtime_artifact_json, verify_artifact_or_raise
 from src.sentiment.base import SentimentResult, BaseSentimentEngine
 
 
@@ -150,6 +150,17 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
                 f"Vocabulary not found: {vocab_path}. "
                 "The vocabulary file should be created during training."
             )
+
+        # Verify pinned sha256 *before* deserializing either file — both
+        # pickle.load (vocab) and torch.load (model, below) execute arbitrary
+        # code as a side effect of deserialization, so checking the hash only
+        # after loading can't stop a tampered file from running; it can only
+        # notice afterward. See src/sentiment/engines/tfidf_engine.py etc.
+        # for the same gate on the classical engines.
+        self.artifact_verified = {
+            "model": verify_artifact_or_raise(model_path, "hybrid_dl_model"),
+            "vocab": verify_artifact_or_raise(vocab_path, "hybrid_dl_vocab"),
+        }
 
         # Select device
         if device == "auto":
