@@ -197,13 +197,15 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    # Access token: kept short since it lives in localStorage
-    # (XSS-exfiltratable) and the frontend already refreshes silently
-    # (AuthContext polls every 60s and refreshes ~60s before expiry) — a
-    # long-lived access token only adds risk without adding convenience.
-    # Refresh token: no longer in localStorage at all — see
-    # core/auth_cookies.py, which stores it in an httpOnly cookie instead,
-    # so it isn't readable by JavaScript regardless of its lifetime.
+    # Access token: kept short even though it now lives in memory only on
+    # the frontend (frontend/src/utils/auth.js — not localStorage, so it
+    # isn't re-readable via storage after the fact) because the frontend
+    # already refreshes silently (AuthContext polls every 60s and refreshes
+    # ~60s before expiry, plus a 401 triggers an immediate retry — see
+    # frontend/src/axios.js) — a long-lived access token only adds risk
+    # without adding convenience.
+    # Refresh token: not reachable from JavaScript at all — see
+    # core/auth_cookies.py, which stores it in an httpOnly cookie instead.
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=90),
     'ROTATE_REFRESH_TOKENS': True,
