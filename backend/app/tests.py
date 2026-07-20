@@ -826,6 +826,65 @@ class AnalysisJobAsyncAPITests(APITestCase):
         self.assertEqual(status_response.data['status'], AnalysisJob.STATUS_FAILED)
         self.assertIn('msg', status_response.data)
 
+    @override_settings(ANALYSIS_RUN_SYNC=False)
+    @patch('app.views.async_task')
+    @patch('app.views.YouTubeFetcher')
+    @patch('app.views.get_sentiment_engine')
+    def test_redelivered_job_does_not_create_duplicate_analysis(
+        self, mock_get_engine, mock_fetcher, mock_async_task
+    ):
+        # Django-Q2 is at-least-once: a worker killed after popping a task
+        # but before acking it causes the cluster to redeliver the SAME task
+        # on restart. Simulate that by invoking _execute_analysis_job a second
+        # time on an already-DONE job — it must not create a second
+        # YouTubeAnalysis row or mutate the finished job.
+        from app.views import _execute_analysis_job
+
+        mock_async_task.side_effect = self._run_async_task_immediately
+        self._mock_fetcher_with_comments(mock_fetcher)
+        mock_get_engine.return_value = MockSentimentEngine()
+
+        response = self.client.post(
+            self.analyze_url,
+            {"video_url": "https://www.youtube.com/watch?v=HLUamwXQ218"},
+            format='json',
+        )
+        job_id = response.data["job_id"]
+
+        job = AnalysisJob.objects.get(id=job_id)
+        self.assertEqual(job.status, AnalysisJob.STATUS_DONE)
+        self.assertEqual(YouTubeAnalysis.objects.filter(user=self.user).count(), 1)
+        original_result = job.result
+
+        # Redelivery of the same task.
+        _execute_analysis_job(job_id)
+
+        self.assertEqual(YouTubeAnalysis.objects.filter(user=self.user).count(), 1)
+        job.refresh_from_db()
+        self.assertEqual(job.status, AnalysisJob.STATUS_DONE)
+        self.assertEqual(job.result, original_result)
+
+    @override_settings(ANALYSIS_RUN_SYNC=False)
+    @patch('app.views.YouTubeFetcher')
+    def test_redelivered_running_job_is_skipped_before_any_fetch(self, mock_fetcher):
+        # A job already RUNNING (its first execution is in flight, or died
+        # mid-run) must be skipped on redelivery: the PENDING->RUNNING claim
+        # fails, so the function returns before even constructing the fetcher.
+        from app.views import _execute_analysis_job
+
+        job = AnalysisJob.objects.create(
+            user=self.user,
+            request_params={"video_url": "https://youtu.be/HLUamwXQ218"},
+            status=AnalysisJob.STATUS_RUNNING,
+        )
+
+        _execute_analysis_job(job.id)
+
+        mock_fetcher.assert_not_called()
+        self.assertEqual(YouTubeAnalysis.objects.filter(user=self.user).count(), 0)
+        job.refresh_from_db()
+        self.assertEqual(job.status, AnalysisJob.STATUS_RUNNING)
+
     def test_job_status_scoped_to_owning_user_not_found_for_others(self):
         other_user = NewUser.objects.create_user(
             email='otherasync@example.com',

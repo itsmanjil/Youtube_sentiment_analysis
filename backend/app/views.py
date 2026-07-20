@@ -968,10 +968,30 @@ def _build_result_payload(video, sentiment_model, processed_comments, filter_sta
 
 
 def _execute_analysis_job(job_id):
-    job = AnalysisJob.objects.select_related("user").get(id=job_id)
-    job.status = AnalysisJob.STATUS_RUNNING
-    job.save(update_fields=["status", "updated_at"])
+    # Atomically claim the job by flipping PENDING -> RUNNING in a single
+    # guarded UPDATE. Django-Q2's ORM broker is at-least-once: if a worker is
+    # SIGKILLed/OOM-killed after popping this task but before acking it, the
+    # cluster redelivers it on restart. Without this guard the redelivery
+    # would re-run the whole function and create a *second* YouTubeAnalysis
+    # row (and a second result payload) for one request, silently duplicating
+    # the analysis in the user's history. Only the caller that wins the
+    # PENDING -> RUNNING transition proceeds; a redelivery finds the job
+    # already RUNNING/DONE/FAILED, updates 0 rows, and returns. (.update() is
+    # a single atomic SQL UPDATE and, unlike .save(), does not fire auto_now,
+    # so updated_at is set explicitly to keep the is_stale() clock fresh.)
+    claimed = AnalysisJob.objects.filter(
+        id=job_id, status=AnalysisJob.STATUS_PENDING
+    ).update(status=AnalysisJob.STATUS_RUNNING, updated_at=timezone.now())
+    if not claimed:
+        logger.warning(
+            "Skipping analysis job %s: status is no longer pending "
+            "(already claimed, completed, or failed) — most likely a "
+            "Django-Q2 task redelivery after a worker restart.",
+            job_id,
+        )
+        return
 
+    job = AnalysisJob.objects.select_related("user").get(id=job_id)
     user = job.user
     p = job.request_params
     video_url = p["video_url"]
