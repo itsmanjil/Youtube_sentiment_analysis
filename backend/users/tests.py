@@ -5,6 +5,63 @@ from rest_framework.test import APITestCase
 from app.models import YouTubeAnalysis, YouTubeVideo
 from core.auth_cookies import REFRESH_COOKIE_NAME
 from users.models import NewUser
+from users.serializers import RegistrationSerializer
+
+
+class RegistrationPasswordValidationTests(APITestCase):
+    def _data(self, **overrides):
+        data = {
+            "email": "newuser@example.com",
+            "user_name": "newuser",
+            "password": "Str0ng&Unrelated!pw",
+            "password2": "Str0ng&Unrelated!pw",
+        }
+        data.update(overrides)
+        return data
+
+    def test_rejects_password_equal_to_email(self):
+        # UserAttributeSimilarityValidator only fires when validate_password
+        # is given the account's own attributes — the regression this guards
+        # is a per-field validator running with no user context, which let a
+        # password identical to the email through.
+        email = "victim@example.com"
+        serializer = RegistrationSerializer(
+            data=self._data(email=email, password=email, password2=email)
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("password", serializer.errors)
+        self.assertTrue(
+            any("email" in str(msg).lower() for msg in serializer.errors["password"])
+        )
+
+    def test_accepts_strong_unrelated_password(self):
+        serializer = RegistrationSerializer(data=self._data())
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+
+    def test_still_rejects_mismatched_confirmation(self):
+        serializer = RegistrationSerializer(data=self._data(password2="different"))
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("password", serializer.errors)
+
+    def test_still_rejects_too_short_password(self):
+        serializer = RegistrationSerializer(data=self._data(password="x1y", password2="x1y"))
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("password", serializer.errors)
+
+    def test_registration_endpoint_rejects_email_as_password(self):
+        email = "enduser@example.com"
+        response = self.client.post(
+            reverse("register"),
+            self._data(email=email, user_name="enduser", password=email, password2=email),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(NewUser.objects.filter(email=email).exists())
 
 
 class UserProfileAPITests(APITestCase):
