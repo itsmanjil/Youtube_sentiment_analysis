@@ -65,7 +65,18 @@ def get_user(request, id):
 
     user = get_object_or_404(NewUser, id=id)
     logger.debug("get_user request_user=%s target_user=%s", request.user, user)
-    youtubeData = YouTubeAnalysis.objects.filter(user=user).order_by('-id')
+    # select_related('video') avoids one extra query per analysis (each row
+    # reads analysis.video.*), and the [:20] bound keeps the payload/query
+    # cost flat regardless of history size. The frontend (Profile.jsx,
+    # Dashboard.jsx) only renders this as a fixed scroll list, so a heavy
+    # user's full history was never needed here. Matches the sibling
+    # endpoint app/views.py::get_user_youtube_analyses.
+    youtubeData = (
+        YouTubeAnalysis.objects
+        .filter(user=user)
+        .select_related('video')
+        .order_by('-id')[:20]
+    )
     searched_lists = []
     for analysis in youtubeData:
         searched_lists.append({

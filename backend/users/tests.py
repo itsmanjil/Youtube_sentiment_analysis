@@ -68,6 +68,39 @@ class UserProfileAPITests(APITestCase):
             "You can only get your information",
         )
 
+    def test_get_user_bounds_searched_list_and_avoids_n_plus_one(self):
+        # Give the user more analyses than the cap, each on its own video so
+        # a naive loop would issue one extra query per row (the N+1 this
+        # endpoint used to have) and serialize the entire history.
+        for i in range(25):
+            video = YouTubeVideo.objects.create(
+                video_id=f"vid{i}",
+                title=f"Video {i}",
+                channel_name="Channel",
+                published_at="2026-01-01T00:00:00Z",
+            )
+            YouTubeAnalysis.objects.create(
+                user=self.user,
+                video=video,
+                sentiment_data={"Positive": 1, "Neutral": 0, "Negative": 0},
+                total_comments_analyzed=1,
+            )
+
+        self.client.force_authenticate(user=self.user)
+        url = reverse("get_user", kwargs={"id": self.user.id})
+
+        # Query count must not scale with history size: user fetch + the
+        # single select_related('video') analyses query (+ a small constant
+        # for auth/savepoints), NOT one-per-analysis. select_related folds
+        # the video join into that one query, so 26 videos add 0 queries.
+        with self.assertNumQueries(2):
+            response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Capped at 20 most-recent, newest first (setUp added one more "v1").
+        self.assertEqual(len(response.data["searched_list"]), 20)
+        self.assertEqual(response.data["searched_list"][0]["video_id"], "vid24")
+
 
 class UserLogoutAPITests(APITestCase):
     # JWT issuance itself (custom claims, etc.) is covered by
