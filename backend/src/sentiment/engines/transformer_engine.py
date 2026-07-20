@@ -287,7 +287,12 @@ class TransformerSentimentEngine(BaseSentimentEngine):
             self.calibration_applied = False
             return
 
-        self.temperature_artifact_path = str(artifact_path)
+        # Filename only, never the absolute path: this surfaces in both the
+        # per-result `raw` dict and the analyze API's analysis_meta (see
+        # app/views.py::_build_analysis_meta), which is persisted and
+        # returned to clients — the response must never leak server-side
+        # filesystem paths. The basename identifies which artifact was used.
+        self.temperature_artifact_path = Path(artifact_path).name
         self.calibration_metadata = artifact
         self.temperature = max(float(artifact.get("temperature", 1.0)), 1e-6)
         self.calibration_applied = True

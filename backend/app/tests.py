@@ -1085,6 +1085,15 @@ class LiveWiringEngineTests(SimpleTestCase):
             ), patch(
                 "src.sentiment.engines.hybrid_dl_engine.load_runtime_artifact_json",
                 return_value={"models": [{"model": "logreg", "temperature": 0.9}]},
+            ), patch(
+                # This synthetic model/vocab lives at a temp path, so there is
+                # no pinned manifest hash for these exact files — the real
+                # gate returns None ("unverifiable") for such a path. Stub it
+                # to None so the calibration behaviour under test is exercised
+                # without the gate rejecting the stub bytes as a mismatch
+                # against the pinned hybrid_dl_model/hybrid_dl_vocab entries.
+                "src.sentiment.engines.hybrid_dl_engine.verify_artifact_or_raise",
+                return_value=None,
             ):
                 engine = HybridDLSentimentEngine(
                     model_path=model_path,

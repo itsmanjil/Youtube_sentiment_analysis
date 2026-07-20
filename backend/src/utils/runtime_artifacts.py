@@ -196,7 +196,12 @@ def get_runtime_artifact_metadata(version: Optional[str] = None) -> Dict[str, An
     artifacts = manifest.get("artifacts") or {}
     return {
         "version": manifest.get("version") or get_runtime_artifact_version(),
-        "manifest_path": str(get_runtime_manifest_path(version)),
+        # Filename only, never the absolute path: this metadata is returned
+        # in the analyze API payload and persisted in YouTubeAnalysis.
+        # analysis_meta, and the response must never expose server-side
+        # filesystem paths. The version above already identifies the pinned
+        # artifact set; the manifest is always named "manifest.json".
+        "manifest_file": get_runtime_manifest_path(version).name,
         "artifacts": {
             name: {
                 "path": entry.get("path"),
