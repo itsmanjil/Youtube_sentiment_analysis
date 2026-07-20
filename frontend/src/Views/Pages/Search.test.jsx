@@ -390,6 +390,80 @@ describe('Search Component', () => {
     }
   });
 
+  test('stops polling immediately when the job status returns 404 with no status field', async () => {
+    // axiosInstance uses validateStatus: status < 500, so a 404 (job row
+    // evicted / never existed) resolves with no `status` field. The poll
+    // must treat that as terminal instead of reading it as "still running"
+    // and polling for the full ~6 minutes before a generic timeout.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderWithAuth(<Search />);
+
+      const urlInput = screen.getByPlaceholderText('https://www.youtube.com/watch?v=...');
+      fireEvent.change(urlInput, { target: { value: 'https://www.youtube.com/watch?v=test' } });
+
+      axiosInstance
+        .mockResolvedValueOnce({ status: 202, data: { job_id: 11, status: 'pending' } })
+        .mockResolvedValueOnce({ status: 404, data: { msg: 'No such analysis job' } });
+
+      await act(async () => {
+        fireEvent.click(screen.getByDisplayValue('Analyze Video'));
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000);
+      });
+
+      await vi.waitFor(() => {
+        expect(screen.getByText(/No such analysis job/i)).toBeInTheDocument();
+      });
+      expect(mockNavigate).not.toHaveBeenCalled();
+
+      // Prove it actually stopped: advancing well past several more poll
+      // intervals issues no further status GETs (POST + exactly one GET).
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10000);
+      });
+      expect(axiosInstance).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test('stops polling when the job status returns an unrecoverable 401', async () => {
+    // A 401 here means the response interceptor's one silent refresh already
+    // failed (session truly expired mid-analysis). It resolves with no
+    // `status` field, so it must be treated as terminal, not "running".
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderWithAuth(<Search />);
+
+      const urlInput = screen.getByPlaceholderText('https://www.youtube.com/watch?v=...');
+      fireEvent.change(urlInput, { target: { value: 'https://www.youtube.com/watch?v=test' } });
+
+      axiosInstance
+        .mockResolvedValueOnce({ status: 202, data: { job_id: 12, status: 'pending' } })
+        .mockResolvedValueOnce({ status: 401, data: {} });
+
+      await act(async () => {
+        fireEvent.click(screen.getByDisplayValue('Analyze Video'));
+      });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000);
+      });
+
+      await vi.waitFor(() => {
+        expect(screen.getByText(/Authentication failed\. Please login again\./i)).toBeInTheDocument();
+      });
+      expect(mockNavigate).not.toHaveBeenCalled();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10000);
+      });
+      expect(axiosInstance).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   describe('video search picker', () => {
     test('search button is disabled until a query is entered', () => {
       renderWithAuth(<Search />);

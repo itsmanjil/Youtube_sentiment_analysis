@@ -253,16 +253,39 @@ function Search() {
         method: "GET",
         url: `youtube/analyze/status/${jobId}/`,
       });
+
+      // The user may have navigated away during the (possibly minutes-long)
+      // poll. Stop the loop instead of running it to completion in the
+      // background — otherwise it keeps firing a status GET every 2s for up
+      // to ~6 minutes against an unmounted view. The caller re-checks
+      // isMountedRef and returns without touching this result.
+      if (!isMountedRef.current) {
+        return { aborted: true };
+      }
+
       if (statusResp.data?.status === "done") {
         return { failed: false, data: statusResp.data };
       }
       if (statusResp.data?.status === "failed") {
         return { failed: true, httpStatus: statusResp.status, data: statusResp.data };
       }
-      // "pending" or "running" — keep polling, surfacing the stage in the UI.
-      if (isMountedRef.current) {
-        setJobStatus(statusResp.data?.status || "running");
+
+      // axiosInstance uses validateStatus: status < 500, so 401/403/404
+      // resolve here rather than throwing, and carry no recognizable job
+      // `status` field. Any non-2xx is terminal: the job is gone (404, e.g.
+      // its row was evicted), the session couldn't be recovered (401 — the
+      // response interceptor's one silent refresh already failed), etc.
+      // Without this, such a response fell through to the "keep polling"
+      // branch below and the loop treated it as "still running" for the full
+      // ~6 minutes before throwing a generic timeout. Route it through the
+      // same {failed} shape the caller already renders via
+      // resolveApiErrorMessage.
+      if (statusResp.status >= 400) {
+        return { failed: true, httpStatus: statusResp.status, data: statusResp.data };
       }
+
+      // "pending" or "running" — keep polling, surfacing the stage in the UI.
+      setJobStatus(statusResp.data?.status || "running");
     }
     throw new Error("Analysis timed out waiting for a result.");
   };
