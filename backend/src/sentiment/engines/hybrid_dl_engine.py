@@ -30,7 +30,7 @@ from typing import Any, Dict, List, Tuple, Union
 
 from src.utils import normalize_probs
 from src.utils.config import get_model_path
-from src.utils.runtime_artifacts import load_runtime_artifact_json, verify_artifact_or_raise
+from src.utils.runtime_artifacts import verify_artifact_or_raise
 from src.sentiment.base import SentimentResult, BaseSentimentEngine
 
 
@@ -252,24 +252,28 @@ class HybridDLSentimentEngine(BaseSentimentEngine):
         # Label mapping
         self.idx2label = {0: "Negative", 1: "Neutral", 2: "Positive"}
 
-        # Temperature scaling (load from research results)
-        self.temperature = 1.0
-        self.calibration_applied = False
-        try:
-            _ts_data = load_runtime_artifact_json("temperature_scaling") or {}
-            for _entry in _ts_data.get("models", []):
-                if _entry.get("model") == "hybrid_dl":
-                    self.temperature = float(_entry["temperature"])
-                    self.calibration_applied = True
-                    break
-        except Exception:
-            pass
+        # Temperature scaling: use the hoisted BaseSentimentEngine helper like
+        # every other engine, rather than an inline copy. The inline version
+        # this replaced hardcoded calibration_applied=True on any matching row,
+        # ignoring the artifact's `kept` flag -- which would misreport a no-op
+        # temperature=1.0 pin (kept=false, fitted T made ECE worse) as
+        # "calibrated" in analysis_meta / the live benchmark. Dormant today
+        # (temperature_scaling.json has no hybrid_dl row), but correct for when
+        # one is added.
+        self.temperature, self.calibration_applied = self._load_temperature("hybrid_dl")
 
     def _tokenize(self, text: str) -> List[str]:
         """Tokenize text in a way that matches the training pipeline."""
         if text is None:
             return []
-        cleaned = re.sub(r"[^a-zA-Z\\s]", " ", str(text))
+        # \s (whitespace), not \\s: the double backslash matched a literal
+        # backslash + s rather than whitespace. Verified identical tokens on
+        # realistic comments (whitespace collapses in .split() below either
+        # way); the only inputs affected are ones containing literal
+        # backslashes, which this now strips like the training tokenizer
+        # (research/data/preprocessing.py::tokenize uses [^a-z\s]) instead of
+        # keeping them as UNK-bound tokens.
+        cleaned = re.sub(r"[^a-zA-Z\s]", " ", str(text))
         cleaned = " ".join(cleaned.lower().split())
         return cleaned.split() if cleaned else []
 

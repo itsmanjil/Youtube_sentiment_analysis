@@ -1181,7 +1181,11 @@ class LiveWiringEngineTests(SimpleTestCase):
         self.assertFalse(custom_engine.calibration_applied)
         self.assertEqual(custom_engine.temperature, 1.0)
 
-    def test_hybrid_dl_runtime_remains_uncalibrated_without_artifact_row(self):
+    def _build_stub_hybrid_engine(self, temperature_artifact):
+        """Construct a HybridDLSentimentEngine against stub torch/model/vocab,
+        with the temperature_scaling artifact patched to `temperature_artifact`.
+        Temperature loading now goes through BaseSentimentEngine._load_temperature
+        (base.py), so the artifact loader is patched in the base namespace."""
         from src.sentiment.engines.hybrid_dl_engine import HybridDLSentimentEngine
 
         fake_torch = ModuleType("torch")
@@ -1240,8 +1244,8 @@ class LiveWiringEngineTests(SimpleTestCase):
                     "research.architectures.hybrid_cnn_bilstm": fake_hybrid_module,
                 },
             ), patch(
-                "src.sentiment.engines.hybrid_dl_engine.load_runtime_artifact_json",
-                return_value={"models": [{"model": "logreg", "temperature": 0.9}]},
+                "src.sentiment.base.load_runtime_artifact_json",
+                return_value=temperature_artifact,
             ), patch(
                 # This synthetic model/vocab lives at a temp path, so there is
                 # no pinned manifest hash for these exact files — the real
@@ -1252,14 +1256,36 @@ class LiveWiringEngineTests(SimpleTestCase):
                 "src.sentiment.engines.hybrid_dl_engine.verify_artifact_or_raise",
                 return_value=None,
             ):
-                engine = HybridDLSentimentEngine(
+                return HybridDLSentimentEngine(
                     model_path=model_path,
                     vocab_path=vocab_path,
                     device="cpu",
                 )
 
+    def test_hybrid_dl_runtime_remains_uncalibrated_without_artifact_row(self):
+        engine = self._build_stub_hybrid_engine(
+            {"models": [{"model": "logreg", "temperature": 0.9}]}
+        )
         self.assertEqual(engine.temperature, 1.0)
         self.assertFalse(engine.calibration_applied)
+
+    def test_hybrid_dl_kept_false_row_is_not_reported_as_calibrated(self):
+        # The bug this guards: the old inline temperature loader hardcoded
+        # calibration_applied=True on any matching row, ignoring `kept`. A
+        # kept=false pin (fitted temperature made held-out ECE worse, so the
+        # no-op temperature=1.0 is kept) must be reported as NOT calibrated.
+        engine = self._build_stub_hybrid_engine(
+            {"models": [{"model": "hybrid_dl", "temperature": 1.0, "kept": False}]}
+        )
+        self.assertEqual(engine.temperature, 1.0)
+        self.assertFalse(engine.calibration_applied)
+
+    def test_hybrid_dl_kept_true_row_is_applied(self):
+        engine = self._build_stub_hybrid_engine(
+            {"models": [{"model": "hybrid_dl", "temperature": 1.35, "kept": True}]}
+        )
+        self.assertEqual(engine.temperature, 1.35)
+        self.assertTrue(engine.calibration_applied)
 
     def test_fuzzy_runtime_only_activates_nf_gate_for_matching_model_set(self):
         from src.sentiment.engines.fuzzy_engine import FuzzyEnsembleSentimentEngine
