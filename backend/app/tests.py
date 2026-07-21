@@ -430,6 +430,35 @@ class YouTubeAnalysisAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("fuzzy_alpha_cut", response.data["msg"])
 
+    def test_analyze_video_rejects_unrecognized_choice_params(self):
+        # emoji_mode/ensemble_weights_optimization/fuzzy_mf_type/
+        # fuzzy_defuzz_method/fuzzy_t_norm/fuzzy_t_conorm all used to be
+        # accepted as any string and silently reinterpreted downstream by
+        # whichever "else" branch the receiving code happened to have (e.g.
+        # convert_emojis's else-branch is "keep"; ensemble_engine treats
+        # anything but exactly "nsga2" as "pso") -- a typo picked a real but
+        # unintended behavior with no error. Each must now be rejected with
+        # a 400 naming the field, matching every bounded numeric param.
+        cases = [
+            ("emoji_mode", "covnert"),
+            ("ensemble_weights_optimization", "ngsa2"),
+            ("fuzzy_mf_type", "guassian"),
+            ("fuzzy_defuzz_method", "centriod"),
+            ("fuzzy_t_norm", "minimum"),
+            ("fuzzy_t_conorm", "maximum"),
+        ]
+        for field, bad_value in cases:
+            with self.subTest(field=field):
+                data = {
+                    "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+                    field: bad_value,
+                }
+
+                response = self.client.post(self.analyze_url, data, format='json')
+
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertIn(field, response.data["msg"])
+
     @patch('app.views.YouTubeFetcher')
     def test_analyze_video_api_error_quota(self, mock_fetcher):
         mock_error_content = b'{"error": {"errors": [{"reason": "quotaExceeded"}], "message": "Quota Exceeded"}}'

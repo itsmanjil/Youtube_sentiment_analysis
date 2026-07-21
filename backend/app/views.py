@@ -193,6 +193,26 @@ def _parse_bounded_float(value, default, *, minimum, maximum, name):
     return parsed
 
 
+def _parse_choice(value, default, *, choices, name):
+    # Mirrors _parse_bounded_int/_parse_bounded_float above but for the
+    # free-string params (emoji_mode, the fuzzy engine's mf_type/
+    # defuzz_method/t_norm/t_conorm, ensemble_weights_optimization) that
+    # used to be accepted as-is with no validation. A typo (e.g.
+    # emoji_mode="covnert") wasn't rejected -- it silently fell through to
+    # whatever "else" branch the downstream code happened to have, picking a
+    # real-but-unintended value (convert_emojis's else-branch is "keep";
+    # ensemble_engine's weights_optimization check silently means "pso") with
+    # no indication to the caller that their input was ignored.
+    if value is None:
+        value = default
+    normalized = str(value).strip().lower()
+    if normalized not in choices:
+        raise _InvalidParam(
+            f"{name} must be one of {sorted(choices)} (got {value!r})."
+        )
+    return normalized
+
+
 def _coerce_bool(value, default=False):
     if value is None:
         return default
@@ -301,22 +321,60 @@ def analyze_youtube_video(request):
             maximum=1000,
             name="fuzzy_resolution",
         )
+        # These mirror the <select> options Search.jsx actually offers (the
+        # canonical valid-value list); an unrecognized value now gets a
+        # clear 400 instead of being silently reinterpreted downstream.
+        emoji_mode = _parse_choice(
+            request.data.get("emoji_mode"),
+            "convert",
+            choices={"remove", "convert", "keep"},
+            name="emoji_mode",
+        )
+        ensemble_weights_optimization = _parse_choice(
+            request.data.get("ensemble_weights_optimization"),
+            "pso",
+            choices={"pso", "nsga2"},
+            name="ensemble_weights_optimization",
+        )
+        fuzzy_mf_type = _parse_choice(
+            request.data.get("fuzzy_mf_type"),
+            "gaussian",
+            choices={"triangular", "trapezoidal", "gaussian"},
+            name="fuzzy_mf_type",
+        )
+        fuzzy_defuzz_method = _parse_choice(
+            request.data.get("fuzzy_defuzz_method"),
+            "centroid",
+            choices={"centroid", "bisector", "mom", "som", "lom", "weighted_average"},
+            name="fuzzy_defuzz_method",
+        )
+        fuzzy_t_norm = _parse_choice(
+            request.data.get("fuzzy_t_norm"),
+            "min",
+            choices={"min", "product", "lukasiewicz"},
+            name="fuzzy_t_norm",
+        )
+        fuzzy_t_conorm = _parse_choice(
+            request.data.get("fuzzy_t_conorm"),
+            "max",
+            choices={"max", "prob_sum", "bounded_sum"},
+            name="fuzzy_t_conorm",
+        )
     except _InvalidParam as exc:
         return Response({"msg": str(exc)}, status=400)
 
-    emoji_mode = request.data.get("emoji_mode", "convert")
     sentiment_model = _normalize_sentiment_model(request.data.get("sentiment_model", "logreg"))
+    # calibration_profile isn't a closed enum like the fields above -- it's
+    # effectively a disable-flag with several accepted spellings ("off",
+    # "none", "disabled", "raw"; see transformer_engine.py); anything else,
+    # typo or not, means "enabled/auto", which is already the sensible
+    # default, so a strict choice list isn't needed here.
     calibration_profile = str(request.data.get("calibration_profile", "auto") or "auto")
     ensemble_models = _coerce_model_list(request.data.get("ensemble_models"))
-    ensemble_weights_optimization = request.data.get("ensemble_weights_optimization")
     ensemble_weights_input = request.data.get("ensemble_weights")
     meta_learner_path = request.data.get("meta_learner_path")
     meta_learner_models = _coerce_model_list(request.data.get("meta_learner_models"))
     fuzzy_models = _coerce_model_list(request.data.get("fuzzy_models"))
-    fuzzy_mf_type = request.data.get("fuzzy_mf_type")
-    fuzzy_defuzz_method = request.data.get("fuzzy_defuzz_method")
-    fuzzy_t_norm = request.data.get("fuzzy_t_norm")
-    fuzzy_t_conorm = request.data.get("fuzzy_t_conorm")
     model_comparison = request.data.get("model_comparison")
 
     if ensemble_models is None:
