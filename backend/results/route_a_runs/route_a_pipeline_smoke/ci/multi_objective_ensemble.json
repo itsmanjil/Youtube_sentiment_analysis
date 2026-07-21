@@ -13,8 +13,8 @@
     "logreg",
     "svm"
   ],
-  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_val_deberta_v3_logreg_svm.npz",
-  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_test_deberta_v3_logreg_svm.npz",
+  "val_cube": "results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_test_deberta_v3_logreg_svm.npz",
   "runtime_s": 0.46,
   "evaluations": 72,
   "pareto_front_size": 5,

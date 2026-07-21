@@ -1,7 +1,7 @@
 # Live Runtime Benchmark
 
 - Runtime artifact version: `route_a_live_v1`
-- Dataset: `/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv`
+- Dataset: `data/test.csv`
 - Text column: `text`
 - Samples: `100`
 

@@ -62,7 +62,7 @@
       "val": "data/val.csv",
       "test": "data/test.csv"
     },
-    "_paths_note": "Rewritten to be relative to backend/; the original absolute paths (/Users/deadshot/...) were from the machine that generated this file and are misleading on any other checkout.",
+    "_paths_note": "Rewritten to be relative to backend/; the original absolute paths were from the machine that generated this file and are misleading on any other checkout.",
     "rows": {
       "train": 516886,
       "val": 128854,

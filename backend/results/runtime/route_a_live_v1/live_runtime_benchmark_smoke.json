@@ -2,7 +2,7 @@
   "title": "Live Runtime Benchmark",
   "runtime_artifacts": {
     "version": "route_a_live_v1",
-    "manifest_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/runtime/route_a_live_v1/manifest.json",
+    "manifest_path": "results/runtime/route_a_live_v1/manifest.json",
     "artifacts": {
       "temperature_scaling": {
         "path": "temperature_scaling.json",
@@ -22,7 +22,7 @@
       }
     }
   },
-  "dataset_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv",
+  "dataset_path": "data/test.csv",
   "text_column": "text",
   "label_column": "label",
   "n_samples": 100,

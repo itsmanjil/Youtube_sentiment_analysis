@@ -3,9 +3,9 @@
   "alpha": 0.05,
   "bootstrap_samples": 100,
   "seed": 42,
-  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_val_deberta_v3_logreg_svm.npz",
-  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_test_deberta_v3_logreg_svm.npz",
-  "ci_results": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_pipeline_smoke/ci/multi_objective_ensemble.json",
+  "val_cube": "results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "results/route_a_runs/route_a_pipeline_smoke/prob_cubes/route_a_pipeline_smoke_test_deberta_v3_logreg_svm.npz",
+  "ci_results": "results/route_a_runs/route_a_pipeline_smoke/ci/multi_objective_ensemble.json",
   "n_samples": 60,
   "labels": [
     "Positive",

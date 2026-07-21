@@ -6,7 +6,7 @@
     "description": "DeBERTa-v3 English encoder baseline",
     "hf_name": "microsoft/deberta-v3-base",
     "resolved_model_name_or_path": "microsoft/deberta-v3-base",
-    "artifact_dir": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/models/transformers/deberta_v3",
+    "artifact_dir": "models/transformers/deberta_v3",
     "max_length": 128,
     "multilingual": false
   },
@@ -20,7 +20,7 @@
       "test": "text"
     },
     "label_column": "label",
-    "split_metadata_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/split_metadata.json",
+    "split_metadata_path": "data/split_metadata.json",
     "split_id": "group_seed42_train516886_val128854_test165110_text",
     "rows": {
       "train": 450,
@@ -147,9 +147,9 @@
       "test_size": 0.2,
       "val_size": 0.2,
       "paths": {
-        "train": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/train.csv",
-        "val": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/val.csv",
-        "test": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv"
+        "train": "data/train.csv",
+        "val": "data/val.csv",
+        "test": "data/test.csv"
       },
       "rows": {
         "train": 516886,

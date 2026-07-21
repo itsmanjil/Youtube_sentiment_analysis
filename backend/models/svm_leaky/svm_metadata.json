@@ -1,6 +1,6 @@
 {
   "train_dataset": "backend/data/train.csv",
-  "test_dataset": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv",
+  "test_dataset": "data/test.csv",
   "train_samples": 663984,
   "test_samples": 207313,
   "label_distribution": {

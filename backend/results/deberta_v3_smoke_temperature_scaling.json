@@ -5,8 +5,8 @@
   "model": {
     "preset": "deberta_v3",
     "hf_name": "microsoft/deberta-v3-base",
-    "model_name_or_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/models/transformers/deberta_v3",
-    "artifact_dir": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/models/transformers/deberta_v3"
+    "model_name_or_path": "models/transformers/deberta_v3",
+    "artifact_dir": "models/transformers/deberta_v3"
   },
   "dataset": {
     "val_csv": "data/route_a_smoke/val.csv",
@@ -16,7 +16,7 @@
       "test": "text"
     },
     "label_column": "label",
-    "split_metadata_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/split_metadata.json",
+    "split_metadata_path": "data/split_metadata.json",
     "split_id": "group_seed42_train516886_val128854_test165110_text"
   },
   "metrics": {

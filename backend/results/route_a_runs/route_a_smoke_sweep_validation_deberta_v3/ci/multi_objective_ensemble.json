@@ -13,8 +13,8 @@
     "logreg",
     "svm"
   ],
-  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_val_deberta_v3_logreg_svm.npz",
-  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_test_deberta_v3_logreg_svm.npz",
+  "val_cube": "results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "results/route_a_runs/route_a_smoke_sweep_validation_deberta_v3/prob_cubes/route_a_smoke_sweep_validation_deberta_v3_test_deberta_v3_logreg_svm.npz",
   "runtime_s": 0.24,
   "evaluations": 72,
   "pareto_front_size": 4,

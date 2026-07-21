@@ -105,6 +105,6 @@
     "ece": -0.053167,
     "brier": -0.032735
   },
-  "val_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_benchmark_cpu/prob_cubes/route_a_benchmark_cpu_val_deberta_v3_logreg_svm.npz",
-  "test_cube": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/results/route_a_runs/route_a_benchmark_cpu/prob_cubes/route_a_benchmark_cpu_test_deberta_v3_logreg_svm.npz"
+  "val_cube": "results/route_a_runs/route_a_benchmark_cpu/prob_cubes/route_a_benchmark_cpu_val_deberta_v3_logreg_svm.npz",
+  "test_cube": "results/route_a_runs/route_a_benchmark_cpu/prob_cubes/route_a_benchmark_cpu_test_deberta_v3_logreg_svm.npz"
 }

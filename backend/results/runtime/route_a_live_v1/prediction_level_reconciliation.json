@@ -44,7 +44,7 @@
     "sample_id_column": null,
     "sample_size": 180,
     "source_csv": "data/route_a_benchmark_cpu/test.csv",
-    "split_metadata_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/split_metadata.json",
+    "split_metadata_path": "data/split_metadata.json",
     "split_provenance": "group_seed42_train516886_val128854_test165110_text",
     "text_column": "text",
     "text_column_strategy": "per_model_auto",

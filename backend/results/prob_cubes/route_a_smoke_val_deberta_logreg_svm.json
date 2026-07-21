@@ -15,7 +15,7 @@
     "Negative"
   ],
   "calibration_profile": "auto",
-  "split_metadata_path": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/split_metadata.json",
+  "split_metadata_path": "data/split_metadata.json",
   "split_provenance": "group_seed42_train516886_val128854_test165110_text",
   "sample_id_column": null,
   "logit_models": [

@@ -54,9 +54,9 @@
     "test_size": 0.2,
     "val_size": 0.2,
     "paths": {
-      "train": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/train.csv",
-      "val": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/val.csv",
-      "test": "/Users/deadshot/Documents/GitHub/Youtube_sentiment_analysis/backend/data/test.csv"
+      "train": "data/train.csv",
+      "val": "data/val.csv",
+      "test": "data/test.csv"
     },
     "rows": {
       "train": 594640,
