@@ -209,10 +209,16 @@ SIMPLE_JWT = {
     # already refreshes silently (AuthContext polls every 60s and refreshes
     # ~60s before expiry, plus a 401 triggers an immediate retry — see
     # frontend/src/axios.js) — a long-lived access token only adds risk
-    # without adding convenience.
+    # without adding convenience. 15 minutes (down from the original 1 hour)
+    # gives a wide margin over that 60s poll/skew, so this doesn't cause
+    # extra refreshes in normal use, while shrinking the window a stolen
+    # access token stays usable after logout — logout blacklists the
+    # refresh token (see users/views.py::logout_view), but an already-issued
+    # access token isn't itself revocable and simply stays valid until it
+    # expires.
     # Refresh token: not reachable from JavaScript at all — see
     # core/auth_cookies.py, which stores it in an httpOnly cookie instead.
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=90),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
