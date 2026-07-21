@@ -321,6 +321,64 @@ class YouTubeAnalysisAPITests(APITestCase):
 
     @patch('app.views.YouTubeFetcher')
     @patch('app.views.get_sentiment_engine')
+    def test_analyze_video_fuzzy_use_neuro_gate_false_reaches_the_engine(
+        self,
+        mock_get_engine,
+        mock_fetcher,
+    ):
+        # fuzzy_use_neuro_gate defaults to True (matches the pinned live-
+        # benchmark's nf_gate_active=True for fuzzy_ensemble) -- this proves
+        # the API-level override request param actually reaches the engine
+        # constructor and is reflected back in analysis_meta, not just the
+        # engine-level default in fuzzy_engine.py.
+        self._mock_fetcher_with_comments(mock_fetcher, comments=MOCK_COMMENTS_RAW[:3])
+        mock_engine = MockSentimentEngine()
+        mock_engine.requested_models = ["logreg", "svm", "tfidf"]
+        mock_engine.base_models = ["logreg", "svm", "tfidf"]
+        mock_engine.mf_type = "triangular"
+        mock_engine.defuzz_method = "bisector"
+        mock_engine.t_norm = "min"
+        mock_engine.t_conorm = "max"
+        mock_engine.alpha_cut = 0.0
+        mock_engine.resolution = 100
+        mock_engine.confidence_threshold = 0.6
+        mock_engine.model_errors = {}
+        mock_engine.use_neuro_fuzzy_gate = False
+        mock_engine._nf_mfs = {}
+        mock_get_engine.return_value = mock_engine
+
+        response = self.client.post(
+            self.analyze_url,
+            {
+                "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
+                "sentiment_model": "fuzzy_ensemble",
+                "fuzzy_use_neuro_gate": False,
+                "fuzzy_mf_type": "triangular",
+                "fuzzy_defuzz_method": "bisector",
+                "filter_spam": False,
+                "filter_language": False,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["analysis_meta"]["fuzzy"]["use_neuro_fuzzy_gate"])
+        self.assertFalse(response.data["analysis_meta"]["fuzzy"]["nf_gate_active"])
+        mock_get_engine.assert_called_with(
+            "fuzzy_ensemble",
+            base_models=["logreg", "svm", "tfidf"],
+            mf_type="triangular",
+            defuzz_method="bisector",
+            t_norm="min",
+            t_conorm="max",
+            alpha_cut=0.0,
+            resolution=100,
+            confidence_threshold=0.6,
+            use_neuro_fuzzy_gate=False,
+        )
+
+    @patch('app.views.YouTubeFetcher')
+    @patch('app.views.get_sentiment_engine')
     def test_analyze_video_uses_transformer_preprocessing_for_encoder_models(self, mock_get_engine, mock_fetcher):
         self._mock_fetcher_with_comments(mock_fetcher, comments=MOCK_COMMENTS_RAW[:3])
 
@@ -1251,6 +1309,65 @@ class LiveWiringEngineTests(SimpleTestCase):
 
         self.assertTrue(bool(matching_engine._nf_mfs))
         self.assertFalse(bool(partial_engine._nf_mfs))
+
+    def test_fuzzy_use_neuro_fuzzy_gate_false_forces_the_configured_fis(self):
+        # use_neuro_fuzzy_gate defaults to True (matches the pinned live-
+        # benchmark's nf_gate_active=True for fuzzy_ensemble -- see
+        # fuzzy_engine.py's docstring), but a caller who explicitly set
+        # mf_type/defuzz_method/etc. needs a way to actually make those take
+        # effect instead of being silently superseded by the trained gate.
+        from src.sentiment.engines.fuzzy_engine import FuzzyEnsembleSentimentEngine
+
+        fake_fuzzy_module = ModuleType(
+            "research.computational_intelligence.fuzzy.engine_integration"
+        )
+
+        class FakeFuzzySentimentEngine:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+
+            def analyze(self, text):
+                return {"label": "Positive", "score": 0.9, "probs": {"Positive": 0.9}}
+
+        fake_fuzzy_module.FuzzySentimentEngine = FakeFuzzySentimentEngine
+
+        nf_artifact = {
+            "architecture": {"model_names": ["logreg", "svm", "tfidf"]},
+            "learned_mfs": [
+                {"model": "logreg", "center": 0.8, "width": 0.1, "alpha": 1.0},
+            ],
+        }
+
+        with patch.dict(
+            sys.modules,
+            {
+                "research.computational_intelligence.fuzzy.engine_integration": (
+                    fake_fuzzy_module
+                )
+            },
+        ), patch(
+            "src.sentiment.factory.get_base_engine",
+            return_value=MagicMock(),
+        ), patch(
+            "src.sentiment.engines.fuzzy_engine.load_runtime_artifact_json",
+            return_value=nf_artifact,
+        ):
+            default_engine = FuzzyEnsembleSentimentEngine(
+                base_models=["logreg", "svm", "tfidf"]
+            )
+            opted_out_engine = FuzzyEnsembleSentimentEngine(
+                base_models=["logreg", "svm", "tfidf"],
+                use_neuro_fuzzy_gate=False,
+            )
+
+        self.assertTrue(default_engine.use_neuro_fuzzy_gate)
+        self.assertTrue(bool(default_engine._nf_mfs))
+        self.assertFalse(opted_out_engine.use_neuro_fuzzy_gate)
+        self.assertFalse(bool(opted_out_engine._nf_mfs))
+
+        info = opted_out_engine.get_model_info()
+        self.assertFalse(info["use_neuro_fuzzy_gate"])
+        self.assertFalse(info["nf_gate_active"])
 
 
 class YouTubePreprocessorTests(SimpleTestCase):

@@ -55,6 +55,22 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
     enable_logging : bool, optional
         Enable fuzzy engine logging.
         Default: False.
+    use_neuro_fuzzy_gate : bool, optional
+        When a trained neuro-fuzzy gate artifact (research/ci/neuro_fuzzy_gate.py,
+        pinned at results/runtime/.../neuro_fuzzy_gate.json) exists for the exact
+        `base_models` set in use, this engine opportunistically routes through
+        that learned ANFIS-lite gate (`_nf_gate_blend`) instead of the
+        mf_type/defuzz_method/t_norm/t_conorm/alpha_cut/resolution-configured
+        fuzzy inference system below -- those parameters are then silently
+        unused for this call, since the gate blends base-model probabilities
+        via learned Gaussian activations, not the FIS. This is deliberate: the
+        thesis's own pinned live-benchmark numbers for fuzzy_ensemble were
+        generated with the gate active (`nf_gate_active: true` in
+        results/runtime/route_a_live_v1/live_runtime_benchmark_full_test.json).
+        Set this to False to force the configured FIS to run instead -- e.g.
+        because you explicitly set mf_type/defuzz_method/etc. and want those
+        to actually take effect. Default: True (matches the pinned benchmark
+        behavior; existing callers see no change).
     """
 
     def __init__(
@@ -70,6 +86,7 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
         enable_logging: bool = False,
         preprocess: bool = False,
         preprocess_config: Optional[ClassicalPreprocessConfig] = None,
+        use_neuro_fuzzy_gate: bool = True,
     ):
         if base_models is None:
             base_models = ["logreg", "svm", "tfidf"]
@@ -145,21 +162,26 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
         self.confidence_threshold = float(confidence_threshold or 0.0)
 
         # Load neuro-fuzzy gate params (ANFIS learned MFs from research).
-        # Only activates when base models match the trained gate exactly.
+        # Only activates when base models match the trained gate exactly, and
+        # only if the caller hasn't opted out via use_neuro_fuzzy_gate=False
+        # (see the docstring above for why this routing exists and what it
+        # overrides).
+        self.use_neuro_fuzzy_gate = bool(use_neuro_fuzzy_gate)
         self._nf_mfs: Dict[str, List[Dict]] = {}
-        try:
-            _nf_data = load_runtime_artifact_json("neuro_fuzzy_gate") or {}
-            _nf_models = _nf_data.get("architecture", {}).get("model_names", [])
-            if set(_nf_models) == set(self.base_models):
-                for _entry in _nf_data.get("learned_mfs", []):
-                    _m = _entry["model"]
-                    self._nf_mfs.setdefault(_m, []).append({
-                        "center": float(_entry["center"]),
-                        "width": float(_entry["width"]),
-                        "alpha": float(_entry["alpha"]),
-                    })
-        except Exception:
-            self._nf_mfs = {}
+        if self.use_neuro_fuzzy_gate:
+            try:
+                _nf_data = load_runtime_artifact_json("neuro_fuzzy_gate") or {}
+                _nf_models = _nf_data.get("architecture", {}).get("model_names", [])
+                if set(_nf_models) == set(self.base_models):
+                    for _entry in _nf_data.get("learned_mfs", []):
+                        _m = _entry["model"]
+                        self._nf_mfs.setdefault(_m, []).append({
+                            "center": float(_entry["center"]),
+                            "width": float(_entry["width"]),
+                            "alpha": float(_entry["alpha"]),
+                        })
+            except Exception:
+                self._nf_mfs = {}
 
     def _nf_gate_blend(self, probs_by_model: Dict[str, Dict[str, float]]):
         """
@@ -320,4 +342,5 @@ class FuzzyEnsembleSentimentEngine(BaseSentimentEngine):
                 "confidence_threshold": self.confidence_threshold,
             }
         info["nf_gate_active"] = bool(self._nf_mfs)
+        info["use_neuro_fuzzy_gate"] = self.use_neuro_fuzzy_gate
         return info

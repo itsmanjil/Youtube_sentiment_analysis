@@ -281,6 +281,15 @@ def analyze_youtube_video(request):
         use_api = _coerce_bool(request.data.get("use_api"), default=True)
         filter_spam = _coerce_bool(request.data.get("filter_spam"), default=True)
         filter_language = _coerce_bool(request.data.get("filter_language"), default=True)
+        # Default True matches the pinned live-benchmark behavior for
+        # fuzzy_ensemble (see fuzzy_engine.py's docstring on
+        # use_neuro_fuzzy_gate) -- existing callers see no change. Set to
+        # false to force the mf_type/defuzz_method/etc. FIS params below to
+        # actually take effect instead of being silently superseded by the
+        # trained neuro-fuzzy gate.
+        fuzzy_use_neuro_gate = _coerce_bool(
+            request.data.get("fuzzy_use_neuro_gate"), default=True
+        )
         bootstrap_samples = _parse_bounded_int(
             request.data.get("bootstrap_samples"),
             500,
@@ -445,6 +454,7 @@ def analyze_youtube_video(request):
         "fuzzy_defuzz_method": fuzzy_defuzz_method,
         "fuzzy_t_norm": fuzzy_t_norm,
         "fuzzy_t_conorm": fuzzy_t_conorm,
+        "fuzzy_use_neuro_gate": fuzzy_use_neuro_gate,
         "model_comparison": model_comparison,
     }
 
@@ -679,6 +689,7 @@ def _build_engine_kwargs(sentiment_model, p):
             "alpha_cut": p["fuzzy_alpha_cut"],
             "resolution": p["fuzzy_resolution"],
             "confidence_threshold": p["confidence_threshold"],
+            "use_neuro_fuzzy_gate": p["fuzzy_use_neuro_gate"],
         }
     elif _is_transformer_model(sentiment_model):
         engine_kwargs = {
@@ -949,6 +960,7 @@ def _build_analysis_meta(sentiment_model, engine, processing_profile, p, analyti
             "alpha_cut": getattr(engine, "alpha_cut", p["fuzzy_alpha_cut"]),
             "resolution": getattr(engine, "resolution", p["fuzzy_resolution"]),
             "confidence_threshold": getattr(engine, "confidence_threshold", p["confidence_threshold"]),
+            "use_neuro_fuzzy_gate": getattr(engine, "use_neuro_fuzzy_gate", p["fuzzy_use_neuro_gate"]),
             "nf_gate_active": bool(getattr(engine, "_nf_mfs", {})),
             "model_errors": getattr(engine, "model_errors", {}),
         }
