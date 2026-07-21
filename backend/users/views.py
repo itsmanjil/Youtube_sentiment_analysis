@@ -24,7 +24,11 @@ def registration_view(request):
         data["email"] = account.email
         data["user_name"] = account.user_name
         # data["token"] = token
-        return Response({'message':'User registered', 'data':data},status=status.HTTP_200_OK)
+        # 201: a new resource (the account) was created. The frontend
+        # (RegisterForm.jsx) already treats any 2xx as success, so this is a
+        # response-correctness fix, not a behavior change for existing
+        # clients.
+        return Response({'message':'User registered', 'data':data},status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
  

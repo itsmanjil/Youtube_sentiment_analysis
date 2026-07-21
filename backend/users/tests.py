@@ -63,6 +63,20 @@ class RegistrationPasswordValidationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(NewUser.objects.filter(email=email).exists())
 
+    def test_registration_endpoint_returns_201_on_success(self):
+        # 201 (a new account resource was created), not 200. The frontend
+        # (RegisterForm.jsx) already treats any 2xx as success, so this is a
+        # response-correctness assertion, not a behavior contract.
+        email = "brandnew@example.com"
+        response = self.client.post(
+            reverse("register"),
+            self._data(email=email, user_name="brandnewuser"),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(NewUser.objects.filter(email=email).exists())
+
 
 class UserProfileAPITests(APITestCase):
     def setUp(self):
