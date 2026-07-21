@@ -21,12 +21,8 @@ jobs:
         run: python -m pip install --upgrade pip && pip install -r requirements-dev.txt
       - name: Ruff (unused imports/vars, undefined names)
         run: ruff check .
-      # --ignore-vuln PYSEC-2026-597 excludes the nltk 3.9.4 (latest as of
-      # writing) path-traversal CVE-2026-12243, which has no fix release yet
-      # (see requirements.txt's nltk pin comment) — remove the ignore once a
-      # patched nltk ships.
       - name: pip-audit (requirements.txt)
-        run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2026-597
+        run: pip-audit -r requirements.txt
 
   backend:
     runs-on: ubuntu-latest
