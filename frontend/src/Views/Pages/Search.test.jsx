@@ -139,6 +139,48 @@ describe('Search Component', () => {
     });
   });
 
+  test('research-option number inputs fall back to their default instead of NaN when cleared', () => {
+    // parseInt/parseFloat("") is NaN, which React renders as an empty
+    // controlled input and would otherwise get sent to the backend as
+    // JSON's null via JSON.stringify(NaN). Each of these fields must fall
+    // back to its own default (matching the field's own useState initial
+    // value) instead, the same guard max_comments already had.
+    renderWithAuth(<Search />);
+
+    fireEvent.click(screen.getByLabelText('Show Research Options'));
+
+    const cases = [
+      { label: /Confidence Threshold/i, cleared: '', fallback: '0.6' },
+      { label: /Bootstrap Samples/i, cleared: '', fallback: '500' },
+      { label: /Random Seed/i, cleared: '', fallback: '42' },
+      { label: /Aspect Top-N/i, cleared: '', fallback: '12' },
+      { label: /Aspect Min Frequency/i, cleared: '', fallback: '3' },
+    ];
+
+    for (const { label, cleared, fallback } of cases) {
+      const input = screen.getByLabelText(label);
+      fireEvent.change(input, { target: { value: cleared } });
+      expect(input.value).toBe(fallback);
+    }
+  });
+
+  test('fuzzy Resolution/Alpha Cut fall back to their default instead of NaN when cleared', () => {
+    renderWithAuth(<Search />);
+
+    fireEvent.click(screen.getByLabelText('Show Research Options'));
+    fireEvent.change(screen.getByLabelText(/Sentiment Model/i), {
+      target: { value: 'fuzzy_ensemble' },
+    });
+
+    const resolutionInput = screen.getByLabelText(/Resolution/i);
+    fireEvent.change(resolutionInput, { target: { value: '' } });
+    expect(resolutionInput.value).toBe('100');
+
+    const alphaCutInput = screen.getByLabelText(/Alpha Cut/i);
+    fireEvent.change(alphaCutInput, { target: { value: '' } });
+    expect(alphaCutInput.value).toBe('0.1');
+  });
+
   test('shows loading state during analysis', async () => {
     renderWithAuth(<Search />);
 

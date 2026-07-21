@@ -943,7 +943,10 @@ function Search() {
                               min="50"
                               max="500"
                               value={fuzzyResolution}
-                              onChange={(e) => setFuzzyResolution(parseInt(e.target.value, 10))}
+                              onChange={(e) => {
+                                const parsed = parseInt(e.target.value, 10);
+                                setFuzzyResolution(Number.isNaN(parsed) ? 100 : parsed);
+                              }}
                             />
                             <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
                               Higher resolution improves stability but increases runtime.
@@ -985,7 +988,10 @@ function Search() {
                               max="1"
                               step="0.01"
                               value={fuzzyAlphaCut}
-                              onChange={(e) => setFuzzyAlphaCut(parseFloat(e.target.value))}
+                              onChange={(e) => {
+                                const parsed = parseFloat(e.target.value);
+                                setFuzzyAlphaCut(Number.isNaN(parsed) ? 0.1 : parsed);
+                              }}
                             />
                             <p style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
                               Use 0.0 for no alpha-cut (default).
@@ -1017,7 +1023,10 @@ function Search() {
                           max="1"
                           step="0.01"
                           value={confidenceThreshold}
-                          onChange={(e) => setConfidenceThreshold(parseFloat(e.target.value))}
+                          onChange={(e) => {
+                            const parsed = parseFloat(e.target.value);
+                            setConfidenceThreshold(Number.isNaN(parsed) ? 0.6 : parsed);
+                          }}
                         />
                       </div>
                       <div className="col-md-4 mt-3">
@@ -1029,7 +1038,10 @@ function Search() {
                           min="100"
                           step="50"
                           value={bootstrapSamples}
-                          onChange={(e) => setBootstrapSamples(parseInt(e.target.value, 10))}
+                          onChange={(e) => {
+                            const parsed = parseInt(e.target.value, 10);
+                            setBootstrapSamples(Number.isNaN(parsed) ? 500 : parsed);
+                          }}
                         />
                       </div>
                       <div className="col-md-4 mt-3">
@@ -1040,7 +1052,10 @@ function Search() {
                           type="number"
                           min="1"
                           value={randomSeed}
-                          onChange={(e) => setRandomSeed(parseInt(e.target.value, 10))}
+                          onChange={(e) => {
+                            const parsed = parseInt(e.target.value, 10);
+                            setRandomSeed(Number.isNaN(parsed) ? 42 : parsed);
+                          }}
                         />
                       </div>
                       <div className="col-md-6 mt-3">
@@ -1051,7 +1066,10 @@ function Search() {
                           type="number"
                           min="3"
                           value={aspectTopN}
-                          onChange={(e) => setAspectTopN(parseInt(e.target.value, 10))}
+                          onChange={(e) => {
+                            const parsed = parseInt(e.target.value, 10);
+                            setAspectTopN(Number.isNaN(parsed) ? 12 : parsed);
+                          }}
                         />
                       </div>
                       <div className="col-md-6 mt-3">
@@ -1062,7 +1080,10 @@ function Search() {
                           type="number"
                           min="1"
                           value={aspectMinFreq}
-                          onChange={(e) => setAspectMinFreq(parseInt(e.target.value, 10))}
+                          onChange={(e) => {
+                            const parsed = parseInt(e.target.value, 10);
+                            setAspectMinFreq(Number.isNaN(parsed) ? 3 : parsed);
+                          }}
                         />
                       </div>
                     </>
