@@ -360,6 +360,32 @@ describe('Dashboard Component', () => {
     expect(screen.getByText('worst')).toBeInTheDocument();
   });
 
+  test('word cloud font size stays finite when the top word has a zero count', async () => {
+    // topWordsPositive[0] is the highest-count word; if it's 0, every word's
+    // count is 0 too, so item.count / topWordsPositive[0].count is 0/0 (NaN)
+    // -- which renders as an invalid "NaNpx" fontSize instead of falling
+    // back to the base size.
+    const analysisData = {
+      sentiment_data: { Positive: 100, Negative: 50, Neutral: 50 },
+      video: { title: 'Test Video' },
+      top_words_positive: [{ word: 'great', count: 0 }],
+      top_words_negative: [{ word: 'bad', count: 0 }],
+    };
+
+    renderWithContext(<Dashboard />, analysisData);
+
+    await waitFor(() => {
+      expect(screen.getByText('great')).toBeInTheDocument();
+    });
+
+    for (const word of ['great', 'bad']) {
+      const fontSize = screen.getByText(word).style.fontSize;
+      expect(fontSize).toBe('12px');
+      expect(fontSize).not.toContain('NaN');
+      expect(fontSize).not.toContain('Infinity');
+    }
+  });
+
   test('displays filter statistics when available', async () => {
     const analysisData = {
       sentiment_data: {

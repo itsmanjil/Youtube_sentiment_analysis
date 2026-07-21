@@ -1224,7 +1224,13 @@ function Dashboard() {
                               }}
                             >
                               {topWordsPositive.slice(0, 20).map((item, index) => {
-                                const fontSize = 12 + (item.count / topWordsPositive[0]?.count) * 20;
+                                // topWordsPositive[0] is the highest-count word (the backend
+                                // sorts descending), so if its count is 0, every word's count
+                                // is 0 too -- item.count / 0 is Infinity/NaN, which renders as
+                                // an invalid "NaNpx"/"Infinitypx" fontSize. Fall back to the
+                                // base 12px instead of scaling by a zero denominator.
+                                const maxCount = topWordsPositive[0]?.count || 0;
+                                const fontSize = 12 + (maxCount > 0 ? (item.count / maxCount) * 20 : 0);
                                 return (
                                   <span
                                     key={index}
@@ -1262,7 +1268,9 @@ function Dashboard() {
                               }}
                             >
                               {topWordsNegative.slice(0, 20).map((item, index) => {
-                                const fontSize = 12 + (item.count / topWordsNegative[0]?.count) * 20;
+                                // Same zero-denominator guard as the positive-words block above.
+                                const maxCount = topWordsNegative[0]?.count || 0;
+                                const fontSize = 12 + (maxCount > 0 ? (item.count / maxCount) * 20 : 0);
                                 return (
                                   <span
                                     key={index}
