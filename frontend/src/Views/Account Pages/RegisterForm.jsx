@@ -41,8 +41,7 @@ const RegisterForm = () => {
     const nameRegex = /^[A-Za-z\s]+$/;
     if (!inputData.user_name) {
       error.user_name = "Name is required!";
-    }
-    if (!nameRegex.test(inputData.user_name)) {
+    } else if (!nameRegex.test(inputData.user_name)) {
       error.user_name = "Valid name is required!";
     }
     if (!inputData.email) {
