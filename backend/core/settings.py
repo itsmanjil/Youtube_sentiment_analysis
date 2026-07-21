@@ -265,3 +265,46 @@ X_FRAME_OPTIONS = "DENY"
 
 # Custom user model
 AUTH_USER_MODEL = "users.NewUser"
+
+# Without an explicit LOGGING config, this project's own loggers (app.*,
+# users.*, src.*, all created via logging.getLogger(__name__)) propagate to
+# an unconfigured root logger. Python's fallback for that — the "handler of
+# last resort" — only prints WARNING and above, so every logger.debug(...)
+# call (request tracing through the analyze pipeline) and logger.info(...)
+# call was silently dropped; only logger.exception(...)/logger.warning(...)
+# happened to reach stderr, and with no timestamp or logger name attached.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{asctime} {levelname} {name} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        # WARNING in tests preserves this project's existing (unconfigured)
+        # test-output behavior — `manage.py test` exercises many
+        # intentionally-triggered error paths, and DEBUG defaults True in
+        # the test environment (see settings_utils.LOCAL_ENVIRONMENTS), so a
+        # DEBUG-level root here would flood test output with every
+        # logger.debug() call across the whole suite instead of just the
+        # warnings/errors it already showed.
+        "level": "WARNING" if _IS_TEST_ENVIRONMENT else ("DEBUG" if DEBUG else "INFO"),
+    },
+    "loggers": {
+        # SQL query logging is DEBUG-only and one line per query — keep it
+        # quieter than the root even when DEBUG=True, so this project's own
+        # logger.debug(...) calls aren't drowned out by ORM query spam.
+        "django.db.backends": {
+            "level": "INFO",
+        },
+    },
+}
