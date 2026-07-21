@@ -8,12 +8,13 @@ extend-exclude = ["venv", "migrations"]
 # docstring conventions) — this is a correctness gate, not a reformat.
 select = ["F"]
 ignore = [
-    # 15 pre-existing "assigned but never used" violations in research/
-    # scripts (as of 2026-07-18) need manual triage before this can be
+    # 14 pre-existing "assigned but never used" violations, all in research/
+    # scripts (as of 2026-07-21), need manual triage before this can be
     # enforced — some assign a value only for its side effect or for
     # readability, others may be genuinely dead. Run
-    # `ruff check --select F841` to see the current list. The two instances
-    # that were unambiguously safe (unused `except ... as exc` bindings)
-    # were fixed directly instead of ignored.
+    # `ruff check --select F841` to see the current list. The unambiguously
+    # safe instances outside research/ (unused `except ... as exc` bindings
+    # and an unused `with patch(...) as` binding in app/tests.py) were fixed
+    # directly instead of ignored, so this ignore now covers research/ only.
     "F841",
 ]

@@ -1468,7 +1468,7 @@ class YouTubeFetcherErrorHandlingTests(SimpleTestCase):
         from app.youtube_fetcher import YouTubeFetcher
 
         with patch.dict("os.environ", {"YOUTUBE_API_KEY": "test-key"}):
-            with patch("app.youtube_fetcher.build") as mock_build:
+            with patch("app.youtube_fetcher.build"):
                 fetcher = YouTubeFetcher()
         mock_youtube = MagicMock()
         fetcher.youtube = mock_youtube
