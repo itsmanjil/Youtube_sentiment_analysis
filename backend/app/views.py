@@ -1324,11 +1324,17 @@ search_youtube_videos.cls.throttle_scope = "search"
 # checks the same default paths `LogRegSentimentEngine` actually loads from.
 @api_view(["GET"])
 @permission_classes((AllowAny,))
+@throttle_classes([])
 def index(request):
     # Unauthenticated (AllowAny) so load balancers / uptime monitors can poll
     # it — so the response must never include exception text (can embed
     # connection details) or server-side filesystem paths. Real detail goes
     # to the server log only.
+    #
+    # @throttle_classes([]) exempts it from the default AnonRateThrottle
+    # (20/minute): a load balancer or uptime monitor polling faster than
+    # every 3s — or several sharing one proxy IP — would otherwise get 429s
+    # and mark the backend down. A health check must not be rate-limited.
     checks = {}
 
     try:

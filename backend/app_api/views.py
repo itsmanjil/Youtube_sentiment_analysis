@@ -1,5 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -23,6 +24,13 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    # Override the default anon/user throttles with a dedicated, tighter
+    # per-IP login scope (see DEFAULT_THROTTLE_RATES['login'] in settings) so
+    # online password guessing is rate-limited well below the generic 'anon'
+    # 20/minute. Applies to POST /api/token/ (login) only, not the refresh
+    # endpoint, which legit clients poll far more often.
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"
 
     def finalize_response(self, request, response, *args, **kwargs):
         # Move the refresh token out of the JSON body and into an httpOnly

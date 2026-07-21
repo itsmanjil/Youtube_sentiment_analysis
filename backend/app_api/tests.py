@@ -1,6 +1,10 @@
+from unittest.mock import patch
+
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import AccessToken
 
 from core.auth_cookies import REFRESH_COOKIE_NAME
@@ -76,3 +80,43 @@ class JWTAuthAPITests(APITestCase):
         response = self.client.post(reverse("token_refresh"), {}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_login_endpoint_is_rate_limited(self):
+        # Confirms the dedicated 'login' ScopedRateThrottle is actually wired
+        # to POST /api/token/. The test env sets the 'login' rate far above
+        # 'anon' so the auth suites aren't throttled, so tighten it here.
+        # patch.dict (not override_settings) because DRF binds THROTTLE_RATES
+        # as a class snapshot at import — a REST_FRAMEWORK override wouldn't
+        # reach the already-constructed throttle. The cache backs throttle
+        # counters, so clear it around this test to isolate the per-IP count.
+        cache.clear()
+        self.addCleanup(cache.clear)
+        url = reverse("token_obtain_pair")
+        creds = {"email": self.user.email, "password": "wrong-password"}
+
+        with patch.dict(ScopedRateThrottle.THROTTLE_RATES, {"login": "2/minute"}):
+            first = self.client.post(url, creds, format="json")
+            second = self.client.post(url, creds, format="json")
+            third = self.client.post(url, creds, format="json")
+
+        # Wrong credentials are 401; the point is that the throttle blocks the
+        # third attempt before auth even runs, which is what slows brute force.
+        self.assertIn(
+            first.status_code,
+            (status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED),
+        )
+        self.assertIn(
+            second.status_code,
+            (status.HTTP_400_BAD_REQUEST, status.HTTP_401_UNAUTHORIZED),
+        )
+        self.assertEqual(third.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+
+    def test_refresh_endpoint_is_not_bound_to_the_login_throttle(self):
+        # The tight login scope must not apply to token refresh, which legit
+        # clients poll roughly once a minute — only the login view carries it.
+        from app_api.views import CookieTokenRefreshView, MyTokenObtainPairView
+
+        self.assertEqual(getattr(MyTokenObtainPairView, "throttle_scope", None), "login")
+        self.assertNotEqual(
+            getattr(CookieTokenRefreshView, "throttle_scope", None), "login"
+        )

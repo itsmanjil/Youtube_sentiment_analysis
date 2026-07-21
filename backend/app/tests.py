@@ -651,6 +651,17 @@ class YouTubeAnalysisAPITests(APITestCase):
         # logged server-side only.
         self.assertEqual(body['checks']['model_artifacts'], 'error')
 
+    def test_health_check_endpoint_is_exempt_from_throttling(self):
+        # A load balancer / uptime monitor polls this faster than the default
+        # AnonRateThrottle (20/min) allows, so index() carries
+        # @throttle_classes([]) to opt out entirely. Assert the exemption
+        # directly on the view (@api_view exposes the generated APIView as
+        # .cls) rather than via override_settings, which can't reach DRF's
+        # import-time throttle-rate snapshot reliably.
+        from app.views import index
+
+        self.assertEqual(list(index.cls.throttle_classes), [])
+
 
 class YouTubeSearchAPITests(APITestCase):
     def setUp(self):

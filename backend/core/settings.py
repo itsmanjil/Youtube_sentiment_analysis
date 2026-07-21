@@ -172,14 +172,14 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 
-    # Unthrottled AllowAny endpoints (register/login) and the CPU-heavy
-    # analyze endpoint (YouTube fetch + preprocessing + model inference +
-    # bootstrap resampling) have no cost to hammering them otherwise.
-    # `DEFAULT_THROTTLE_CLASSES` (anon/user) is skipped entirely in the test
-    # environment since `manage.py test` reuses one IP/user across many
-    # requests per run. `analyze` uses an explicit @throttle_classes on the
-    # view (not gated by DEFAULT_THROTTLE_CLASSES), so its rate is always
-    # defined here — just far looser in tests than in dev/production.
+    # The generic anon/user throttles apply to most endpoints; a few carry a
+    # dedicated ScopedRateThrottle scope instead (analyze/search/login) set
+    # via @throttle_classes / a view attribute. `DEFAULT_THROTTLE_CLASSES`
+    # (anon/user) is skipped entirely in the test environment since
+    # `manage.py test` reuses one IP/user across many requests per run; the
+    # scoped rates are instead set to an effectively-unlimited value in tests
+    # (they're always applied on their views, not gated by
+    # DEFAULT_THROTTLE_CLASSES) so those suites aren't throttled.
     'DEFAULT_THROTTLE_CLASSES': [] if _IS_TEST_ENVIRONMENT else [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
@@ -193,6 +193,12 @@ REST_FRAMEWORK = {
         # 'user' despite being a lightweight read — a chatty picker UI could
         # otherwise burn the shared daily YouTube API quota fast.
         'search': '100000/day' if _IS_TEST_ENVIRONMENT else '30/hour',
+        # Login (POST /api/token/) is the online password-guessing target.
+        # The generic 'anon' 20/minute (~28.8k/day/IP) is far too loose for
+        # that; a legitimate user rarely needs more than a couple of attempts
+        # a minute, so a tight per-IP burst cap slows credential stuffing
+        # without hurting real logins.
+        'login': '100000/day' if _IS_TEST_ENVIRONMENT else '5/minute',
     },
 }
 
