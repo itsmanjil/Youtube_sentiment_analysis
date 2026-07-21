@@ -88,25 +88,6 @@ function Profile() {
                     <span className="d-sm-inline d-none">{user.user_name}</span>
                   </span>
                 </li>
-                <li className="nav-item d-xl-none ps-3 d-flex align-items-center">
-                  <button
-                    type="button"
-                    className="nav-link text-body p-0"
-                    id="iconNavbarSidenav"
-                    aria-label="Toggle sidebar navigation"
-                    style={{background: 'none', border: 'none', cursor: 'pointer'}}
-                  >
-                    <div className="sidenav-toggler-inner">
-                      <i className="sidenav-toggler-line"></i>
-                      <i className="sidenav-toggler-line"></i>
-                      <i className="sidenav-toggler-line"></i>
-                    </div>
-                  </button>
-                </li>
-                
-                
-                
-                {/* </li> */}
               </ul>
             </div>
           </div>
