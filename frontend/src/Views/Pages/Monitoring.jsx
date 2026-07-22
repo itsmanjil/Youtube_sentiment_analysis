@@ -53,10 +53,17 @@ function Monitoring() {
     } catch {}
   };
 
-  // Fetch on component mount
+  // Fetch on component mount only -- getUserData/fetchAnalyses are
+  // deliberately not in the deps array. getUserData just decodes the
+  // current authToken's user_id/user_name claims, which don't change
+  // across a token refresh (same user, new token), so re-running it on
+  // every refresh would only set identical state. fetchAnalyses is
+  // separately wired to the "Refresh" button below and must stay a plain
+  // callable, not be folded into this effect.
   useEffect(() => {
     getUserData();
     fetchAnalyses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Calculate summary statistics

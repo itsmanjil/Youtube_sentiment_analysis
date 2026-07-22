@@ -117,7 +117,7 @@ function Dashboard() {
   const metaLearnerInfo = analysisMeta?.meta_learner;
   const fuzzyInfo = analysisMeta?.fuzzy;
 
-  const getData = async () => {
+  const getData = React.useCallback(async () => {
     try {
       if (!authToken?.access) {
         setHasSearched(false);
@@ -272,10 +272,10 @@ function Dashboard() {
     } catch {
       setHasSearched(false);
     }
-  };
+  }, [authToken, location.state]);
   useEffect(() => {
     getData();
-  }, [location.state, authToken]);
+  }, [getData]);
 
   //line graph
   let [getLinePng, { ref: lineRef }] = useCurrentPng();

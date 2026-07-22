@@ -175,6 +175,13 @@ export const AuthProvider = ({ children }) => {
     }, 1000 * 60);
 
     return () => clearInterval(interval);
+    // updateToken is deliberately not in the deps array: it captures no
+    // render-scoped state that goes stale (no authToken read inside it --
+    // refreshInFlightRef is a ref, always current; the refresh call itself
+    // is cookie-based). Adding it would tear down and rebuild this interval
+    // on every render instead of only when authToken changes, which can
+    // starve the 60s check entirely if renders happen more often than that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authToken]);
 
   return (
