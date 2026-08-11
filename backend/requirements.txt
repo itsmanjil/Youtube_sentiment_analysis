@@ -41,7 +41,7 @@ google-api-python-client==2.188.0
 google-auth-httplib2==0.3.0
 google-auth-oauthlib==1.2.4
 youtube-comment-downloader==0.1.78
-yt-dlp==2026.6.9
+yt-dlp==2026.7.4
 emoji==2.15.0
 # Replaced langdetect (2010-era, unreliable on short YouTube comment text —
 # see app/youtube_preprocessor.py). 2.1.1 is the latest release still

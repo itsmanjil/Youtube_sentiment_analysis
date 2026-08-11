@@ -26,13 +26,12 @@ google-api-python-client = "==2.188.0"
 google-auth-httplib2 = "==0.3.0"
 google-auth-oauthlib = "==1.2.4"
 youtube-comment-downloader = "==0.1.78"
-yt-dlp = "==2026.6.9"
+yt-dlp = "==2026.7.4"
 emoji = "==2.15.0"
 lingua-language-detector = "==2.1.1"
 wordcloud = "==1.9.6"
 matplotlib = "==3.10.8"
 numpy = "==2.4.6"
-
 # Deep-learning extras (Hybrid-DL / Transformers)
 # - Install separately to avoid NumPy ABI issues with PyTorch wheels.
 # - See: backend/requirements-dl.txt
