@@ -8,8 +8,6 @@ This package contains individual implementations of sentiment analysis engines:
 - svm_engine: TF-IDF + Linear SVM
 - ensemble_engine: Weighted soft voting
 - meta_learner_engine: Stacked ensemble
-- hybrid_dl_engine: CNN-BiLSTM-Attention
-- transformer_engine: BERT-based classifier
 - fuzzy_engine: Fuzzy inference ensemble
 """
 
@@ -29,13 +27,3 @@ __all__ = [
     "FuzzyEnsembleSentimentEngine",
 ]
 
-# Lazy imports for optional dependencies
-def get_hybrid_dl_engine():
-    """Get HybridDLSentimentEngine (requires PyTorch)."""
-    from .hybrid_dl_engine import HybridDLSentimentEngine
-    return HybridDLSentimentEngine
-
-def get_transformer_engine():
-    """Get TransformerSentimentEngine (requires transformers)."""
-    from .transformer_engine import TransformerSentimentEngine
-    return TransformerSentimentEngine

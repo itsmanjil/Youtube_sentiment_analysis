@@ -22,10 +22,8 @@ Available Engines
 - 'tfidf': TF-IDF + Multinomial Naive Bayes
 - 'logreg': TF-IDF + Logistic Regression
 - 'svm': TF-IDF + Linear SVM
-- 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
 - 'ensemble': Weighted soft voting ensemble
 - 'meta_learner': Stacked ensemble with meta-classifier
-- 'bert': BERT-based transformer (requires transformers library)
 """
 
 from .base import (

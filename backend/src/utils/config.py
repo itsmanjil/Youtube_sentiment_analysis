@@ -78,33 +78,8 @@ class Config:
             "model": MODELS_DIR / "svm" / "model.sav",
             "vectorizer": MODELS_DIR / "svm" / "tfidfVectorizer.pickle",
         },
-        "hybrid_dl": {
-            "model": MODELS_DIR / "hybrid_dl" / "hybrid_v1.pt",
-            "vocab": MODELS_DIR / "hybrid_dl" / "vocab.pkl",
-            "metadata": MODELS_DIR / "hybrid_dl" / "metadata.json",
-        },
         "meta_learner": {
             "model": MODELS_DIR / "meta_learner.pkl",
-        },
-        "bert": {
-            "model": MODELS_DIR / "transformers" / "bert",
-            "calibration": MODELS_DIR / "transformers" / "bert" / "temperature_scaling.json",
-        },
-        "modernbert": {
-            "model": MODELS_DIR / "transformers" / "modernbert",
-            "calibration": MODELS_DIR / "transformers" / "modernbert" / "temperature_scaling.json",
-        },
-        "deberta_v3": {
-            "model": MODELS_DIR / "transformers" / "deberta_v3",
-            "calibration": MODELS_DIR / "transformers" / "deberta_v3" / "temperature_scaling.json",
-        },
-        "xlm_v": {
-            "model": MODELS_DIR / "transformers" / "xlm_v",
-            "calibration": MODELS_DIR / "transformers" / "xlm_v" / "temperature_scaling.json",
-        },
-        "mdeberta_v3": {
-            "model": MODELS_DIR / "transformers" / "mdeberta_v3",
-            "calibration": MODELS_DIR / "transformers" / "mdeberta_v3" / "temperature_scaling.json",
         },
     }
 
@@ -122,8 +97,8 @@ class Config:
         Parameters
         ----------
         model_type : str
-            Type of model ('tfidf', 'logreg', 'svm', 'hybrid_dl', 'meta_learner',
-            'bert', 'modernbert', 'deberta_v3', 'xlm_v', 'mdeberta_v3').
+            Type of model ('tfidf', 'logreg', 'svm', 'meta_learner',
+            ).
         component : str, optional
             Component to retrieve ('model', 'vectorizer', 'vocab', 'metadata', 'calibration').
             Default is 'model'.

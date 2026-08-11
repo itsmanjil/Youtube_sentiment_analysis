@@ -49,7 +49,7 @@ sys.path.insert(0, str(BASE_DIR))
 # `python research/llm_zero_shot_baseline.py` auto-inserts this script's own
 # directory (backend/research/) at sys.path[0] before any of this file's code
 # runs. backend/research/transformers/ is a real local subpackage (see
-# research/transformers/model_registry.py etc.), so an unqualified
+# research/transformers/prob_cube_io.py etc.), so an unqualified
 # `import transformers` below would resolve to it instead of the pip-
 # installed HuggingFace library. Drop that auto-inserted entry now that
 # BASE_DIR (which has no top-level transformers/ of its own) is on the path.

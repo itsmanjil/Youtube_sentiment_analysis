@@ -117,15 +117,6 @@ from research.transformers.prob_cube_io import load_probability_cube
 
 LABELS: List[str] = list(SENTIMENT_LABELS)
 DEFAULT_MODELS = ["logreg", "svm", "tfidf"]
-TRANSFORMER_MODELS = {
-    "bert",
-    "transformer",
-    "roberta",
-    "modernbert",
-    "deberta_v3",
-    "xlm_v",
-    "mdeberta_v3",
-}
 N_FUZZY_SETS = 3          # Low / Medium / High per model
 LOG_C = math.log(len(LABELS))
 
@@ -149,8 +140,6 @@ def parse_model_names(raw_value: str) -> List[str]:
 
 
 def _engine_kwargs(model_name: str, calibration_profile: str) -> dict:
-    if model_name in TRANSFORMER_MODELS:
-        return {"calibration_profile": calibration_profile}
     # The neuro-fuzzy gate is fitted on raw base-model probabilities, matching
     # how FuzzyEnsembleSentimentEngine builds its base engines at serving time
     # (src/sentiment/engines/fuzzy_engine.py). A calibrated base model here
@@ -493,12 +482,12 @@ def main() -> None:
     parser.add_argument(
         "--val_cube",
         default=None,
-        help="Optional validation probability cube (.npz) exported by research/transformers/export_prob_cube.py.",
+        help="Optional validation probability cube (.npz).",
     )
     parser.add_argument(
         "--test_cube",
         default=None,
-        help="Optional test probability cube (.npz) exported by research/transformers/export_prob_cube.py.",
+        help="Optional test probability cube (.npz).",
     )
     parser.add_argument("--sample_val",  type=int, default=10000)
     parser.add_argument("--sample_test", type=int, default=20000)

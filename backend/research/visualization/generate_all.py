@@ -70,7 +70,7 @@ def generate_all_visualizations(experiment_name='thesis_full_gpu', output_dir='.
         total_count += 1
         if run_script('plot_confusion_matrix.py', [
             '--test_csv', str(test_file),
-            '--models', 'logreg,svm,hybrid_dl',
+            '--models', 'logreg,svm',
             '--output', output_dir
         ]):
             success_count += 1

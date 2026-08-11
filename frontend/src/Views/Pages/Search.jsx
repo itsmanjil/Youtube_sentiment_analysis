@@ -734,8 +734,6 @@ function Search() {
                       <optgroup label="Research (Computational Intelligence)">
                         <option value="ensemble">Ensemble NSGA-II — best calibrated</option>
                         <option value="fuzzy_ensemble">Fuzzy Ensemble (uncertainty-aware)</option>
-                        <option value="hybrid_dl">Hybrid CNN-BiLSTM (deep learning)</option>
-                        <option value="deberta_v3">DeBERTa-v3 (transformer — CPU, experimental)</option>
                       </optgroup>
                       <optgroup label="Baselines">
                         <option value="logreg">Logistic Regression</option>

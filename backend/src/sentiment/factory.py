@@ -2,9 +2,7 @@
 Sentiment Engine Factory.
 
 This module provides factory functions for creating sentiment analysis
-engines. It handles lazy loading of optional dependencies (PyTorch,
-transformers) to allow the package to work even without deep learning
-libraries installed.
+engines.
 
 Usage
 -----
@@ -20,8 +18,6 @@ Available Engines
 - 'ensemble': Weighted soft voting (combines classical models)
 - 'meta_learner': Stacked ensemble (learns combination rules)
 - 'fuzzy_ensemble': Fuzzy inference ensemble (uncertainty-aware)
-- 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
-- 'deberta_v3': DeBERTa-v3 transformer preset (requires transformers)
 """
 
 from typing import Any, List
@@ -32,15 +28,6 @@ from .engines.svm_engine import SVMSentimentEngine
 from .engines.ensemble_engine import EnsembleSentimentEngine
 from .engines.meta_learner_engine import MetaLearnerSentimentEngine
 from .engines.fuzzy_engine import FuzzyEnsembleSentimentEngine
-
-# Only presets with a fine-tuned checkpoint under backend/models/transformers/
-# are registered here — see TransformerSentimentEngine.MODEL_PRESETS for the
-# same restriction and why (no checkpoint means every request fails with "no
-# fine-tuned checkpoint found").
-_TRANSFORMER_ENGINE_ALIASES = {
-    "deberta_v3",
-}
-
 
 # Registry of available engines
 _ENGINE_REGISTRY = {
@@ -75,19 +62,9 @@ def list_available_engines() -> List[str]:
     Examples
     --------
     >>> list_available_engines()
-    ['tfidf', 'logreg', 'svm', 'ensemble', 'meta_learner', 'hybrid_dl', 'deberta_v3']
+    ['ensemble', 'fuzzy_ensemble', 'logreg', 'meta_learner', 'svm', 'tfidf']
     """
     engines = list(_ENGINE_REGISTRY.keys())
-
-    # Check for optional engines without importing heavyweight deps.
-    # Importing torch/transformers can be slow and may emit ABI warnings.
-    import importlib.util
-
-    if importlib.util.find_spec("torch") is not None:
-        engines.append("hybrid_dl")
-
-    if importlib.util.find_spec("transformers") is not None:
-        engines.extend(sorted(_TRANSFORMER_ENGINE_ALIASES))
 
     # Remove aliases for cleaner output
     engines = [e for e in engines if e not in ("ci_ensemble", "stacking", "fuzzy")]
@@ -108,9 +85,7 @@ def get_sentiment_engine(engine_type: str = "logreg", **kwargs) -> Any:
         - 'ensemble': Weighted soft voting
         - 'meta_learner': Stacked ensemble
         - 'fuzzy_ensemble': Fuzzy inference ensemble (uncertainty-aware)
-        - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
-        - 'deberta_v3': DeBERTa-v3 transformer preset (requires transformers)
-    **kwargs
+            **kwargs
         Additional arguments passed to the engine constructor.
 
     Returns
@@ -144,38 +119,12 @@ def get_sentiment_engine(engine_type: str = "logreg", **kwargs) -> Any:
     ...     defuzz_method='centroid',
     ... )
 
-    >>> # DeBERTa-v3 transformer
-    >>> engine = get_sentiment_engine('deberta_v3')
     """
     engine_type = engine_type.lower().strip()
 
     # Check standard engines
     if engine_type in _ENGINE_REGISTRY:
         return _ENGINE_REGISTRY[engine_type](**kwargs)
-
-    # Handle deep learning engines with lazy imports
-    if engine_type == "hybrid_dl":
-        try:
-            from .engines.hybrid_dl_engine import HybridDLSentimentEngine
-            return HybridDLSentimentEngine(**kwargs)
-        except ImportError as e:
-            raise ImportError(
-                f"HybridDLSentimentEngine requires PyTorch. "
-                f"Install with: pip install torch\n"
-                f"Error: {e}"
-            )
-
-    if engine_type in _TRANSFORMER_ENGINE_ALIASES:
-        try:
-            from .engines.transformer_engine import TransformerSentimentEngine
-            kwargs.setdefault("model_preset", engine_type)
-            return TransformerSentimentEngine(**kwargs)
-        except ImportError as e:
-            raise ImportError(
-                f"TransformerSentimentEngine requires transformers and torch. "
-                f"Install with: pip install transformers torch\n"
-                f"Error: {e}"
-            )
 
     # Unknown engine type
     available = list_available_engines()
@@ -200,8 +149,6 @@ def get_base_engine(engine_type: str = "logreg", **kwargs) -> Any:
         - 'tfidf': TF-IDF + Naive Bayes
         - 'logreg': TF-IDF + Logistic Regression (default)
         - 'svm': TF-IDF + Linear SVM
-        - 'hybrid_dl': CNN-BiLSTM-Attention (requires PyTorch)
-        - 'deberta_v3': transformer preset (requires transformers)
     **kwargs
         Additional arguments passed to the engine constructor.
 
@@ -226,39 +173,15 @@ def get_base_engine(engine_type: str = "logreg", **kwargs) -> Any:
     if engine_type in _BASE_ENGINE_REGISTRY:
         return _BASE_ENGINE_REGISTRY[engine_type](**kwargs)
 
-    # Handle deep learning engine
-    if engine_type == "hybrid_dl":
-        try:
-            from .engines.hybrid_dl_engine import HybridDLSentimentEngine
-            return HybridDLSentimentEngine(**kwargs)
-        except ImportError as e:
-            raise ImportError(
-                f"HybridDLSentimentEngine requires PyTorch. "
-                f"Install with: pip install torch\n"
-                f"Error: {e}"
-            )
-
-    if engine_type in _TRANSFORMER_ENGINE_ALIASES:
-        try:
-            from .engines.transformer_engine import TransformerSentimentEngine
-            kwargs.setdefault("model_preset", engine_type)
-            return TransformerSentimentEngine(**kwargs)
-        except ImportError as e:
-            raise ImportError(
-                f"TransformerSentimentEngine requires transformers and torch. "
-                f"Install with: pip install transformers torch\n"
-                f"Error: {e}"
-            )
-
     # Reject ensemble types
     if engine_type in ("ensemble", "ci_ensemble", "meta_learner", "stacking"):
         raise ValueError(
             f"'{engine_type}' is not a base engine. "
-            "Base engines are: tfidf, logreg, svm, hybrid_dl"
+            "Base engines are: tfidf, logreg, svm"
         )
 
     # Unknown engine type
-    available = list(_BASE_ENGINE_REGISTRY.keys()) + ["hybrid_dl"]
+    available = list(_BASE_ENGINE_REGISTRY.keys())
     raise ValueError(
         f"Invalid base engine type: '{engine_type}'. "
         f"Available base engines: {available}"

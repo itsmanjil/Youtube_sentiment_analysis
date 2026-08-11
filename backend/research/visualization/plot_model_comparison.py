@@ -28,12 +28,6 @@ def load_results(results_dir):
                 data = json.load(f)
                 results[model] = data.get(model, data)
     
-    # Load hybrid model results
-    hybrid_file = results_dir / '../output/thesis_full_gpu/test_results.json'
-    if Path(hybrid_file).exists():
-        with open(hybrid_file) as f:
-            results['hybrid_dl'] = json.load(f)
-    
     # Load ensemble results
     ensemble_file = results_dir / 'final_comparison.json'
     if ensemble_file.exists():

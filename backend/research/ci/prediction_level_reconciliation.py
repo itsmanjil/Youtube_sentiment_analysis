@@ -23,21 +23,12 @@ BACKEND_ROOT = Path(__file__).resolve().parents[2]
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from research.transformers.export_prob_cube import prepare_scoring_frame
-from research.transformers.prob_cube_io import load_probability_cube
+from research.transformers.prob_cube_io import (
+    load_probability_cube,
+    prepare_scoring_frame,
+)
 from src.sentiment import coerce_sentiment_result, get_sentiment_engine
 from src.utils import SENTIMENT_LABELS, get_runtime_artifact_metadata, normalize_probs
-
-
-TRANSFORMER_MODELS = {
-    "bert",
-    "transformer",
-    "roberta",
-    "modernbert",
-    "deberta_v3",
-    "xlm_v",
-    "mdeberta_v3",
-}
 
 
 def _utcnow() -> str:
@@ -50,8 +41,6 @@ def _resolve_backend_path(path_value: str | Path) -> Path:
 
 
 def _engine_kwargs(model_name: str, calibration_profile: str) -> Dict[str, object]:
-    if model_name in TRANSFORMER_MODELS:
-        return {"calibration_profile": calibration_profile}
     return {}
 
 
@@ -234,7 +223,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--prob_cube",
-        default="results/prob_cubes/route_a_benchmark_cpu_test_deberta_logreg_svm.npz",
+        default="results/prob_cubes/route_a_benchmark_cpu_test_logreg_svm.npz",
         help="Offline probability cube to compare.",
     )
     parser.add_argument(

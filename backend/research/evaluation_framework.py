@@ -517,7 +517,7 @@ if __name__ == "__main__":
     # Mock data for demonstration
     from sklearn.datasets import make_classification
     from sklearn.linear_model import LogisticRegression
-    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.svm import LinearSVC
 
     print("Generating synthetic sentiment data...")
     X, y = make_classification(
@@ -543,13 +543,13 @@ if __name__ == "__main__":
     )
 
     print("\n" + "="*80)
-    print("EVALUATING ADVANCED: Random Forest")
+    print("EVALUATING BASELINE: Linear SVM")
     print("="*80)
     evaluator.evaluate_with_cross_validation(
-        model_fn=lambda: RandomForestClassifier(n_estimators=100, random_state=42),
+        model_fn=lambda: LinearSVC(random_state=42),
         X=X,
         y=y,
-        model_name="Random_Forest"
+        model_name="Linear_SVM"
     )
 
     # Generate thesis report

@@ -12,10 +12,8 @@ sentiment analysis:
 An earlier revision of this docstring additionally claimed "Neural
 Architecture Search: Evolutionary architecture optimization" and
 "Bio-Inspired Attention: Novel attention mechanisms". Neither exists in this
-codebase: research/architectures/attention.py implements standard
-multi-head scaled dot-product attention (Vaswani et al. 2017), not a novel
-or bio-inspired mechanism, and there is no architecture-search code anywhere
-in this repository. Do not cite either claim.
+codebase, and there is no architecture-search code anywhere in this
+repository. Do not cite either claim.
 
 Author: Thesis Project — Computational Intelligence & Sentiment Analysis
 Thesis: Computational Intelligence Approaches for YouTube Sentiment Analysis

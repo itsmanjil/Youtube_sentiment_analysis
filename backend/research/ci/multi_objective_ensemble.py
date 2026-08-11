@@ -69,15 +69,6 @@ from research.evaluation.calibration import compute_calibration_metrics
 # Constants
 # ---------------------------------------------------------------------------
 DEFAULT_MODELS = ["logreg", "svm", "tfidf"]
-TRANSFORMER_MODELS = {
-    "bert",
-    "transformer",
-    "roberta",
-    "modernbert",
-    "deberta_v3",
-    "xlm_v",
-    "mdeberta_v3",
-}
 LABELS: List[str] = list(SENTIMENT_LABELS)  # ["Positive", "Neutral", "Negative"]
 
 
@@ -100,8 +91,6 @@ def parse_model_names(raw_value: str) -> List[str]:
 
 
 def _engine_kwargs(model_name: str, calibration_profile: str) -> dict:
-    if model_name in TRANSFORMER_MODELS:
-        return {"calibration_profile": calibration_profile}
     # NSGA-II ensemble weights are fitted on raw base-model probabilities,
     # matching how EnsembleSentimentEngine builds its base engines at serving
     # time (src/sentiment/engines/ensemble_engine.py). A calibrated base model
@@ -364,12 +353,12 @@ def main() -> None:
     parser.add_argument(
         "--val_cube",
         default=None,
-        help="Optional validation probability cube (.npz) exported by research/transformers/export_prob_cube.py.",
+        help="Optional validation probability cube (.npz).",
     )
     parser.add_argument(
         "--test_cube",
         default=None,
-        help="Optional test probability cube (.npz) exported by research/transformers/export_prob_cube.py.",
+        help="Optional test probability cube (.npz).",
     )
     parser.add_argument("--sample", type=int, default=8000,
                         help="Max val samples (speed vs accuracy trade-off)")

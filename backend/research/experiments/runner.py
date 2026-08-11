@@ -459,7 +459,6 @@ class ThesisExperiment:
         from src.sentiment import get_sentiment_engine
 
         engine_aliases = {
-            'hybrid_nn': 'hybrid_dl',
         }
 
         # Load configured base models
