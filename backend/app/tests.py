@@ -1,8 +1,7 @@
 import json
-import pickle
 import sys
 from datetime import timedelta
-from types import ModuleType, SimpleNamespace
+from types import ModuleType
 from unittest.mock import patch, MagicMock
 import tempfile
 from pathlib import Path
