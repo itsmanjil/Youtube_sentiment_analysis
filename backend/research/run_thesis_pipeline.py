@@ -4,14 +4,13 @@ End-to-end training pipeline for thesis-grade experiments.
 Steps:
   - classic: train LogReg, SVM, TF-IDF models
   - prepare: build train/val/test splits from YouTube videos or labeled CSV
-  - hybrid: train Hybrid CNN-BiLSTM-Attention model
   - ensemble: optimize ensemble weights with PSO
   - meta: train stacking meta-learner
 
 Usage:
   python research/run_thesis_pipeline.py --steps all
   python research/run_thesis_pipeline.py --steps classic,ensemble,meta
-  python research/run_thesis_pipeline.py --steps prepare,hybrid --video_list videos.txt
+  python research/run_thesis_pipeline.py --steps prepare --video_list videos.txt
 """
 
 from __future__ import annotations
@@ -26,7 +25,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
 
-STEP_ORDER = ["classic", "prepare", "hybrid", "ensemble", "meta"]
+STEP_ORDER = ["classic", "prepare", "ensemble", "meta"]
 AVAILABLE_STEPS = set(STEP_ORDER)
 
 CLASSIC_SCRIPT_MAP = {
@@ -126,7 +125,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--steps",
         default="all",
-        help="Comma-separated steps: classic,prepare,hybrid,ensemble,meta (default: all)",
+        help="Comma-separated steps: classic,prepare,ensemble,meta (default: all)",
     )
 
     # Classic model training
@@ -168,14 +167,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Optional column for group-aware split (e.g., video_id)",
     )
 
-    # Hybrid DL
+    # Split overrides
     parser.add_argument("--train_csv", default=None)
     parser.add_argument("--val_csv", default=None)
     parser.add_argument("--test_csv", default=None)
-    parser.add_argument("--hybrid_config", default=None)
-    parser.add_argument("--hybrid_output_dir", default=None)
-    parser.add_argument("--hybrid_experiment_name", default="thesis_hybrid_v1")
-    parser.add_argument("--hybrid_device", default=None)
 
     # Ensemble optimization
     parser.add_argument("--ensemble_data", default=None)
@@ -264,28 +259,6 @@ def run_prepare(args, command_log: Path | None) -> Path:
     return output_dir
 
 
-def run_hybrid(args, prepared_dir: Path | None, command_log: Path | None):
-    train_csv, val_csv, test_csv = resolve_split_paths(args, prepared_dir)
-    ensure_exists(train_csv, "Train CSV")
-    ensure_exists(val_csv, "Validation CSV")
-    ensure_exists(test_csv, "Test CSV")
-
-    script_path = BASE_DIR / "research" / "train_hybrid_dl.py"
-    cmd = [PYTHON, str(script_path)]
-    if args.hybrid_config:
-        cmd += ["--config", args.hybrid_config]
-    cmd += ["--train_csv", str(train_csv)]
-    cmd += ["--val_csv", str(val_csv)]
-    cmd += ["--test_csv", str(test_csv)]
-    if args.hybrid_output_dir:
-        cmd += ["--output_dir", args.hybrid_output_dir]
-    if args.hybrid_experiment_name:
-        cmd += ["--experiment_name", args.hybrid_experiment_name]
-    if args.hybrid_device:
-        cmd += ["--device", args.hybrid_device]
-    run_command(cmd, command_log=command_log)
-
-
 def run_ensemble(args, command_log: Path | None):
     data_path = Path(args.ensemble_data) if args.ensemble_data else default_ensemble_data()
     ensure_exists(data_path, "Ensemble dataset")
@@ -357,8 +330,6 @@ def main():
             run_classic(args, command_log)
         elif step == "prepare":
             prepared_dir = run_prepare(args, command_log)
-        elif step == "hybrid":
-            run_hybrid(args, prepared_dir, command_log)
         elif step == "ensemble":
             run_ensemble(args, command_log)
         elif step == "meta":

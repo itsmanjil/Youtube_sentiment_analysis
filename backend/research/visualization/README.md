@@ -35,7 +35,7 @@ Generates confusion matrices for all models:
 ```bash
 python plot_confusion_matrix.py \
   --test_csv ../data/test.csv \
-  --models logreg,svm,hybrid_dl,ensemble \
+  --models logreg,svm,tfidf,meta_learner,ensemble \
   --output ./plots
 ```
 
@@ -153,7 +153,6 @@ plots/
 ├── f1_curve.png
 ├── confusion_matrix_logreg.png
 ├── confusion_matrix_svm.png
-├── confusion_matrix_hybrid_dl.png
 ├── confusion_matrix_comparison.png
 ├── comparison_accuracy.png
 ├── comparison_f1_macro.png
@@ -173,20 +172,11 @@ backend/
 ## Example: Complete Pipeline
 
 ```bash
-# 1. Train model (if not done already)
-cd ../..
-python research/train_hybrid_dl.py \
-  --train_csv data/train_full_filtered.csv \
-  --val_csv data/val_full_filtered.csv \
-  --test_csv data/test_full_filtered.csv \
-  --max_epochs 10 \
-  --experiment_name thesis_full_gpu
-
-# 2. Generate all visualizations
+# 1. Generate all visualizations
 cd research/visualization
 python generate_all.py
 
-# 3. View results
+# 2. View results
 start plots/comparison_dashboard.png
 start ../../EVALUATION_REPORT.md
 ```

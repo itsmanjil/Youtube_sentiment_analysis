@@ -151,7 +151,7 @@ def generate_confusion_matrices(test_csv, models, output_dir):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate confusion matrices')
     parser.add_argument('--test_csv', required=True, help='Path to test CSV')
-    parser.add_argument('--models', default='logreg,svm,hybrid_dl,ensemble',
+    parser.add_argument('--models', default='logreg,svm,ensemble',
                        help='Comma-separated model names')
     parser.add_argument('--output', default='./plots', help='Output directory')
     args = parser.parse_args()

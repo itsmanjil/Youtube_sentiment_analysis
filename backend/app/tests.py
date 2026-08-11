@@ -26,25 +26,6 @@ from .analysis_utils import (
 from .models import AnalysisJob, YouTubeVideo, YouTubeAnalysis, YouTubeComment
 from .youtube_preprocessor import YouTubePreprocessor
 from src.sentiment import SentimentResult
-from research.transformers.model_registry import get_encoder_spec
-from research.transformers.train_encoder import (
-    load_split_metadata,
-    resolve_text_column,
-    summarize_split_provenance,
-)
-from research.transformers.export_prob_cube import (
-    parse_model_names,
-    prepare_scoring_frame,
-    resolve_text_column_for_model,
-)
-from research.route_a.run_encoder_sweep import (
-    _best_classical_model,
-    _find_mcnemar_row,
-)
-from research.transformers.calibrate_encoder import (
-    LABELS as CALIBRATION_LABELS,
-    resolve_model_label_order,
-)
 from research.transformers.prob_cube_io import (
     load_probability_cube,
     save_probability_cube,
@@ -377,39 +358,6 @@ class YouTubeAnalysisAPITests(APITestCase):
             use_neuro_fuzzy_gate=False,
         )
 
-    @patch('app.views.YouTubeFetcher')
-    @patch('app.views.get_sentiment_engine')
-    def test_analyze_video_uses_transformer_preprocessing_for_encoder_models(self, mock_get_engine, mock_fetcher):
-        self._mock_fetcher_with_comments(mock_fetcher, comments=MOCK_COMMENTS_RAW[:3])
-
-        mock_engine = MockSentimentEngine()
-        mock_engine.model_preset = "deberta_v3"
-        mock_engine.model_source = "microsoft/deberta-v3-base"
-        mock_engine.model_artifact = "deberta_v3"
-        mock_engine.calibration_applied = False
-        mock_engine.calibration_profile = "auto"
-        mock_engine.temperature = 1.0
-        mock_engine.temperature_artifact_path = None
-        mock_engine.max_length = 128
-        mock_engine.device = "cpu"
-        mock_get_engine.return_value = mock_engine
-
-        data = {
-            "video_url": "https://www.youtube.com/watch?v=HLUamwXQ218",
-            "sentiment_model": "deberta_v3",
-            "filter_spam": False,
-            "filter_language": False,
-        }
-
-        response = self.client.post(self.analyze_url, data, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["model_used"], "DEBERTA_V3")
-        self.assertEqual(response.data["analysis_meta"]["model_family"], "transformer")
-        self.assertEqual(response.data["analysis_meta"]["preprocessing_profile"], "transformer")
-        self.assertEqual(response.data["analysis_meta"]["transformer"]["preset"], "deberta_v3")
-        self.assertEqual(response.data["analysis_meta"]["transformer"]["calibration_profile"], "auto")
-        mock_get_engine.assert_called_with("deberta_v3", calibration_profile="auto")
 
     def test_analyze_video_missing_url(self):
         data = {"max_comments": 100}
@@ -1181,112 +1129,6 @@ class LiveWiringEngineTests(SimpleTestCase):
         self.assertFalse(custom_engine.calibration_applied)
         self.assertEqual(custom_engine.temperature, 1.0)
 
-    def _build_stub_hybrid_engine(self, temperature_artifact):
-        """Construct a HybridDLSentimentEngine against stub torch/model/vocab,
-        with the temperature_scaling artifact patched to `temperature_artifact`.
-        Temperature loading now goes through BaseSentimentEngine._load_temperature
-        (base.py), so the artifact loader is patched in the base namespace."""
-        from src.sentiment.engines.hybrid_dl_engine import HybridDLSentimentEngine
-
-        fake_torch = ModuleType("torch")
-        fake_torch.__path__ = []
-        fake_torch.long = "long"
-        fake_torch.cuda = SimpleNamespace(is_available=lambda: False)
-        fake_torch.backends = SimpleNamespace(
-            mps=SimpleNamespace(is_available=lambda: False)
-        )
-        fake_torch.device = lambda name: name
-        fake_torch.load = lambda path, map_location=None, weights_only=False: {
-            "model_state_dict": {"weights": [1.0]}
-        }
-
-        fake_torch_nn = ModuleType("torch.nn")
-        fake_torch_nn.__path__ = []
-        fake_torch_nn_functional = ModuleType("torch.nn.functional")
-
-        fake_hybrid_module = ModuleType(
-            "research.architectures.hybrid_cnn_bilstm"
-        )
-
-        class FakeHybridCNNBiLSTM:
-            def __init__(self, **kwargs):
-                self.kwargs = kwargs
-
-            def load_state_dict(self, state_dict):
-                self.state_dict = state_dict
-
-            def to(self, device):
-                self.device = device
-                return self
-
-            def eval(self):
-                self.was_evaluated = True
-
-        fake_hybrid_module.HybridCNNBiLSTM = FakeHybridCNNBiLSTM
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-            model_path = temp_path / "hybrid.pt"
-            vocab_path = temp_path / "vocab.pkl"
-            model_path.write_bytes(b"stub")
-            with open(vocab_path, "wb") as handle:
-                pickle.dump(
-                    {"word2idx": {"<PAD>": 0, "<UNK>": 1, "hello": 2}},
-                    handle,
-                )
-
-            with patch.dict(
-                sys.modules,
-                {
-                    "torch": fake_torch,
-                    "torch.nn": fake_torch_nn,
-                    "torch.nn.functional": fake_torch_nn_functional,
-                    "research.architectures.hybrid_cnn_bilstm": fake_hybrid_module,
-                },
-            ), patch(
-                "src.sentiment.base.load_runtime_artifact_json",
-                return_value=temperature_artifact,
-            ), patch(
-                # This synthetic model/vocab lives at a temp path, so there is
-                # no pinned manifest hash for these exact files — the real
-                # gate returns None ("unverifiable") for such a path. Stub it
-                # to None so the calibration behaviour under test is exercised
-                # without the gate rejecting the stub bytes as a mismatch
-                # against the pinned hybrid_dl_model/hybrid_dl_vocab entries.
-                "src.sentiment.engines.hybrid_dl_engine.verify_artifact_or_raise",
-                return_value=None,
-            ):
-                return HybridDLSentimentEngine(
-                    model_path=model_path,
-                    vocab_path=vocab_path,
-                    device="cpu",
-                )
-
-    def test_hybrid_dl_runtime_remains_uncalibrated_without_artifact_row(self):
-        engine = self._build_stub_hybrid_engine(
-            {"models": [{"model": "logreg", "temperature": 0.9}]}
-        )
-        self.assertEqual(engine.temperature, 1.0)
-        self.assertFalse(engine.calibration_applied)
-
-    def test_hybrid_dl_kept_false_row_is_not_reported_as_calibrated(self):
-        # The bug this guards: the old inline temperature loader hardcoded
-        # calibration_applied=True on any matching row, ignoring `kept`. A
-        # kept=false pin (fitted temperature made held-out ECE worse, so the
-        # no-op temperature=1.0 is kept) must be reported as NOT calibrated.
-        engine = self._build_stub_hybrid_engine(
-            {"models": [{"model": "hybrid_dl", "temperature": 1.0, "kept": False}]}
-        )
-        self.assertEqual(engine.temperature, 1.0)
-        self.assertFalse(engine.calibration_applied)
-
-    def test_hybrid_dl_kept_true_row_is_applied(self):
-        engine = self._build_stub_hybrid_engine(
-            {"models": [{"model": "hybrid_dl", "temperature": 1.35, "kept": True}]}
-        )
-        self.assertEqual(engine.temperature, 1.35)
-        self.assertTrue(engine.calibration_applied)
-
     def test_fuzzy_runtime_only_activates_nf_gate_for_matching_model_set(self):
         from src.sentiment.engines.fuzzy_engine import FuzzyEnsembleSentimentEngine
 
@@ -1525,47 +1367,6 @@ class YouTubeFetcherErrorHandlingTests(SimpleTestCase):
             pass  # Expected: the raw HttpError propagates, unwrapped.
 
 
-class TransformerTrainingScriptTests(SimpleTestCase):
-    def test_resolve_text_column_prefers_canonical_text(self):
-        resolved = resolve_text_column(
-            ["label", "text_transformer", "text", "text_classical"]
-        )
-        self.assertEqual(resolved, "text")
-
-    def test_load_split_metadata_and_provenance_summary(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            tmp_path = Path(temp_dir)
-            train_csv = tmp_path / "train.csv"
-            meta_path = tmp_path / "split_metadata.json"
-            train_csv.write_text("text,label\nhello,Positive\n", encoding="utf-8")
-            meta_path.write_text(
-                json.dumps(
-                    {
-                        "split": {
-                            "strategy": "group",
-                            "random_state": 42,
-                            "rows": {"train": 10, "val": 3, "test": 4},
-                        },
-                        "youtube_preprocess": {
-                            "primary_text_profile": "transformer",
-                        },
-                    }
-                ),
-                encoding="utf-8",
-            )
-
-            metadata, resolved_path = load_split_metadata(train_csv)
-            summary = summarize_split_provenance(metadata)
-
-            self.assertEqual(resolved_path, meta_path)
-            self.assertEqual(summary, "group_seed42_train10_val3_test4_transformer")
-
-    def test_encoder_spec_normalizes_aliases(self):
-        spec = get_encoder_spec("deberta-v3")
-        self.assertEqual(spec.key, "deberta_v3")
-        self.assertIn("DeBERTa", spec.description)
-
-
 class CalibrationUtilsTests(SimpleTestCase):
     def test_apply_temperature_to_logits_returns_valid_probabilities(self):
         logits = np.array([[2.0, 1.0, 0.5], [0.1, 0.2, 0.3]])
@@ -1582,90 +1383,7 @@ class CalibrationUtilsTests(SimpleTestCase):
             self.assertEqual(loaded["temperature"], 1.42)
             self.assertEqual(loaded["method"], "temperature_scaling")
 
-    def test_resolve_model_label_order_uses_checkpoint_config(self):
-        engine = SimpleNamespace(
-            model=SimpleNamespace(
-                config=SimpleNamespace(
-                    id2label={0: "Negative", 1: "Neutral", 2: "Positive"}
-                )
-            )
-        )
-
-        self.assertEqual(resolve_model_label_order(engine), CALIBRATION_LABELS)
-
-    def test_resolve_model_label_order_falls_back_on_invalid_config(self):
-        engine = SimpleNamespace(
-            model=SimpleNamespace(
-                config=SimpleNamespace(
-                    id2label={0: "Positive", 1: "Neutral", 2: "Spam"}
-                )
-            )
-        )
-
-        self.assertEqual(resolve_model_label_order(engine), CALIBRATION_LABELS)
-
-
-class ProbabilityCubeIOTests(SimpleTestCase):
-    def test_parse_model_names_normalizes_encoder_aliases(self):
-        self.assertEqual(
-            parse_model_names("modernbert, deberta-v3, logreg"),
-            ["modernbert", "deberta_v3", "logreg"],
-        )
-
-    def test_resolve_text_column_for_model_uses_family_specific_defaults(self):
-        columns = ["text", "text_classical", "text_transformer", "label"]
-        self.assertEqual(
-            resolve_text_column_for_model(columns, "logreg"),
-            "text_classical",
-        )
-        self.assertEqual(
-            resolve_text_column_for_model(columns, "deberta_v3"),
-            "text_transformer",
-        )
-
-    def test_prepare_scoring_frame_tracks_model_specific_columns(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            csv_path = Path(temp_dir) / "split.csv"
-            csv_path.write_text(
-                "text,label,text_classical,text_transformer\n"
-                "Hello!!!,Positive,hello,Hello!!!\n"
-                "Bad :-(,Negative,bad,Bad :-(\n",
-                encoding="utf-8",
-            )
-
-            df, canonical, model_columns = prepare_scoring_frame(
-                csv_path,
-                model_names=["deberta_v3", "logreg"],
-            )
-
-            self.assertEqual(canonical, "text")
-            self.assertEqual(model_columns["deberta_v3"], "text_transformer")
-            self.assertEqual(model_columns["logreg"], "text_classical")
-            self.assertEqual(len(df), 2)
-
-
-class RouteASweepHelpersTests(SimpleTestCase):
-    def test_best_classical_model_prefers_highest_macro_f1(self):
-        metrics = {
-            "logreg": {"macro_f1": 0.71},
-            "svm": {"macro_f1": 0.73},
-            "deberta_v3": {"macro_f1": 0.69},
-        }
-
-        self.assertEqual(_best_classical_model(metrics, ["logreg", "svm"]), "svm")
-
-    def test_find_mcnemar_row_handles_reverse_pair(self):
-        rows = [
-            {"model_a": "svm", "model_b": "neuro_fuzzy", "n01": 7, "n10": 4, "significant": False},
-        ]
-
-        row = _find_mcnemar_row(rows, "neuro_fuzzy", "svm")
-
-        self.assertEqual(row["model_a"], "neuro_fuzzy")
-        self.assertEqual(row["model_b"], "svm")
-        self.assertEqual(row["n01"], 4)
-        self.assertEqual(row["n10"], 7)
-
+class ProbabilityCubeRoundTripTests(SimpleTestCase):
     def test_probability_cube_roundtrip(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             artifact_path = Path(temp_dir) / "cube.npz"
@@ -1688,7 +1406,7 @@ class RouteASweepHelpersTests(SimpleTestCase):
                 artifact_path,
                 prob_cube=prob_cube,
                 logits_cube=logits_cube,
-                model_names=["modernbert", "deberta_v3"],
+                model_names=["logreg", "svm"],
                 labels=["Positive", "Neutral", "Negative"],
                 y_true=["Positive", "Negative"],
                 texts=["great video", "terrible upload"],
@@ -1697,7 +1415,7 @@ class RouteASweepHelpersTests(SimpleTestCase):
             )
             bundle = load_probability_cube(artifact_path)
 
-            self.assertEqual(bundle.model_names, ["modernbert", "deberta_v3"])
+            self.assertEqual(bundle.model_names, ["logreg", "svm"])
             self.assertEqual(bundle.labels, ["Positive", "Neutral", "Negative"])
             self.assertEqual(bundle.y_true, ["Positive", "Negative"])
             self.assertEqual(bundle.texts, ["great video", "terrible upload"])

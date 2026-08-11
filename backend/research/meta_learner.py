@@ -2,8 +2,8 @@
 Meta-Learner (Stacking Ensemble) for Sentiment Analysis
 
 Implements a 2-level stacked ensemble:
-- Level 0: Base models (LogReg, SVM, TF-IDF, Hybrid-DL)
-- Level 1: Meta-learner (Logistic Regression, XGBoost, etc.)
+- Level 0: Base models (LogReg, SVM, TF-IDF)
+- Level 1: Meta-learner (Logistic Regression)
 
 The meta-learner learns to optimally combine predictions from base models
 using cross-validated out-of-fold predictions to avoid overfitting.
@@ -38,14 +38,13 @@ class MetaLearnerEnsemble:
     2-Level Stacked Ensemble for Sentiment Analysis
 
     Architecture:
-        Level 0 (Base Models): LogReg, SVM, TF-IDF, Hybrid-DL
-        Level 1 (Meta-Learner): Logistic Regression / XGBoost / LightGBM
+        Level 0 (Base Models): LogReg, SVM, TF-IDF
+        Level 1 (Meta-Learner): Logistic Regression
 
     The meta-learner is trained on probability distributions from base models
     using cross-validated out-of-fold predictions to prevent overfitting.
 
     Features:
-    - Multiple meta-learner options (LR, XGBoost, LightGBM)
     - Cross-validated training (k-fold)
     - Probability calibration
     - Uncertainty quantification
@@ -73,7 +72,7 @@ class MetaLearnerEnsemble:
         """
         Args:
             base_models (list): List of base model names
-            meta_learner_type (str): 'logistic_regression', 'xgboost', 'lightgbm'
+            meta_learner_type (str): 'logistic_regression'
             n_folds (int): Number of folds for cross-validated training
             random_state (int): Random seed
             meta_params (dict): Parameters for meta-learner
@@ -159,40 +158,10 @@ class MetaLearnerEnsemble:
                 random_state=self.random_state
             )
 
-        elif self.meta_learner_type == 'xgboost':
-            try:
-                from xgboost import XGBClassifier
-                return XGBClassifier(
-                    max_depth=params.get('max_depth', 3),
-                    n_estimators=params.get('n_estimators', 100),
-                    learning_rate=params.get('learning_rate', 0.1),
-                    subsample=params.get('subsample', 0.8),
-                    colsample_bytree=params.get('colsample_bytree', 0.8),
-                    random_state=self.random_state,
-                    use_label_encoder=False,
-                    eval_metric='mlogloss'
-                )
-            except ImportError:
-                raise ImportError("XGBoost not installed. Install with: pip install xgboost")
-
-        elif self.meta_learner_type == 'lightgbm':
-            try:
-                from lightgbm import LGBMClassifier
-                return LGBMClassifier(
-                    max_depth=params.get('max_depth', 3),
-                    n_estimators=params.get('n_estimators', 100),
-                    learning_rate=params.get('learning_rate', 0.1),
-                    subsample=params.get('subsample', 0.8),
-                    colsample_bytree=params.get('colsample_bytree', 0.8),
-                    random_state=self.random_state
-                )
-            except ImportError:
-                raise ImportError("LightGBM not installed. Install with: pip install lightgbm")
-
         else:
             raise ValueError(
                 f"Unknown meta_learner_type: {self.meta_learner_type}. "
-                "Choose from: logistic_regression, xgboost, lightgbm"
+                "Choose from: logistic_regression"
             )
 
     def _get_base_predictions(self, texts):
@@ -734,7 +703,7 @@ def main():
     parser.add_argument(
         '--meta_learner',
         default='logistic_regression',
-        choices=['logistic_regression', 'xgboost', 'lightgbm'],
+        choices=['logistic_regression'],
         help='Meta-learner type'
     )
     parser.add_argument(

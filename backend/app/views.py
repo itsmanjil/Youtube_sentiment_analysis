@@ -50,36 +50,15 @@ _MODEL_ALIASES = {
     "stacking": "meta_learner",
     "fuzzy": "fuzzy_ensemble",
     "fuzzy-ensemble": "fuzzy_ensemble",
-    "deberta-v3": "deberta_v3",
-}
-
-# Only presets with a fine-tuned checkpoint under backend/models/transformers/
-# are exposed here — bert/roberta/modernbert/xlm_v/mdeberta_v3 have no shipped
-# artifact and would only ever fail with "no fine-tuned checkpoint found"
-# (see TransformerSentimentEngine.__init__). Training a new preset is still
-# possible via research/transformers/train_encoder.py and its own registry
-# (research/transformers/model_registry.py); once a checkpoint exists under
-# backend/models/transformers/<preset>, add it back here.
-_TRANSFORMER_MODELS = {
-    "deberta_v3",
 }
 
 # Canonical sentiment_model names the factory (src/sentiment/factory.py) can
 # construct, after _normalize_sentiment_model resolves view-layer aliases
-# (meta/stacking/fuzzy/deberta-v3/...) to these. Static rather than probed via
-# list_available_engines(): that function additionally gates transformer/
-# hybrid_dl names on torch/transformers actually being importable, which is
-# the right check at engine-construction time but would make this synchronous
-# pre-check reject a canonical, mockable model name in an environment that
-# simply doesn't have those optional deps installed (e.g. the test suite,
-# which mocks get_sentiment_engine directly for transformer-preset tests).
-# An unavailable-dependency request still fails cleanly via the ImportError
-# handling in _execute_analysis_job — this check only catches typos/garbage.
+# (meta/stacking/fuzzy/...) to these.
 _KNOWN_SENTIMENT_MODELS = {
     "tfidf", "logreg", "svm",
     "ensemble", "meta_learner", "fuzzy_ensemble",
-    "hybrid_dl",
-} | _TRANSFORMER_MODELS
+}
 
 
 def _coerce_model_list(value):
@@ -225,21 +204,13 @@ def _normalize_sentiment_model(value):
     return _MODEL_ALIASES.get(normalized, normalized)
 
 
-def _is_transformer_model(model_name):
-    return model_name in _TRANSFORMER_MODELS
-
-
 def _get_processing_profile(model_name):
-    return "transformer" if _is_transformer_model(model_name) else "classical"
+    return "classical"
 
 
 def _get_model_family(model_name):
-    if _is_transformer_model(model_name):
-        return "transformer"
     if model_name in ("ensemble", "meta_learner", "fuzzy_ensemble"):
         return "ensemble"
-    if model_name == "hybrid_dl":
-        return "deep_learning"
     return "classical"
 
 
@@ -370,11 +341,9 @@ def analyze_youtube_video(request):
         return Response({"msg": str(exc)}, status=400)
 
     sentiment_model = _normalize_sentiment_model(request.data.get("sentiment_model", "logreg"))
-    # calibration_profile isn't a closed enum like the fields above -- it's
-    # effectively a disable-flag with several accepted spellings ("off",
-    # "none", "disabled", "raw"; see transformer_engine.py); anything else,
-    # typo or not, means "enabled/auto", which is already the sensible
-    # default, so a strict choice list isn't needed here.
+    # Accepted but no longer consumed by any engine: the transformer arm that
+    # read it was removed. Kept so existing clients posting it still get a 200
+    # rather than an unknown-field error; it is echoed back in analysis params.
     calibration_profile = str(request.data.get("calibration_profile", "auto") or "auto")
     ensemble_models = _coerce_model_list(request.data.get("ensemble_models"))
     ensemble_weights_input = request.data.get("ensemble_weights")
@@ -691,10 +660,6 @@ def _build_engine_kwargs(sentiment_model, p):
             "confidence_threshold": p["confidence_threshold"],
             "use_neuro_fuzzy_gate": p["fuzzy_use_neuro_gate"],
         }
-    elif _is_transformer_model(sentiment_model):
-        engine_kwargs = {
-            "calibration_profile": p["calibration_profile"],
-        }
     return engine_kwargs
 
 
@@ -915,19 +880,6 @@ def _build_analysis_meta(sentiment_model, engine, processing_profile, p, analyti
         "bootstrap_samples": p["bootstrap_samples"],
         "random_seed": p["random_seed"],
     }
-    if _is_transformer_model(sentiment_model):
-        analysis_meta["transformer"] = {
-            "preset": getattr(engine, "model_preset", None),
-            "source": getattr(engine, "model_source", None),
-            "artifact": getattr(engine, "model_artifact", None),
-            "is_fine_tuned": getattr(engine, "is_fine_tuned", None),
-            "max_length": getattr(engine, "max_length", None),
-            "device": str(getattr(engine, "device", "")),
-            "calibration_profile": getattr(engine, "calibration_profile", p["calibration_profile"]),
-            "calibration_applied": getattr(engine, "calibration_applied", False),
-            "temperature": getattr(engine, "temperature", None),
-            "temperature_artifact_path": getattr(engine, "temperature_artifact_path", None),
-        }
     if sentiment_model == "ensemble":
         analysis_meta["ensemble"] = {
             "models": getattr(engine, "requested_models", p["ensemble_models"]),

@@ -158,3 +158,108 @@ def load_probability_cube(path: Path | str) -> ProbabilityCubeBundle:
         logits_cube=logits_cube,
         metadata=metadata,
     )
+
+
+# ---------------------------------------------------------------------------
+# Scoring-frame helpers
+#
+# These moved here from research/transformers/export_prob_cube.py when the
+# DeBERTa-v3 arm was removed. The per-model text-column indirection is kept
+# because cubes still record which column each model was scored on, but the
+# transformer-specific column priority is gone: every remaining engine is
+# classical, so all models share one priority order.
+# ---------------------------------------------------------------------------
+
+TEXT_COLUMN_PRIORITY = ["text", "text_transformer", "text_raw", "text_classical"]
+CLASSICAL_TEXT_COLUMN_PRIORITY = ["text_classical", "text", "text_raw", "text_transformer"]
+
+
+def resolve_text_column(columns: Sequence[str], preferred: str = "auto") -> str:
+    column_names = set(columns)
+    if preferred and preferred != "auto":
+        if preferred not in column_names:
+            raise ValueError(
+                f"Requested text column '{preferred}' not found. "
+                f"Available columns: {sorted(column_names)}"
+            )
+        return preferred
+
+    for candidate in TEXT_COLUMN_PRIORITY:
+        if candidate in column_names:
+            return candidate
+
+    raise ValueError(
+        "No supported text column found. "
+        f"Tried: {TEXT_COLUMN_PRIORITY}. Available columns: {sorted(column_names)}"
+    )
+
+
+def resolve_text_column_for_model(
+    columns: Sequence[str],
+    model_name: str,
+    *,
+    preferred: str = "auto",
+) -> str:
+    column_names = set(columns)
+    if preferred and preferred != "auto":
+        if preferred not in column_names:
+            raise ValueError(
+                f"Requested text column '{preferred}' not found. "
+                f"Available columns: {sorted(column_names)}"
+            )
+        return preferred
+
+    for candidate in CLASSICAL_TEXT_COLUMN_PRIORITY:
+        if candidate in column_names:
+            return candidate
+
+    raise ValueError(
+        f"No supported text column found for model '{model_name}'. "
+        f"Tried: {CLASSICAL_TEXT_COLUMN_PRIORITY}. "
+        f"Available columns: {sorted(column_names)}"
+    )
+
+
+def prepare_scoring_frame(
+    csv_path,
+    *,
+    model_names: Sequence[str],
+    text_column: str = "auto",
+    label_column: str = "label",
+):
+    import pandas as pd
+
+    from src.sentiment import normalize_label
+    from src.utils import SENTIMENT_LABELS
+
+    labels = list(SENTIMENT_LABELS)
+    df = pd.read_csv(csv_path)
+    if label_column not in df.columns:
+        raise ValueError(
+            f"Label column '{label_column}' not found in {csv_path}. "
+            f"Available columns: {sorted(df.columns)}"
+        )
+
+    canonical_text_column = resolve_text_column(df.columns, preferred=text_column)
+    model_text_columns = {
+        model_name: resolve_text_column_for_model(
+            df.columns,
+            model_name,
+            preferred=text_column,
+        )
+        for model_name in model_names
+    }
+
+    required_columns = set(model_text_columns.values()) | {label_column}
+    if canonical_text_column in df.columns:
+        required_columns.add(canonical_text_column)
+
+    df = df.dropna(subset=sorted(required_columns)).copy()
+    for column in required_columns:
+        if column != label_column:
+            df[column] = df[column].astype(str).str.strip()
+            df = df[df[column].astype(bool)]
+
+    df["label"] = df[label_column].apply(normalize_label)
+    df = df[df["label"].isin(labels)]
+    return df.reset_index(drop=True), canonical_text_column, model_text_columns
