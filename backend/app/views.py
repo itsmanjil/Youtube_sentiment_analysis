@@ -12,7 +12,14 @@ logger = logging.getLogger(__name__)
 # labeled (entropy-gated selective prediction). Shared between the gate in
 # _run_sentiment_analysis and the "high_uncertainty_ratio" stat in
 # _build_analytics so both describe the same boundary.
-UNCERTAINTY_GATE_ENTROPY = 0.5
+#
+# Pinned to the risk-coverage sweep in results/entropy_gated_prediction.md
+# (same ensemble weights: logreg=0.916, svm=0.003, tfidf=0.081): tau=0.72
+# gives coverage=0.508 there, i.e. abstaining on the least-confident *half*
+# of comments -- the exact operating point the thesis's "accuracy rises
+# from ~0.70 to ~0.85" claim is measured at. 0.5 was never validated against
+# that table and abstains on ~70% of comments instead of ~50%.
+UNCERTAINTY_GATE_ENTROPY = 0.72
 
 from googleapiclient.errors import HttpError
 
