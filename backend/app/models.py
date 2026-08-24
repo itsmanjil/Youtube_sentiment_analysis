@@ -40,6 +40,10 @@ class YouTubeComment(models.Model):
     is_reply = models.BooleanField(default=False)
     sentiment = models.CharField(max_length=20, null=True, blank=True)
     sentiment_score = models.FloatField(null=True, blank=True)
+    needs_review = models.BooleanField(
+        default=False,
+        help_text="True when the entropy gate withheld a label as too uncertain to trust.",
+    )
     is_spam = models.BooleanField(default=False)
     language = models.CharField(max_length=10, default='en')
     created_at = models.DateTimeField(auto_now_add=True)

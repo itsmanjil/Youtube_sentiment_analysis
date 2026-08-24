@@ -35,6 +35,7 @@ const COLORS = [
   SENTIMENT_COLORS.Negative,
   SENTIMENT_COLORS.Neutral,
   SENTIMENT_COLORS.Positive,
+  SENTIMENT_COLORS.Uncertain,
 ];
 
 const RADIAN = Math.PI / 180;
@@ -186,6 +187,7 @@ function Dashboard() {
             { name: "Negative", value: youtubeData.sentiment_data.Negative || 0 },
             { name: "Neutral", value: youtubeData.sentiment_data.Neutral || 0 },
             { name: "Positive", value: youtubeData.sentiment_data.Positive || 0 },
+            { name: "Uncertain", value: youtubeData.sentiment_data.Uncertain || 0 },
           ];
 
           setSentimentBreakdown(sentimentArray);
@@ -1105,7 +1107,7 @@ function Dashboard() {
                                   </p>
                                   <div className="d-flex justify-content-between align-items-center">
                                     <small className="text-muted">
-                                      <i className="fas fa-user"></i> {comment.author}
+                                      <i className="fas fa-thumbs-up"></i> {comment.likes} likes
                                     </small>
                                     <span
                                       className="badge"
@@ -1149,7 +1151,7 @@ function Dashboard() {
                                   </p>
                                   <div className="d-flex justify-content-between align-items-center">
                                     <small className="text-muted">
-                                      <i className="fas fa-user"></i> {comment.author}
+                                      <i className="fas fa-thumbs-up"></i> {comment.likes} likes
                                     </small>
                                     <span
                                       className="badge"

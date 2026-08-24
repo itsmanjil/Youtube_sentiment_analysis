@@ -8,6 +8,12 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# Normalized-entropy cutoff above which a prediction is withheld rather than
+# labeled (entropy-gated selective prediction). Shared between the gate in
+# _run_sentiment_analysis and the "high_uncertainty_ratio" stat in
+# _build_analytics so both describe the same boundary.
+UNCERTAINTY_GATE_ENTROPY = 0.5
+
 from googleapiclient.errors import HttpError
 
 from django.conf import settings
@@ -697,10 +703,22 @@ def _run_sentiment_analysis(job, sentiment_model, engine_kwargs, processed_comme
     )
     for item, raw_result in zip(processed_comments, batch_results):
         result = coerce_sentiment_result(raw_result, sentiment_model)
-        item['sentiment'] = result.label
         item['sentiment_score'] = result.score
         item['sentiment_probs'] = result.probs
         item['confidence'] = confidence_from_probs(result.probs)
+
+        # Entropy-gated selective prediction: a label is withheld rather than
+        # returned at face value once the model's own distribution is too
+        # spread out to trust. 0.5 matches the "high_uncertainty_ratio" cutoff
+        # already used for reporting in _build_analytics, so the gate and the
+        # aggregate stats agree on what counts as uncertain.
+        entropy = entropy_from_probs(result.probs)
+        if entropy > UNCERTAINTY_GATE_ENTROPY:
+            item['sentiment'] = 'Uncertain'
+            item['needs_review'] = True
+        else:
+            item['sentiment'] = result.label
+            item['needs_review'] = False
 
     return engine
 
@@ -735,12 +753,17 @@ def _save_comments(video, processed_comments):
         fields = dict(
             video=video,
             text=item['text'],
-            author=item['author'],
+            # Data minimization: the commenter's display name is used only
+            # transiently (batch fetch, spam/lang filtering, engine input)
+            # and is never written to durable storage — matches the
+            # thesis's "no account identifiers are processed" claim.
+            author='',
             likes=item['likes'],
             published_at=published_at,
             is_reply=item['is_reply'],
             sentiment=item['sentiment'],
             sentiment_score=item['sentiment_score'],
+            needs_review=item.get('needs_review', False),
             is_spam=item.get('metadata', {}).get('is_spam', False),
             language=item['metadata']['language'],
         )
@@ -764,7 +787,7 @@ def _save_comments(video, processed_comments):
                 unique_fields=["comment_id"],
                 update_fields=[
                     "video", "text", "author", "likes", "published_at",
-                    "is_reply", "sentiment", "sentiment_score", "is_spam",
+                    "is_reply", "sentiment", "sentiment_score", "needs_review", "is_spam",
                     "language",
                 ],
             )
@@ -793,7 +816,7 @@ def _build_analytics(p, processed_comments):
         "max_entropy": round(max(entropies), 4) if entropies else 0.0,
         "min_entropy": round(min(entropies), 4) if entropies else 0.0,
         "high_uncertainty_ratio": round(
-            sum(1 for e in entropies if e > 0.5) / len(entropies), 4
+            sum(1 for e in entropies if e > UNCERTAINTY_GATE_ENTROPY) / len(entropies), 4
         ) if entropies else 0.0,
     }
     sentiment_cis = bootstrap_confidence_intervals(
@@ -812,7 +835,8 @@ def _build_analytics(p, processed_comments):
     sentiment_data = {
         'Positive': sentiment_counts.get('Positive', 0),
         'Negative': sentiment_counts.get('Negative', 0),
-        'Neutral': sentiment_counts.get('Neutral', 0)
+        'Neutral': sentiment_counts.get('Neutral', 0),
+        'Uncertain': sentiment_counts.get('Uncertain', 0),
     }
 
     # Like-weighted sentiment
@@ -824,7 +848,10 @@ def _build_analytics(p, processed_comments):
                 'likes': likes,
                 'sentiment': item['sentiment'],
                 'text': item['text'][:100],
-                'author': item['author']
+                # No author here: this list is persisted verbatim onto
+                # YouTubeAnalysis.like_weighted_sentiment, so keeping the
+                # commenter's name here would mean an account identifier
+                # ends up in durable storage.
             })
 
     like_weighted.sort(key=lambda x: x['likes'], reverse=True)
@@ -940,7 +967,8 @@ def _build_result_payload(video, sentiment_model, processed_comments, filter_sta
     sentiment_ratio = {
         'positive_percent': round(sentiment_data['Positive'] / total * 100, 2) if total > 0 else 0,
         'negative_percent': round(sentiment_data['Negative'] / total * 100, 2) if total > 0 else 0,
-        'neutral_percent': round(sentiment_data['Neutral'] / total * 100, 2) if total > 0 else 0
+        'neutral_percent': round(sentiment_data['Neutral'] / total * 100, 2) if total > 0 else 0,
+        'uncertain_percent': round(sentiment_data['Uncertain'] / total * 100, 2) if total > 0 else 0,
     }
 
     return {
@@ -977,6 +1005,7 @@ def _build_result_payload(video, sentiment_model, processed_comments, filter_sta
         'top_words_negative': [{'word': w, 'count': c} for w, c in top_negative[:20]],
         'confidence_stats': analytics["confidence_stats"],
         'uncertainty_stats': analytics["uncertainty_stats"],
+        'needs_review_count': sentiment_data['Uncertain'],
         'sentiment_confidence_intervals': analytics["sentiment_cis"],
         'aspect_sentiment': analytics["aspect_sentiment"],
         'sentiment_timeline': analytics["sentiment_timeline"],
