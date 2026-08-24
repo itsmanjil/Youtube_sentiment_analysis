@@ -64,5 +64,6 @@ thesis_*backup*.docx
 
 # Local dev helpers / samples
 run.bat
+stop_dev_processes.ps1
 sample.pdf
 .ipynb_checkpoints/
