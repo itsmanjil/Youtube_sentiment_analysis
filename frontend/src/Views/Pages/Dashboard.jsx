@@ -103,10 +103,8 @@ function Dashboard() {
   };
 
   const sentimentTotalCount =
-    sentimentBreakdown && sentimentBreakdown.length >= 3
-      ? (sentimentBreakdown[0]?.value || 0) +
-        (sentimentBreakdown[1]?.value || 0) +
-        (sentimentBreakdown[2]?.value || 0)
+    sentimentBreakdown && sentimentBreakdown.length > 0
+      ? sentimentBreakdown.reduce((sum, entry) => sum + (entry?.value || 0), 0)
       : 0;
   const percentOfTotal = (value) =>
     sentimentTotalCount > 0 ? `${((value / sentimentTotalCount) * 100).toFixed(1)}% of total` : null;
@@ -521,7 +519,7 @@ function Dashboard() {
                   percent={percentOfTotal(sentimentBreakdown?.[0]?.value)}
                 />
               </div>
-              <div className="col-xl-3 col-sm-6">
+              <div className="col-xl-3 col-sm-6 mb-xl-0 mb-4">
                 <StatCard
                   icon="fas fa-minus-circle me-2"
                   iconSize="18px"
@@ -531,6 +529,18 @@ function Dashboard() {
                   value={sentimentBreakdown && sentimentBreakdown[1] ? sentimentBreakdown[1].value : 0}
                   valueColor={SENTIMENT_COLORS.Neutral}
                   percent={percentOfTotal(sentimentBreakdown?.[1]?.value)}
+                />
+              </div>
+              <div className="col-xl-3 col-sm-6">
+                <StatCard
+                  icon="fas fa-question-circle me-2"
+                  iconSize="18px"
+                  iconColor={SENTIMENT_COLORS.Uncertain}
+                  borderColor={SENTIMENT_COLORS.Uncertain}
+                  label="Uncertain Comments"
+                  value={sentimentBreakdown && sentimentBreakdown[3] ? sentimentBreakdown[3].value : 0}
+                  valueColor={SENTIMENT_COLORS.Uncertain}
+                  percent={percentOfTotal(sentimentBreakdown?.[3]?.value)}
                 />
               </div>
             </div>
